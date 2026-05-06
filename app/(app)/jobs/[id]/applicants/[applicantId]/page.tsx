@@ -1,0 +1,403 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { api, gradeFromScores, feedbackKey } from "@/lib/api";
+import RadarCard from "@/components/radar-card";
+import FeedbackButtons from "@/components/feedback-buttons";
+
+export const dynamic = "force-dynamic";
+
+export default async function ApplicantDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string; applicantId: string }>;
+}) {
+  const { id, applicantId } = await params;
+  const decodedAppId = decodeURIComponent(applicantId);
+
+  const [result, fb] = await Promise.all([
+    api.getResult(id).catch(() => null),
+    api.listFeedback(id, decodedAppId).catch(() => ({ items: [] as never[] })),
+  ]);
+
+  const applicant = result?.results?.find((r) => r.applicant_id === decodedAppId);
+
+  if (!applicant) {
+    return (
+      <div className="px-8 lg:px-14 py-12 max-w-3xl mx-auto">
+        <Link
+          href={`/jobs/${id}`}
+          className="inline-flex items-center gap-1.5 text-[13px] text-[var(--ink-muted)] mb-8"
+        >
+          <ArrowLeft size={13} /> 작업으로 돌아가기
+        </Link>
+        <div className="border-t border-b border-[var(--line-strong)] py-20 text-center">
+          <h2 className="serif text-3xl mb-2">지원자를 찾을 수 없습니다.</h2>
+          <p className="text-[14px] text-[var(--ink-muted)]">{decodedAppId}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const fbMap = new Map<string, boolean>();
+  for (const f of fb.items) fbMap.set(feedbackKey(f.component, f.item_key), f.rating);
+  const fbOf = (component: string, itemKey = ""): boolean | null => {
+    const k = feedbackKey(component, itemKey);
+    return fbMap.has(k) ? (fbMap.get(k) as boolean) : null;
+  };
+
+  const { grade, avg } = gradeFromScores(applicant.scores?.job_fit);
+  const coreData = Object.entries(applicant.scores?.core_similarity ?? {}).map(([axis, value]) => ({
+    axis,
+    value: Number(value),
+  }));
+  const fitData = Object.entries(applicant.scores?.job_fit ?? {}).map(([axis, v]) => ({
+    axis,
+    value: v.score,
+  }));
+  const topDept = applicant.scores?.department_fit?.[0];
+
+  return (
+    <div className="px-8 lg:px-14 py-12 max-w-[1280px] mx-auto fade-up">
+      <Link
+        href={`/jobs/${id}`}
+        className="inline-flex items-center gap-1.5 text-[13px] text-[var(--ink-muted)] hover:text-[var(--ink)] mb-8 transition"
+      >
+        <ArrowLeft size={13} /> 작업으로 돌아가기
+      </Link>
+
+      <header className="grid grid-cols-12 gap-8 pb-8 border-b border-[var(--line-strong)]">
+        <div className="col-span-12 lg:col-span-8">
+          <div className="text-[13px] text-[var(--ink-muted)] mb-3">
+            {applicant.job_track}
+            {applicant.job_field ? ` · ${applicant.job_field}` : ""}
+          </div>
+          <h1 className="serif text-[clamp(36px,4.5vw,52px)] leading-[1.1] tracking-[-0.012em] text-[var(--ink)]">
+            {applicant.applicant_id}
+          </h1>
+        </div>
+        <div className="col-span-12 lg:col-span-4 flex flex-col justify-end gap-4">
+          <div className="flex items-end justify-between border-b border-[var(--line)] pb-3">
+            <div>
+              <div className="text-[13px] text-[var(--ink-muted)] mb-1">종합 등급</div>
+              <div
+                className="serif text-[64px] leading-none tabular-nums text-[var(--ink)]"
+                style={grade === "S" ? { color: "var(--secondary-2)" } : undefined}
+              >
+                {grade}
+              </div>
+            </div>
+            <FeedbackButtons
+              jobId={id}
+              applicantId={decodedAppId}
+              component="grade"
+              initialRating={fbOf("grade")}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+            <SmallKpi label="직무적합 평균" value={`${avg.toFixed(1)} / 10`} />
+            {topDept && (
+              <SmallKpi label="상위 직군" value={topDept.department} sub={topDept.score.toFixed(1)} />
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* 종합 요약 */}
+      <Section number="01" title="종합 요약">
+        <div className="grid grid-cols-12 gap-10">
+          <div className="col-span-12 lg:col-span-9">
+            {applicant.summary?.overall && (
+              <p className="serif text-[22px] leading-[1.55] tracking-[-0.005em] text-[var(--ink)]">
+                {applicant.summary.overall}
+              </p>
+            )}
+            {applicant.summary?.overall_lines && (
+              <ul className="mt-7 space-y-3">
+                {applicant.summary.overall_lines.map((line, i) => (
+                  <li key={i} className="grid grid-cols-[auto_1fr] gap-4 items-baseline">
+                    <span className="text-[13px] text-[var(--secondary-2)] tabular-nums">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="text-[15px] leading-[1.8] text-[var(--ink)]">{line}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="col-span-12 lg:col-span-3 flex justify-end items-start">
+            <FeedbackButtons
+              jobId={id}
+              applicantId={decodedAppId}
+              component="summary_overall"
+              initialRating={fbOf("summary_overall")}
+              label="요약 평가"
+            />
+          </div>
+        </div>
+      </Section>
+
+      {/* 자기소개서 핵심 */}
+      {applicant.summary?.by_question && applicant.summary.by_question.length > 0 && (
+        <Section number="02" title="자기소개서 핵심">
+          <ol className="border-t border-[var(--line)]">
+            {(() => {
+              const rows = applicant.summary.by_question;
+              const qNumByQid = new Map<string, number>();
+              rows.forEach((q) => {
+                if (!qNumByQid.has(q.question_id)) qNumByQid.set(q.question_id, qNumByQid.size + 1);
+              });
+              return rows.map((q, i) => {
+                const isFirstOfGroup = i === 0 || rows[i - 1].question_id !== q.question_id;
+                const qNum = qNumByQid.get(q.question_id) ?? 0;
+                const itemIdx = q.item_index ?? 0;
+                const itemKey = `${q.question_id}-${itemIdx}`;
+                return (
+                  <li
+                    key={itemKey}
+                    className="grid grid-cols-12 gap-6 items-start py-7 border-b border-[var(--line)]"
+                  >
+                    <div className="col-span-12 lg:col-span-2">
+                      {isFirstOfGroup && (
+                        <div className="text-[13px] text-[var(--ink-muted)] tabular-nums">
+                          Q{String(qNum).padStart(2, "0")}
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-span-12 lg:col-span-8">
+                      {isFirstOfGroup && (
+                        <p className="text-[13px] text-[var(--ink-soft)] mb-3">{q.question}</p>
+                      )}
+                      <h3 className="serif text-[20px] leading-[1.35] mb-1.5">
+                        {q.title || q.question_id}
+                      </h3>
+                      <p className="text-[15px] leading-[1.8] text-[var(--ink)]">{q.content}</p>
+                    </div>
+                    <div className="col-span-12 lg:col-span-2 flex lg:justify-end">
+                      <FeedbackButtons
+                        jobId={id}
+                        applicantId={decodedAppId}
+                        component="summary_by_question"
+                        itemKey={itemKey}
+                        initialRating={fbOf("summary_by_question", itemKey)}
+                        size="sm"
+                      />
+                    </div>
+                  </li>
+                );
+              });
+            })()}
+          </ol>
+        </Section>
+      )}
+
+      {/* 역량 진단 */}
+      <Section number="03" title="역량 진단">
+        <div className="grid grid-cols-12 gap-12">
+          {coreData.length > 0 && (
+            <div className="col-span-12 lg:col-span-6">
+              <div className="flex items-baseline justify-between mb-3">
+                <div>
+                  <div className="text-[15px] font-medium">핵심인재 유사도</div>
+                  <p className="mt-1 text-[12.5px] text-[var(--ink-muted)] max-w-[36ch] leading-[1.6]">
+                    합격자 자소서와의 코사인 유사도 — 직군별 핵심인재 패턴과의 거리.
+                  </p>
+                </div>
+                <FeedbackButtons
+                  jobId={id}
+                  applicantId={decodedAppId}
+                  component="core_similarity"
+                  initialRating={fbOf("core_similarity")}
+                  size="sm"
+                />
+              </div>
+              <RadarCard data={coreData} color="#33307A" />
+            </div>
+          )}
+
+          {fitData.length > 0 && (
+            <div className="col-span-12 lg:col-span-6">
+              <div className="flex items-baseline justify-between mb-3">
+                <div>
+                  <div className="text-[15px] font-medium">직무 적합도</div>
+                  <p className="mt-1 text-[12.5px] text-[var(--ink-muted)] max-w-[36ch] leading-[1.6]">
+                    직무정의(JD) 기준 5축 평가 — LLM이 1–10점으로 채점.
+                  </p>
+                </div>
+                <FeedbackButtons
+                  jobId={id}
+                  applicantId={decodedAppId}
+                  component="job_fit"
+                  initialRating={fbOf("job_fit")}
+                  size="sm"
+                />
+              </div>
+              <RadarCard data={fitData} color="#F39200" />
+            </div>
+          )}
+        </div>
+
+        {fitData.length > 0 && (
+          <div className="mt-10 border-t border-[var(--line)]">
+            {Object.entries(applicant.scores?.job_fit ?? {}).map(([axis, v]) => (
+              <div
+                key={axis}
+                className="grid grid-cols-12 gap-6 py-5 border-b border-[var(--line)] items-baseline"
+              >
+                <div className="col-span-12 lg:col-span-2 serif text-[17px]">{axis}</div>
+                <div className="col-span-3 lg:col-span-1 serif text-[20px] text-[var(--secondary-2)] tabular-nums">
+                  {v.score.toFixed(1)}
+                </div>
+                <p className="col-span-9 lg:col-span-8 text-[14px] leading-[1.75] text-[var(--ink-muted)]">
+                  {v.reason}
+                </p>
+                <div className="col-span-12 lg:col-span-1 flex lg:justify-end">
+                  <FeedbackButtons
+                    jobId={id}
+                    applicantId={decodedAppId}
+                    component="job_fit"
+                    itemKey={axis}
+                    initialRating={fbOf("job_fit", axis)}
+                    size="sm"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
+      {/* 직군 매칭 */}
+      {applicant.scores?.department_fit && applicant.scores.department_fit.length > 0 && (
+        <Section number="04" title="직군 매칭">
+          <div className="grid grid-cols-12 gap-12">
+            <div className="col-span-12 lg:col-span-9">
+              <ol className="border-t border-[var(--line)]">
+                {applicant.scores.department_fit.map((d, i) => {
+                  const max = Math.max(
+                    ...(applicant.scores?.department_fit?.map((x) => x.score) ?? [10]),
+                    10,
+                  );
+                  const pct = (d.score / max) * 100;
+                  return (
+                    <li
+                      key={d.department}
+                      className="grid grid-cols-12 gap-4 items-center py-4 border-b border-[var(--line)]"
+                    >
+                      <div className="col-span-1 text-[13px] text-[var(--ink-muted)] tabular-nums">
+                        {String(i + 1).padStart(2, "0")}
+                      </div>
+                      <div className="col-span-4 text-[15px]">{d.department}</div>
+                      <div className="col-span-6">
+                        <div className="h-px w-full bg-[var(--line)]">
+                          <div
+                            className="h-px bg-[var(--ink)] transition-[width] duration-700"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="col-span-1 text-right serif text-[16px] tabular-nums">
+                        {d.score.toFixed(1)}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+            <div className="col-span-12 lg:col-span-3 flex lg:justify-end">
+              <FeedbackButtons
+                jobId={id}
+                applicantId={decodedAppId}
+                component="department_fit"
+                initialRating={fbOf("department_fit")}
+                label="매칭 평가"
+              />
+            </div>
+          </div>
+        </Section>
+      )}
+
+      {/* 추천 면접 질문 */}
+      {applicant.interview_questions && applicant.interview_questions.length > 0 && (
+        <Section number="05" title="추천 면접 질문">
+          <div className="grid grid-cols-12 gap-x-8 border-t border-[var(--line)]">
+            {applicant.interview_questions.map((q) => (
+              <article
+                key={q.id}
+                className="col-span-12 md:col-span-6 grid grid-cols-[auto_1fr] gap-5 py-7 border-b border-[var(--line)]"
+              >
+                <div className="serif text-[28px] leading-none text-[var(--ink-muted)] tabular-nums">
+                  {String(q.id).padStart(2, "0")}
+                </div>
+                <div>
+                  <p className="text-[16px] leading-[1.6] text-[var(--ink)]">
+                    {q.question}
+                  </p>
+                  {(q.intent || q.topic_tag) && (
+                    <div className="mt-3 text-[12.5px] text-[var(--ink-muted)] leading-[1.6]">
+                      {q.topic_tag && (
+                        <span className="inline-block mr-2 px-2 py-0.5 rounded-[2px] border border-[var(--line-strong)] text-[11px]">
+                          {q.topic_tag}
+                        </span>
+                      )}
+                      {q.intent && <span>{q.intent}</span>}
+                    </div>
+                  )}
+                  <div className="mt-4">
+                    <FeedbackButtons
+                      jobId={id}
+                      applicantId={decodedAppId}
+                      component="interview_question"
+                      itemKey={String(q.id)}
+                      initialRating={fbOf("interview_question", String(q.id))}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </Section>
+      )}
+    </div>
+  );
+}
+
+function Section({
+  number,
+  title,
+  children,
+}: {
+  number: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="mt-16">
+      <header className="flex items-baseline gap-5 mb-8 pb-4 border-b border-[var(--ink)]">
+        <span className="text-[13px] text-[var(--ink-muted)] tabular-nums">{number}</span>
+        <h2 className="serif text-[26px]">{title}</h2>
+      </header>
+      {children}
+    </section>
+  );
+}
+
+function SmallKpi({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+}) {
+  return (
+    <div>
+      <div className="text-[12px] text-[var(--ink-muted)] mb-1">{label}</div>
+      <div className="text-[15px] text-[var(--ink)] tabular-nums">
+        {value}
+        {sub && <span className="ml-2 text-[12px] text-[var(--ink-muted)]">· {sub}</span>}
+      </div>
+    </div>
+  );
+}
