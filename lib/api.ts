@@ -57,6 +57,71 @@ export interface ApplicantResult {
   metadata?: Record<string, unknown>;
 }
 
+// ─── 논문 첨부 분석 / 직군 적합도 v2 ────────────────────────────────────────
+
+export type PaperStatus =
+  | "uploaded"
+  | "extracted"
+  | "extract_partial"
+  | "extract_fail"
+  | "analyzed"
+  | "analysis_fail";
+
+export interface PaperFile {
+  file_id: number;
+  paper_id: number | null;
+  original_filename: string | null;
+  size_bytes: number | null;
+  status: PaperStatus;
+  error_message: string | null;
+  uploaded_at: string;
+  title?: string | null;
+  abstract_chars?: number;
+  analyzed_at?: string | null;
+  paper_problem?: string | null;
+  paper_strength?: string | null;
+}
+
+export interface PaperEvidenceCoord {
+  page: number;
+  bbox: [number, number, number, number];
+  text: string;
+}
+
+export interface PaperDetail extends PaperFile {
+  abstract?: string | null;
+  doi?: string | null;
+  journal?: string | null;
+  year?: string | null;
+  authors_text?: string | null;
+  paper_problem?: string | null;
+  paper_solution?: string | null;
+  paper_result?: string | null;
+  paper_evidence?: { problem?: string; solution?: string; result?: string } | null;
+  paper_tech_stack?: string[] | null;
+  paper_process?: string[] | null;
+  paper_strength?: string | null;
+  paper_weakness?: string | null;
+  paper_interview_qs?: string[] | null;
+  evidence_with_coords?: Record<string, PaperEvidenceCoord> | null;
+}
+
+export interface DeptFitItem {
+  dept_name: string;
+  score: number;
+  reason: string | null;
+}
+
+export interface DeptFitResponse {
+  applicant_id: string;
+  job_track: string;
+  skipped: boolean;
+  skipped_reason: string | null;
+  items: DeptFitItem[];
+  computed_at: string | null;
+  prompt_version: string | null;
+}
+
 export interface FeedbackEntry {
   job_id: string;
   applicant_id: string;
@@ -108,13 +173,23 @@ export const api = {
   },
   uploadExcel: async (
     file: File,
-    extra?: { request_id?: string; mode?: string; job_track?: string },
+    extra?: {
+      request_id?: string;
+      mode?: string;
+      job_track?: string;
+      info_file?: File;
+      sheet_name?: string;
+      info_sheet_name?: string;
+    },
   ) => {
     const fd = new FormData();
     fd.append("file", file);
+    if (extra?.info_file) fd.append("info_file", extra.info_file);
     if (extra?.request_id) fd.append("request_id", extra.request_id);
     if (extra?.mode) fd.append("mode", extra.mode);
     if (extra?.job_track) fd.append("job_track", extra.job_track);
+    if (extra?.sheet_name) fd.append("sheet_name", extra.sheet_name);
+    if (extra?.info_sheet_name) fd.append("info_sheet_name", extra.info_sheet_name);
     const res = await fetch(`${API_BASE}/analysis-jobs/from-excel`, {
       method: "POST",
       body: fd,
@@ -125,8 +200,63 @@ export const api = {
     }
     return res.json() as Promise<{ job_id: string; status: string; created_at: string }>;
   },
+  bulkUploadPapers: async (id: string, zipFile: File) => {
+    const fd = new FormData();
+    fd.append("file", zipFile);
+    const res = await fetch(`${API_BASE}/analysis-jobs/${id}/papers/bulk-upload`, {
+      method: "POST",
+      body: fd,
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`${res.status}: ${text}`);
+    }
+    return res.json() as Promise<{
+      total_pdf_entries: number;
+      queued: number;
+      duplicate_skipped: number;
+      unmatched_applicants: string[];
+      errors: string[];
+      queued_file_ids: number[];
+    }>;
+  },
   reportPdfUrl: (id: string) => `${API_BASE}/analysis-jobs/${id}/report.pdf`,
   resultCsvUrl: (id: string) => `${API_BASE}/analysis-jobs/${id}/result.csv`,
+
+  // 논문 첨부
+  listPapers: (id: string, applicantId: string) =>
+    http<PaperFile[]>(`/analysis-jobs/${id}/applicants/${applicantId}/papers`),
+  getPaperDetail: (id: string, applicantId: string, fileId: number) =>
+    http<PaperDetail>(`/analysis-jobs/${id}/applicants/${applicantId}/papers/${fileId}`),
+  uploadPaper: async (id: string, applicantId: string, file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch(
+      `${API_BASE}/analysis-jobs/${id}/applicants/${applicantId}/papers`,
+      { method: "POST", body: fd },
+    );
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`${res.status}: ${text}`);
+    }
+    return res.json() as Promise<PaperFile>;
+  },
+  deletePaper: (id: string, applicantId: string, fileId: number) =>
+    http<void>(
+      `/analysis-jobs/${id}/applicants/${applicantId}/papers/${fileId}`,
+      { method: "DELETE" },
+    ),
+  paperPdfUrl: (id: string, applicantId: string, fileId: number) =>
+    `${API_BASE}/analysis-jobs/${id}/applicants/${applicantId}/papers/${fileId}/pdf`,
+
+  // 직군 적합도 v2
+  getDeptFit: (id: string, applicantId: string) =>
+    http<DeptFitResponse>(`/analysis-jobs/${id}/applicants/${applicantId}/dept-fit`),
+  recomputeDeptFit: (id: string, applicantId: string) =>
+    http<{ enqueued: boolean; applicant_id: string }>(
+      `/analysis-jobs/${id}/applicants/${applicantId}/dept-fit/recompute`,
+      { method: "POST" },
+    ),
 };
 
 export function gradeFromScores(
@@ -137,10 +267,10 @@ export function gradeFromScores(
   if (vals.length === 0) return { grade: "C", avg: 0 };
   const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
   let grade: "S" | "A" | "B" | "C" | "D" = "C";
-  if (avg >= 9) grade = "S";
-  else if (avg >= 8) grade = "A";
-  else if (avg >= 7) grade = "B";
-  else if (avg >= 5) grade = "C";
+  if (avg >= 8.5) grade = "S";
+  else if (avg >= 8.0) grade = "A";
+  else if (avg >= 7.5) grade = "B";
+  else if (avg >= 7.0) grade = "C";
   else grade = "D";
   return { grade, avg };
 }

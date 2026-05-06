@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UploadCloud, FileSpreadsheet, ArrowLeft } from "lucide-react";
+import { UploadCloud, FileSpreadsheet, ArrowLeft, FileArchive } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 
@@ -16,28 +16,53 @@ const TRACKS = [
 export default function NewJobPage() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
+  const [infoFile, setInfoFile] = useState<File | null>(null);
+  const [pdfZip, setPdfZip] = useState<File | null>(null);
   const [label, setLabel] = useState("");
   const [track, setTrack] = useState("");
   const [mode, setMode] = useState<"full" | "score_only" | "questions_only">("full");
   const [busy, setBusy] = useState(false);
+  const [busyMsg, setBusyMsg] = useState<string>("업로드 중…");
   const [err, setErr] = useState<string | null>(null);
+  const [zipSummary, setZipSummary] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return;
     setBusy(true);
+    setBusyMsg("자소서 업로드 중…");
     setErr(null);
+    setZipSummary(null);
     try {
       const r = await api.uploadExcel(file, {
         request_id: label || undefined,
         mode,
         job_track: track || undefined,
+        info_file: infoFile ?? undefined,
       });
       await fetch("/api/jobs/record", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ job_id: r.job_id, label, created_at: r.created_at }),
       });
+
+      if (pdfZip) {
+        setBusyMsg("논문 PDF zip 업로드 중…");
+        try {
+          const bulk = await api.bulkUploadPapers(r.job_id, pdfZip);
+          setZipSummary(
+            `PDF ${bulk.queued}건 분석 큐잉 / 중복 ${bulk.duplicate_skipped} / 미매칭 ${bulk.unmatched_applicants.length}명`,
+          );
+        } catch (zerr) {
+          // zip 업로드 실패해도 job 자체는 진행 — 사용자가 상세 페이지에서 재시도 가능
+          setErr(
+            `자소서 분석은 시작됐으나 PDF zip 업로드 실패: ${
+              zerr instanceof Error ? zerr.message : String(zerr)
+            }`,
+          );
+        }
+      }
+
       router.push(`/jobs/${r.job_id}`);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "업로드 실패");
@@ -91,6 +116,76 @@ export default function NewJobPage() {
                   <div className="text-sm font-medium">파일을 끌어놓거나 클릭해서 선택하세요</div>
                   <div className="text-xs text-[var(--ink-muted)] mt-1">
                     .xlsx · 시트당 한 직군 권장
+                  </div>
+                </div>
+              </>
+            )}
+          </label>
+        </label>
+
+        <label className="block">
+          <span className="block text-[11px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
+            지원정보 xlsx (선택 — 학술지 게재 메타)
+          </span>
+          <label className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[var(--line)] bg-[var(--bg-2)]/30 hover:bg-[var(--bg-2)] transition cursor-pointer py-7 px-6">
+            <input
+              type="file"
+              accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              className="sr-only"
+              onChange={(e) => setInfoFile(e.target.files?.[0] ?? null)}
+            />
+            {infoFile ? (
+              <>
+                <FileSpreadsheet size={22} strokeWidth={1.4} className="text-[var(--gold-2)]" />
+                <div className="text-center">
+                  <div className="text-sm font-medium">{infoFile.name}</div>
+                  <div className="text-xs text-[var(--ink-muted)] mt-1">
+                    {(infoFile.size / 1024).toFixed(0)} KB · 클릭하여 변경
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <UploadCloud size={22} strokeWidth={1.4} className="text-[var(--ink-muted)]" />
+                <div className="text-center">
+                  <div className="text-sm font-medium">지원정보 xlsx 를 첨부 (논문 메타 join)</div>
+                  <div className="text-xs text-[var(--ink-muted)] mt-1">
+                    applicant_id 로 자소서와 매칭. 없으면 학술지 메타 없이 진행.
+                  </div>
+                </div>
+              </>
+            )}
+          </label>
+        </label>
+
+        <label className="block">
+          <span className="block text-[11px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
+            논문 PDF zip (선택)
+          </span>
+          <label className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[var(--line)] bg-[var(--bg-2)]/30 hover:bg-[var(--bg-2)] transition cursor-pointer py-7 px-6">
+            <input
+              type="file"
+              accept=".zip,application/zip,application/x-zip-compressed"
+              className="sr-only"
+              onChange={(e) => setPdfZip(e.target.files?.[0] ?? null)}
+            />
+            {pdfZip ? (
+              <>
+                <FileArchive size={22} strokeWidth={1.4} className="text-[var(--gold-2)]" />
+                <div className="text-center">
+                  <div className="text-sm font-medium">{pdfZip.name}</div>
+                  <div className="text-xs text-[var(--ink-muted)] mt-1">
+                    {(pdfZip.size / 1024 / 1024).toFixed(1)} MB · 클릭하여 변경
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <UploadCloud size={22} strokeWidth={1.4} className="text-[var(--ink-muted)]" />
+                <div className="text-center">
+                  <div className="text-sm font-medium">attachments/&#123;applicant_id&#125;/*.pdf 구조 zip</div>
+                  <div className="text-xs text-[var(--ink-muted)] mt-1">
+                    한 번에 일괄 업로드. 폴더명이 자소서 applicant_id 와 일치해야 매칭.
                   </div>
                 </div>
               </>
@@ -166,10 +261,15 @@ export default function NewJobPage() {
             {err}
           </div>
         )}
+        {zipSummary && (
+          <div className="text-sm text-[var(--ink-muted)] bg-[var(--bg-2)] border border-[var(--line)] rounded-lg px-3.5 py-2.5">
+            {zipSummary}
+          </div>
+        )}
 
         <div className="flex justify-end pt-2">
           <button type="submit" className="btn-primary" disabled={!file || busy}>
-            {busy ? "업로드 중…" : "분석 시작"}
+            {busy ? busyMsg : "분석 시작"}
           </button>
         </div>
       </form>
