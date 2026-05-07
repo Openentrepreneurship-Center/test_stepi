@@ -1,33 +1,13 @@
 import Link from "next/link";
-import { readJobIndex } from "@/lib/job-index";
 import JobStatusBadge from "@/components/job-status-badge";
+import JobRowDeleteButton from "@/components/job-row-delete-button";
 import { api } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-async function fetchJobs() {
-  const index = await readJobIndex();
-  const jobs = await Promise.all(
-    index.map(async (rec) => {
-      try {
-        const s = await api.getStatus(rec.job_id);
-        return { ...rec, ...s };
-      } catch {
-        return {
-          ...rec,
-          status: "failed" as const,
-          progress: { total: 0, done: 0, failed: 0 },
-          updated_at: rec.created_at,
-          error: "백엔드 응답 없음",
-        };
-      }
-    }),
-  );
-  return jobs.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
-}
-
 export default async function DashboardPage() {
-  const jobs = await fetchJobs();
+  const list = await api.listJobs({ limit: 200 }).catch(() => null);
+  const jobs = list?.items ?? [];
 
   return (
     <div className="px-8 lg:px-14 py-12 max-w-[1400px] mx-auto fade-up">
@@ -41,13 +21,27 @@ export default async function DashboardPage() {
 
       <section className="mt-12">
         <div className="flex items-end justify-between mb-6">
-          <h2 className="serif text-[22px]">분석 작업</h2>
+          <h2 className="serif text-[22px]">
+            분석 작업
+            {list && (
+              <span className="ml-3 text-[14px] font-normal text-[var(--ink-muted)] tabular-nums">
+                {list.total}건
+              </span>
+            )}
+          </h2>
           <Link href="/jobs/new" className="btn-primary">
             새 분석 시작
           </Link>
         </div>
 
-        {jobs.length === 0 ? (
+        {list === null ? (
+          <div className="border-t border-b border-[var(--line-strong)] py-20 text-center">
+            <p className="serif text-[20px] mb-2">백엔드에 연결할 수 없습니다.</p>
+            <p className="text-[13px] text-[var(--ink-muted)]">
+              잠시 후 다시 시도해주세요.
+            </p>
+          </div>
+        ) : jobs.length === 0 ? (
           <div className="border-t border-b border-[var(--line-strong)] py-20 text-center">
             <p className="serif text-[24px] mb-3">아직 분석 이력이 없습니다.</p>
             <p className="text-[14px] text-[var(--ink-muted)]">
@@ -59,47 +53,52 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <div className="border-t border-[var(--line-strong)]">
-            {jobs.map((j) => (
-              <Link
-                key={j.job_id}
-                href={`/jobs/${j.job_id}`}
-                className="grid grid-cols-12 items-center gap-6 px-1 py-5 border-b border-[var(--line)] hover:bg-[var(--paper)] transition group"
-              >
-                <div className="col-span-6">
-                  <div className="text-[16px] text-[var(--ink)] group-hover:underline underline-offset-4 decoration-[var(--secondary)]">
-                    {j.label || "이름 없는 배치"}
-                  </div>
-                  <div className="mt-1 font-mono text-[12px] text-[var(--ink-soft)]">
-                    {j.job_id}
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <JobStatusBadge status={j.status} />
-                </div>
-                <div className="col-span-2 text-right">
-                  <span className="text-[16px] text-[var(--ink)] tabular-nums">
-                    {j.progress?.done ?? 0}
-                    <span className="text-[var(--ink-muted)]"> / {j.progress?.total ?? 0}</span>
-                  </span>
-                  {(j.progress?.failed ?? 0) > 0 && (
-                    <div className="text-[12px] text-[var(--bad)] mt-0.5">
-                      실패 {j.progress?.failed}
+            {jobs.map((j) => {
+              const label = (j.request_id || "").replace(/^excel:/, "") || "이름 없는 배치";
+              return (
+                <Link
+                  key={j.job_id}
+                  href={`/jobs/${j.job_id}`}
+                  className="grid grid-cols-12 items-center gap-6 px-1 py-5 border-b border-[var(--line)] hover:bg-[var(--paper)] transition group"
+                >
+                  <div className="col-span-5">
+                    <div className="text-[16px] text-[var(--ink)] group-hover:underline underline-offset-4 decoration-[var(--secondary)] truncate">
+                      {label}
                     </div>
-                  )}
-                </div>
-                <div className="col-span-2 text-right text-[13px] text-[var(--ink-muted)] tabular-nums">
-                  {new Date(j.created_at).toLocaleDateString("ko-KR", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                  })}
-                </div>
-              </Link>
-            ))}
+                    <div className="mt-1 font-mono text-[12px] text-[var(--ink-soft)]">
+                      {j.job_id}
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    <JobStatusBadge status={j.status} />
+                  </div>
+                  <div className="col-span-2 text-right">
+                    <span className="text-[16px] text-[var(--ink)] tabular-nums">
+                      {j.progress.done}
+                      <span className="text-[var(--ink-muted)]"> / {j.progress.total}</span>
+                    </span>
+                    {j.progress.failed > 0 && (
+                      <div className="text-[12px] text-[var(--bad)] mt-0.5">
+                        실패 {j.progress.failed}
+                      </div>
+                    )}
+                  </div>
+                  <div className="col-span-2 text-right text-[13px] text-[var(--ink-muted)] tabular-nums">
+                    {new Date(j.created_at).toLocaleDateString("ko-KR", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                    })}
+                  </div>
+                  <div className="col-span-1 flex justify-end">
+                    <JobRowDeleteButton jobId={j.job_id} label={label} />
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>
     </div>
   );
 }
-

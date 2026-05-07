@@ -198,12 +198,14 @@ function PaperCard({
             </span>
           </div>
           <h3 className="serif text-[18px] leading-[1.35] truncate">
-            {detail?.title || file.title || "(제목 추출 중)"}
+            {file.claimed_title || detail?.title || file.title || "(제목 추출 중)"}
           </h3>
-          {detail && (detail.journal || detail.year) && (
+          {(file.claimed_journal || file.claimed_year || detail?.journal || detail?.year) && (
             <p className="mt-1 text-[12px] text-[var(--ink-muted)]">
-              {[detail.journal, detail.year].filter(Boolean).join(" · ")}
-              {detail.doi && (
+              {[file.claimed_journal || detail?.journal, file.claimed_year || detail?.year]
+                .filter(Boolean)
+                .join(" · ")}
+              {detail?.doi && (
                 <>
                   {" · "}
                   <a

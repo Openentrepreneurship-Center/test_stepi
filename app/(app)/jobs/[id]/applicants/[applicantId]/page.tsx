@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { api, gradeFromScores, feedbackKey } from "@/lib/api";
+import { api, feedbackKey } from "@/lib/api";
 import RadarCard from "@/components/radar-card";
 import FeedbackButtons from "@/components/feedback-buttons";
+import RegenerateSummaryButton from "@/components/regenerate-summary-button";
 import PapersSection from "@/components/papers-section";
 import DeptFitV2Section from "@/components/dept-fit-v2-section";
+import DetailTabs from "@/components/detail-tabs";
 
 export const dynamic = "force-dynamic";
 
@@ -48,16 +50,25 @@ export default async function ApplicantDetailPage({
     return fbMap.has(k) ? (fbMap.get(k) as boolean) : null;
   };
 
-  const { avg } = gradeFromScores(applicant.scores?.job_fit);
+  const fitVals = Object.values(applicant.scores?.job_fit ?? {});
+  // LLM 채점은 1-10 scale 로 들어오지만 UI 는 /100 로 표시 (직군적합도 v2 와 통일).
+  const fitAvg100 =
+    fitVals.length > 0
+      ? (fitVals.reduce((s, v) => s + v.score, 0) / fitVals.length) * 10
+      : 0;
   const coreData = Object.entries(applicant.scores?.core_similarity ?? {}).map(([axis, value]) => ({
     axis,
     value: Number(value),
   }));
   const fitData = Object.entries(applicant.scores?.job_fit ?? {}).map(([axis, v]) => ({
     axis,
-    value: v.score,
+    value: v.score * 10,
   }));
-  const topDept = applicant.scores?.department_fit?.[0];
+  // v2 dept-fit (행정직 skip / PDF 미첨부 시 빈 응답)
+  const deptFit = await api
+    .getDeptFit(id, decodedAppId)
+    .catch(() => null);
+  const topDeptV2 = deptFit?.items?.[0];
 
   // 연구실적 요약 (등급 칸 대체)
   const analyzedPapers = papers.filter((p) => p.status === "analyzed");
@@ -66,29 +77,6 @@ export default async function ApplicantDetailPage({
   );
   const topStrength = analyzedPapers.find((p) => p.paper_strength)?.paper_strength ?? null;
 
-  // 논문 기반 면접질문 — analyzed paper 별 detail 에서 paper_interview_qs 수집.
-  const paperDetails = await Promise.all(
-    analyzedPapers.map((p) =>
-      api.getPaperDetail(id, decodedAppId, p.file_id).catch(() => null),
-    ),
-  );
-  const paperQuestions: Array<{
-    key: string;
-    question: string;
-    paperTitle: string | null;
-  }> = [];
-  for (const detail of paperDetails) {
-    if (!detail?.paper_interview_qs) continue;
-    const title = detail.title ?? detail.original_filename ?? null;
-    detail.paper_interview_qs.forEach((q, i) => {
-      if (typeof q !== "string" || !q.trim()) return;
-      paperQuestions.push({
-        key: `paper:${detail.file_id}:${i}`,
-        question: q.trim(),
-        paperTitle: title,
-      });
-    });
-  }
 
   return (
     <div className="px-8 lg:px-14 py-12 max-w-[1280px] mx-auto fade-up">
@@ -147,16 +135,33 @@ export default async function ApplicantDetailPage({
             )}
           </div>
           <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-            <SmallKpi label="직무적합 평균" value={`${avg.toFixed(1)} / 10`} />
-            {topDept && (
-              <SmallKpi label="상위 직군" value={topDept.department} sub={topDept.score.toFixed(1)} />
+            <SmallKpi label="직무적합 평균" value={`${fitAvg100.toFixed(0)} / 100`} />
+            {topDeptV2 ? (
+              <SmallKpi
+                label="상위 부서"
+                value={topDeptV2.dept_name}
+                sub={topDeptV2.score.toFixed(0)}
+              />
+            ) : (
+              <SmallKpi
+                label="상위 부서"
+                value="—"
+                sub={
+                  deptFit?.skipped
+                    ? "행정직 미산출"
+                    : "논문 미첨부"
+                }
+              />
             )}
           </div>
         </div>
       </header>
 
-      {/* 종합 요약 */}
-      <Section number="01" title="종합 요약">
+      <DetailTabs
+        essayContent={
+          <>
+            {/* 종합 요약 */}
+            <Section number="01" title="종합 요약">
         <div className="grid grid-cols-12 gap-10">
           <div className="col-span-12 lg:col-span-9">
             {applicant.summary?.overall && (
@@ -177,7 +182,8 @@ export default async function ApplicantDetailPage({
               </ul>
             )}
           </div>
-          <div className="col-span-12 lg:col-span-3 flex justify-end items-start">
+          <div className="col-span-12 lg:col-span-3 flex flex-col justify-start items-end gap-3">
+            <RegenerateSummaryButton jobId={id} applicantId={decodedAppId} />
             <FeedbackButtons
               jobId={id}
               applicantId={decodedAppId}
@@ -273,7 +279,7 @@ export default async function ApplicantDetailPage({
                 <div>
                   <div className="text-[15px] font-medium">직무 적합도</div>
                   <p className="mt-1 text-[12.5px] text-[var(--ink-muted)] max-w-[36ch] leading-[1.6]">
-                    직무정의(JD) 기준 5축 평가 — LLM이 1–10점으로 채점.
+                    직무정의(JD) 기준 5축 평가 — LLM이 0-100 점수로 채점.
                   </p>
                 </div>
                 <FeedbackButtons
@@ -284,7 +290,7 @@ export default async function ApplicantDetailPage({
                   size="sm"
                 />
               </div>
-              <RadarCard data={fitData} color="#F39200" />
+              <RadarCard data={fitData} color="#F39200" max={100} />
             </div>
           )}
         </div>
@@ -298,7 +304,7 @@ export default async function ApplicantDetailPage({
               >
                 <div className="col-span-12 lg:col-span-2 serif text-[17px]">{axis}</div>
                 <div className="col-span-3 lg:col-span-1 serif text-[20px] text-[var(--secondary-2)] tabular-nums">
-                  {v.score.toFixed(1)}
+                  {(v.score * 10).toFixed(0)}
                 </div>
                 <p className="col-span-9 lg:col-span-8 text-[14px] leading-[1.75] text-[var(--ink-muted)]">
                   {v.reason}
@@ -337,19 +343,13 @@ export default async function ApplicantDetailPage({
         </div>
       </Section>
 
-      {/* 첨부 논문 분석 */}
-      <Section number="05" title="첨부 논문 분석">
-        <PapersSection jobId={id} applicantId={decodedAppId} />
-      </Section>
-
-      {/* 추천 면접 질문 — 자소서 RAG + 논문 기반 통합 */}
-      {((applicant.interview_questions && applicant.interview_questions.length > 0) ||
-        paperQuestions.length > 0) && (
+      {/* 추천 면접 질문 — 자소서 RAG (논문 기반 질문은 연구실적 탭의 각 논문 카드에서 별도 노출) */}
+      {applicant.interview_questions && applicant.interview_questions.length > 0 && (
         <Section number="06" title="추천 면접 질문">
           <div className="grid grid-cols-12 gap-x-8 border-t border-[var(--line)]">
-            {applicant.interview_questions?.map((q, idx) => (
+            {applicant.interview_questions.map((q, idx) => (
               <article
-                key={`essay:${q.id}`}
+                key={q.id}
                 className="col-span-12 md:col-span-6 grid grid-cols-[auto_1fr] gap-5 py-7 border-b border-[var(--line)]"
               >
                 <div className="serif text-[28px] leading-none text-[var(--ink-muted)] tabular-nums">
@@ -359,17 +359,16 @@ export default async function ApplicantDetailPage({
                   <p className="text-[16px] leading-[1.6] text-[var(--ink)]">
                     {q.question}
                   </p>
-                  <div className="mt-3 text-[12.5px] text-[var(--ink-muted)] leading-[1.6] flex flex-wrap items-center gap-2">
-                    <span className="inline-block px-2 py-0.5 rounded-[2px] border border-[var(--line-strong)] text-[11px]">
-                      자소서
-                    </span>
-                    {q.topic_tag && (
-                      <span className="inline-block px-2 py-0.5 rounded-[2px] border border-[var(--line-strong)] text-[11px]">
-                        {q.topic_tag}
-                      </span>
-                    )}
-                    {q.intent && <span>{q.intent}</span>}
-                  </div>
+                  {(q.intent || q.topic_tag) && (
+                    <div className="mt-3 text-[12.5px] text-[var(--ink-muted)] leading-[1.6] flex flex-wrap items-center gap-2">
+                      {q.topic_tag && (
+                        <span className="inline-block px-2 py-0.5 rounded-[2px] border border-[var(--line-strong)] text-[11px]">
+                          {q.topic_tag}
+                        </span>
+                      )}
+                      {q.intent && <span>{q.intent}</span>}
+                    </div>
+                  )}
                   <div className="mt-4">
                     <FeedbackButtons
                       jobId={id}
@@ -383,48 +382,17 @@ export default async function ApplicantDetailPage({
                 </div>
               </article>
             ))}
-            {paperQuestions.map((pq, idx) => {
-              const seq =
-                (applicant.interview_questions?.length ?? 0) + idx + 1;
-              return (
-                <article
-                  key={pq.key}
-                  className="col-span-12 md:col-span-6 grid grid-cols-[auto_1fr] gap-5 py-7 border-b border-[var(--line)]"
-                >
-                  <div className="serif text-[28px] leading-none text-[var(--ink-muted)] tabular-nums">
-                    {String(seq).padStart(2, "0")}
-                  </div>
-                  <div>
-                    <p className="text-[16px] leading-[1.6] text-[var(--ink)]">
-                      {pq.question}
-                    </p>
-                    <div className="mt-3 text-[12.5px] text-[var(--ink-muted)] leading-[1.6] flex flex-wrap items-center gap-2">
-                      <span className="inline-block px-2 py-0.5 rounded-[2px] border border-[var(--gold)]/60 bg-[var(--gold)]/8 text-[11px]">
-                        논문
-                      </span>
-                      {pq.paperTitle && (
-                        <span className="truncate max-w-[28ch]" title={pq.paperTitle}>
-                          {pq.paperTitle}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-4">
-                      <FeedbackButtons
-                        jobId={id}
-                        applicantId={decodedAppId}
-                        component="interview_question"
-                        itemKey={pq.key}
-                        initialRating={fbOf("interview_question", pq.key)}
-                        size="sm"
-                      />
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
           </div>
         </Section>
       )}
+          </>
+        }
+        paperContent={
+          <Section number="05" title="첨부 논문 분석">
+            <PapersSection jobId={id} applicantId={decodedAppId} />
+          </Section>
+        }
+      />
     </div>
   );
 }

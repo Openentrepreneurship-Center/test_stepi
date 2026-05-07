@@ -1,6 +1,25 @@
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
-export type JobStatus = "pending" | "running" | "done" | "failed";
+export interface JobSummary {
+  job_id: string;
+  request_id: string | null;
+  mode: string;
+  status: JobStatus;
+  progress: JobProgress;
+  created_at: string;
+  updated_at: string;
+  error?: string | null;
+  deleted_at?: string | null;
+}
+
+export interface JobListResponse {
+  items: JobSummary[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export type JobStatus = "pending" | "running" | "done" | "failed" | "cancelled";
 
 export interface JobProgress {
   total: number;
@@ -76,6 +95,10 @@ export interface PaperFile {
   error_message: string | null;
   uploaded_at: string;
   title?: string | null;
+  claimed_title?: string | null;
+  claimed_journal?: string | null;
+  claimed_year?: string | null;
+  match_status?: string | null;
   abstract_chars?: number;
   analyzed_at?: string | null;
   paper_problem?: string | null;
@@ -147,8 +170,36 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  listJobs: (params?: { limit?: number; offset?: number; status?: string; trashed?: boolean }) => {
+    const qs = new URLSearchParams();
+    if (params?.limit != null) qs.set("limit", String(params.limit));
+    if (params?.offset != null) qs.set("offset", String(params.offset));
+    if (params?.status) qs.set("status", params.status);
+    if (params?.trashed) qs.set("trashed", "true");
+    const suffix = qs.toString() ? `?${qs}` : "";
+    return http<JobListResponse>(`/analysis-jobs${suffix}`);
+  },
+  softDeleteJob: (id: string) =>
+    http<void>(`/analysis-jobs/${id}`, { method: "DELETE" }),
+  restoreJob: (id: string) =>
+    http<{ job_id: string; status: string; created_at: string }>(
+      `/analysis-jobs/${id}/restore`,
+      { method: "POST" },
+    ),
+  hardDeleteJob: (id: string) =>
+    http<void>(`/analysis-jobs/${id}/permanent`, { method: "DELETE" }),
   getStatus: (id: string) => http<JobStatusResponse>(`/analysis-jobs/${id}`),
   getResult: (id: string) => http<JobResultResponse>(`/analysis-jobs/${id}/result`),
+  cancelJob: (id: string) =>
+    http<{ job_id: string; status: string; created_at: string }>(
+      `/analysis-jobs/${id}/cancel`,
+      { method: "POST" },
+    ),
+  resumeJob: (id: string) =>
+    http<{ job_id: string; status: string; created_at: string }>(
+      `/analysis-jobs/${id}/resume`,
+      { method: "POST" },
+    ),
   listFeedback: (id: string, applicantId: string) =>
     http<{ items: FeedbackEntry[] }>(`/analysis-jobs/${id}/applicants/${applicantId}/feedback`),
   upsertFeedback: (
@@ -180,6 +231,7 @@ export const api = {
       info_file?: File;
       sheet_name?: string;
       info_sheet_name?: string;
+      limit?: number;
     },
   ) => {
     const fd = new FormData();
@@ -190,6 +242,7 @@ export const api = {
     if (extra?.job_track) fd.append("job_track", extra.job_track);
     if (extra?.sheet_name) fd.append("sheet_name", extra.sheet_name);
     if (extra?.info_sheet_name) fd.append("info_sheet_name", extra.info_sheet_name);
+    if (extra?.limit !== undefined) fd.append("limit", String(extra.limit));
     const res = await fetch(`${API_BASE}/analysis-jobs/from-excel`, {
       method: "POST",
       body: fd,

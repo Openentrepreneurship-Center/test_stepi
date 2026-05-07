@@ -13,16 +13,17 @@ import {
 interface Props {
   data: Array<{ axis: string; value: number }>;
   color?: string;
+  max?: number;
 }
 
-export default function RadarCard({ data, color = "#33307A" }: Props) {
+export default function RadarCard({ data, color = "#33307A", max = 10 }: Props) {
   return (
     <div className="h-[280px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data} outerRadius="72%">
           <PolarGrid stroke="var(--line)" />
           <PolarAngleAxis dataKey="axis" tick={{ fill: "var(--ink-muted)", fontSize: 12 }} />
-          <PolarRadiusAxis domain={[0, 10]} tick={false} axisLine={false} />
+          <PolarRadiusAxis domain={[0, max]} tick={false} axisLine={false} />
           <Radar
             dataKey="value"
             stroke={color}

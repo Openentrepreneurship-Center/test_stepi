@@ -39,13 +39,8 @@ export default function NewJobPage() {
         mode,
         job_track: track || undefined,
         info_file: infoFile ?? undefined,
+        limit: 5, // TEMP: 테스트용 상위 5명만 분석 — 운영 전 제거
       });
-      await fetch("/api/jobs/record", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ job_id: r.job_id, label, created_at: r.created_at }),
-      });
-
       if (pdfZip) {
         setBusyMsg("논문 PDF zip 업로드 중…");
         try {

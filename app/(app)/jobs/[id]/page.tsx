@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, Download, FileText } from "lucide-react";
-import { api, gradeFromScores } from "@/lib/api";
+import { api } from "@/lib/api";
 import JobStatusBadge from "@/components/job-status-badge";
 import JobAutoRefresh from "./auto-refresh";
 import AnalyzingIndicator from "@/components/analyzing-indicator";
+import JobControlButtons from "@/components/job-control-buttons";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,30 @@ export default async function JobDetailPage({
 }) {
   const { id } = await params;
   const status = await api.getStatus(id).catch(() => null);
-  const result = status?.status === "done" ? await api.getResult(id).catch(() => null) : null;
+  // 진행 중(running/pending)이어도 그때까지 끝난 지원자 부분 결과를 같이 가져온다
+  const result =
+    status && (status.progress.done > 0 || status.status === "done" || status.status === "failed")
+      ? await api.getResult(id).catch(() => null)
+      : null;
+
+  // v2 dept-fit + 논문 분석 상태를 지원자별로 병렬 fetch
+  const perApplicant = await Promise.all(
+    (result?.results ?? []).map(async (a) => {
+      const [papers, deptFit] = await Promise.all([
+        api.listPapers(id, a.applicant_id).catch(() => []),
+        api.getDeptFit(id, a.applicant_id).catch(() => null),
+      ]);
+      const analyzed = papers.filter((p) => p.status === "analyzed").length;
+      return {
+        applicantId: a.applicant_id,
+        analyzed,
+        totalPapers: papers.length,
+        topDept: deptFit?.items?.[0] ?? null,
+        deptSkipped: deptFit?.skipped ?? false,
+      };
+    }),
+  );
+  const perApplicantById = new Map(perApplicant.map((p) => [p.applicantId, p]));
 
   if (!status) {
     return (
@@ -65,6 +89,9 @@ export default async function JobDetailPage({
             }
             sub={status.progress.failed > 0 ? `실패 ${status.progress.failed}` : undefined}
           />
+          <div className="pt-1">
+            <JobControlButtons jobId={id} status={status.status} />
+          </div>
           <Stat
             label="개시"
             valueNode={
@@ -118,6 +145,11 @@ export default async function JobDetailPage({
               지원자 명부
               <span className="ml-3 text-[14px] font-normal text-[var(--ink-muted)]">
                 {result.results.length}명
+                {isRunning && status.progress.total > result.results.length && (
+                  <span className="ml-2 text-[var(--secondary-2)]">
+                    · 분석 중 (전체 {status.progress.total}명, 잠시 후 자동 갱신)
+                  </span>
+                )}
               </span>
             </h2>
             <div className="flex items-center gap-3">
@@ -135,13 +167,17 @@ export default async function JobDetailPage({
               <div className="col-span-1">No.</div>
               <div className="col-span-3">지원자</div>
               <div className="col-span-2">직군</div>
-              <div className="col-span-1 text-center">등급</div>
-              <div className="col-span-2 text-right">직무적합도</div>
-              <div className="col-span-3">상위 직군 매칭</div>
+              <div className="col-span-2 text-right">직무적합 평균</div>
+              <div className="col-span-1 text-center">논문</div>
+              <div className="col-span-3">상위 부서 (v2)</div>
             </div>
             {result.results.map((a, i) => {
-              const { grade, avg } = gradeFromScores(a.scores?.job_fit);
-              const topDept = a.scores?.department_fit?.[0];
+              const fitVals = Object.values(a.scores?.job_fit ?? {});
+              const fitAvg100 =
+                fitVals.length > 0
+                  ? (fitVals.reduce((s, v) => s + v.score, 0) / fitVals.length) * 10
+                  : 0;
+              const meta = perApplicantById.get(a.applicant_id);
               return (
                 <Link
                   key={a.applicant_id}
@@ -164,25 +200,33 @@ export default async function JobDetailPage({
                   <div className="col-span-2 text-[14px] text-[var(--ink-muted)]">
                     {a.job_track}
                   </div>
-                  <div className="col-span-1 flex justify-center">
-                    <GradeMark grade={grade} />
-                  </div>
                   <div className="col-span-2 text-right">
                     <span className="serif text-[20px] text-[var(--ink)] tabular-nums">
-                      {avg.toFixed(1)}
+                      {fitAvg100.toFixed(0)}
                     </span>
-                    <span className="text-[12px] text-[var(--ink-muted)] ml-1">/ 10</span>
+                    <span className="text-[12px] text-[var(--ink-muted)] ml-1">/ 100</span>
+                  </div>
+                  <div className="col-span-1 text-center text-[13px] tabular-nums">
+                    {meta && meta.totalPapers > 0 ? (
+                      <span className="text-[var(--ink)]">
+                        {meta.analyzed}/{meta.totalPapers}
+                      </span>
+                    ) : (
+                      <span className="text-[var(--ink-soft)]">—</span>
+                    )}
                   </div>
                   <div className="col-span-3 flex items-center justify-between gap-2">
-                    {topDept ? (
+                    {meta?.topDept ? (
                       <>
-                        <span className="text-[14px] truncate">{topDept.department}</span>
+                        <span className="text-[14px] truncate">{meta.topDept.dept_name}</span>
                         <span className="text-[13px] tabular-nums text-[var(--ink-muted)]">
-                          {topDept.score.toFixed(1)}
+                          {meta.topDept.score.toFixed(0)}
                         </span>
                       </>
                     ) : (
-                      <span className="text-[13px] text-[var(--ink-soft)]">—</span>
+                      <span className="text-[13px] text-[var(--ink-soft)]">
+                        {meta?.deptSkipped ? "행정직" : "—"}
+                      </span>
                     )}
                     <ArrowUpRight
                       size={14}
@@ -220,15 +264,4 @@ function Stat({
   );
 }
 
-function GradeMark({ grade }: { grade: "S" | "A" | "B" | "C" | "D" }) {
-  const isTop = grade === "S";
-  return (
-    <span
-      className={`serif text-[24px] leading-none tabular-nums ${
-        isTop ? "text-[var(--secondary-2)]" : "text-[var(--ink)]"
-      }`}
-    >
-      {grade}
-    </span>
-  );
-}
+

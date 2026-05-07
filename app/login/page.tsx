@@ -84,6 +84,7 @@ function LoginInner() {
                 placeholder="비밀번호 입력"
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
+                onInput={(e) => setPw((e.target as HTMLInputElement).value)}
                 autoFocus
                 required
                 autoComplete="current-password"
@@ -99,7 +100,7 @@ function LoginInner() {
             <button
               type="submit"
               className="btn-primary w-full"
-              disabled={loading || pw.length === 0}
+              disabled={loading}
             >
               {loading ? "확인 중…" : "들어가기"}
             </button>

@@ -5,6 +5,7 @@ const LABEL: Record<JobStatus, string> = {
   running: "분석 중",
   done: "완료",
   failed: "실패",
+  cancelled: "중단",
 };
 
 const TONE: Record<JobStatus, string> = {
@@ -12,6 +13,7 @@ const TONE: Record<JobStatus, string> = {
   running: "border-[var(--gold)] text-[var(--gold-2)] bg-[var(--gold)]/8",
   done: "border-[var(--good)] text-[var(--good)] bg-[var(--good)]/8",
   failed: "border-[var(--bad)] text-[var(--bad)] bg-[var(--bad)]/8",
+  cancelled: "border-[var(--line-strong)] text-[var(--ink-muted)] bg-[var(--bg-2)]",
 };
 
 export default function JobStatusBadge({ status }: { status: JobStatus }) {
