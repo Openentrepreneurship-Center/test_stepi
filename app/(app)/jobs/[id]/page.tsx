@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, Download, FileText } from "lucide-react";
 import { api } from "@/lib/api";
+import ApplicantDeleteButton from "@/components/applicant-delete-button";
 import JobStatusBadge from "@/components/job-status-badge";
 import JobAutoRefresh from "./auto-refresh";
 import AnalyzingIndicator from "@/components/analyzing-indicator";
@@ -168,8 +169,9 @@ export default async function JobDetailPage({
               <div className="col-span-3">지원자</div>
               <div className="col-span-2">직군</div>
               <div className="col-span-2 text-right">직무적합 평균</div>
-              <div className="col-span-1 text-center">논문</div>
-              <div className="col-span-3">상위 부서 (v2)</div>
+              <div className="col-span-1 text-center">게재</div>
+              <div className="col-span-2">상위 부서 (v2)</div>
+              <div className="col-span-1"></div>
             </div>
             {result.results.map((a, i) => {
               const fitVals = Object.values(a.scores?.job_fit ?? {});
@@ -215,7 +217,7 @@ export default async function JobDetailPage({
                       <span className="text-[var(--ink-soft)]">—</span>
                     )}
                   </div>
-                  <div className="col-span-3 flex items-center justify-between gap-2">
+                  <div className="col-span-2 flex items-center justify-between gap-2">
                     {meta?.topDept ? (
                       <>
                         <span className="text-[14px] truncate">{meta.topDept.dept_name}</span>
@@ -228,6 +230,9 @@ export default async function JobDetailPage({
                         {meta?.deptSkipped ? "행정직" : "—"}
                       </span>
                     )}
+                  </div>
+                  <div className="col-span-1 flex items-center justify-end gap-1">
+                    <ApplicantDeleteButton jobId={id} applicantId={a.applicant_id} />
                     <ArrowUpRight
                       size={14}
                       strokeWidth={1.6}

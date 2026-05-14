@@ -19,7 +19,7 @@ export default function DetailTabs({ essayContent, paperContent }: Props) {
           자기소개서 분석
         </TabButton>
         <TabButton active={tab === "paper"} onClick={() => setTab("paper")}>
-          연구실적 분석
+          학술지 게재
         </TabButton>
       </div>
       <div className={tab === "essay" ? "block" : "hidden"}>{essayContent}</div>

@@ -39,7 +39,6 @@ export default function NewJobPage() {
         mode,
         job_track: track || undefined,
         info_file: infoFile ?? undefined,
-        limit: 5, // TEMP: 테스트용 상위 5명만 분석 — 운영 전 제거
       });
       if (pdfZip) {
         setBusyMsg("논문 PDF zip 업로드 중…");

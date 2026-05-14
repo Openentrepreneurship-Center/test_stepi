@@ -84,10 +84,11 @@ export type PaperStatus =
   | "extract_partial"
   | "extract_fail"
   | "analyzed"
-  | "analysis_fail";
+  | "analysis_fail"
+  | "meta_only";  // PDF 미첨부, xlsx 학술지 게재 메타만
 
 export interface PaperFile {
-  file_id: number;
+  file_id: number | null;  // PDF 미첨부 (meta_only) 시 null
   paper_id: number | null;
   original_filename: string | null;
   size_bytes: number | null;
@@ -253,6 +254,11 @@ export const api = {
     }
     return res.json() as Promise<{ job_id: string; status: string; created_at: string }>;
   },
+  deleteApplicant: (id: string, applicantId: string) =>
+    http<void>(
+      `/analysis-jobs/${id}/applicants/${encodeURIComponent(applicantId)}`,
+      { method: "DELETE" },
+    ),
   bulkUploadPapers: async (id: string, zipFile: File) => {
     const fd = new FormData();
     fd.append("file", zipFile);

@@ -70,11 +70,19 @@ export default async function ApplicantDetailPage({
     .catch(() => null);
   const topDeptV2 = deptFit?.items?.[0];
 
-  // 연구실적 요약 (등급 칸 대체)
+  // 학술지 게재 요약 (등급 칸 대체) — meta_only(PDF 없음) 도 게재 건수에 포함
   const analyzedPapers = papers.filter((p) => p.status === "analyzed");
   const pendingPapers = papers.filter((p) =>
     ["uploaded", "extracted", "extract_partial"].includes(p.status),
   );
+  // 학술지명 chip: claimed_journal (xlsx 자기보고) 위주 — 카드 헤더에 top 3
+  const journalChips = Array.from(
+    new Set(
+      papers
+        .map((p) => (p.claimed_journal ?? "").trim())
+        .filter((s): s is string => s.length > 0),
+    ),
+  ).slice(0, 3);
   const topStrength = analyzedPapers.find((p) => p.paper_strength)?.paper_strength ?? null;
 
 
@@ -100,7 +108,7 @@ export default async function ApplicantDetailPage({
         <div className="col-span-12 lg:col-span-4 flex flex-col justify-end gap-4">
           <div className="border-b border-[var(--line)] pb-3">
             <div className="flex items-baseline justify-between mb-2">
-              <div className="text-[13px] text-[var(--ink-muted)]">연구실적</div>
+              <div className="text-[13px] text-[var(--ink-muted)]">학술지 게재</div>
               <FeedbackButtons
                 jobId={id}
                 applicantId={decodedAppId}
@@ -110,24 +118,34 @@ export default async function ApplicantDetailPage({
               />
             </div>
             {papers.length === 0 ? (
-              <p className="text-[14px] text-[var(--ink-muted)] italic">첨부된 논문 없음</p>
+              <p className="text-[14px] text-[var(--ink-muted)] italic">게재 이력 없음</p>
             ) : (
               <>
                 <div className="flex items-baseline gap-3 mb-2">
                   <span className="serif text-[44px] leading-none tabular-nums text-[var(--ink)]">
-                    {analyzedPapers.length}
+                    {papers.length}
                   </span>
-                  <span className="text-[13px] text-[var(--ink-muted)]">
-                    건 분석 완료
-                    {pendingPapers.length > 0 && (
-                      <span className="ml-1.5 text-[12px] text-[var(--ink-soft)]">
-                        · 처리 중 {pendingPapers.length}
+                  <span className="text-[13px] text-[var(--ink-muted)]">건</span>
+                </div>
+                {journalChips.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {journalChips.map((j) => (
+                      <span
+                        key={j}
+                        className="text-[11px] text-[var(--ink-muted)] bg-[var(--paper)] border border-[var(--line)] rounded-full px-2 py-0.5 truncate max-w-[180px]"
+                        title={j}
+                      >
+                        {j}
                       </span>
-                    )}
-                  </span>
+                    ))}
+                  </div>
+                )}
+                <div className="text-[12px] text-[var(--ink-soft)]">
+                  PDF 분석 {analyzedPapers.length}/{papers.length}
+                  {pendingPapers.length > 0 && ` · 처리 중 ${pendingPapers.length}`}
                 </div>
                 {topStrength && (
-                  <p className="text-[13px] leading-[1.55] text-[var(--ink-muted)] line-clamp-3">
+                  <p className="mt-2 text-[13px] leading-[1.55] text-[var(--ink-muted)] line-clamp-2">
                     “{topStrength}”
                   </p>
                 )}
@@ -388,7 +406,7 @@ export default async function ApplicantDetailPage({
           </>
         }
         paperContent={
-          <Section number="05" title="첨부 논문 분석">
+          <Section number="05" title="학술지 게재 이력">
             <PapersSection jobId={id} applicantId={decodedAppId} />
           </Section>
         }

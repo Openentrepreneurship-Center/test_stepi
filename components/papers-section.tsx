@@ -16,6 +16,7 @@ const STATUS_LABEL: Record<PaperStatus, string> = {
   extract_fail: "추출 실패",
   analyzed: "분석 완료",
   analysis_fail: "분석 실패",
+  meta_only: "PDF 미첨부",
 };
 
 const STATUS_TONE: Record<PaperStatus, string> = {
@@ -25,6 +26,7 @@ const STATUS_TONE: Record<PaperStatus, string> = {
   extract_fail: "text-red-600",
   analyzed: "text-[var(--secondary-2)]",
   analysis_fail: "text-red-600",
+  meta_only: "text-[var(--ink-soft)]",
 };
 
 const PENDING: PaperStatus[] = ["uploaded", "extracted", "extract_partial"];
@@ -46,9 +48,10 @@ export default function PapersSection({
     try {
       const list = await api.listPapers(jobId, applicantId);
       setFiles(list);
-      // 분석 완료된 파일은 detail 미리 가져오기 (카드 렌더용)
+      // 분석 완료된 파일은 detail 미리 가져오기 (카드 렌더용). meta_only 는 file_id null → 제외.
       const needDetail = list.filter(
-        (f) => f.status === "analyzed" && !details[f.file_id],
+        (f): f is PaperFile & { file_id: number } =>
+          f.file_id != null && f.status === "analyzed" && !details[f.file_id],
       );
       if (needDetail.length > 0) {
         const fetched = await Promise.all(
@@ -150,18 +153,18 @@ export default function PapersSection({
 
       {files.length === 0 ? (
         <p className="text-[13px] text-[var(--ink-muted)]">
-          첨부된 논문 없음. PDF 를 업로드하면 자동으로 분석됩니다.
+          학술지 게재 이력 없음. xlsx 지원정보 또는 PDF 업로드로 등록됩니다.
         </p>
       ) : (
         <div className="space-y-10">
           {files.map((f) => (
             <PaperCard
-              key={f.file_id}
+              key={f.file_id ?? `meta-${f.paper_id}`}
               file={f}
-              detail={details[f.file_id] ?? null}
+              detail={f.file_id != null ? (details[f.file_id] ?? null) : null}
               jobId={jobId}
               applicantId={applicantId}
-              onDelete={() => onDelete(f.file_id)}
+              onDelete={() => f.file_id != null && onDelete(f.file_id)}
             />
           ))}
         </div>
@@ -184,7 +187,8 @@ function PaperCard({
   onDelete: () => void;
 }) {
   const isAnalyzed = file.status === "analyzed" && detail;
-  const pdfUrl = api.paperPdfUrl(jobId, applicantId, file.file_id);
+  const isMetaOnly = file.file_id == null;
+  const pdfUrl = !isMetaOnly ? api.paperPdfUrl(jobId, applicantId, file.file_id!) : null;
 
   return (
     <article className="border border-[var(--line)] rounded-sm overflow-hidden">
@@ -228,26 +232,34 @@ function PaperCard({
             )}
             {STATUS_LABEL[file.status]}
           </span>
-          <a
-            href={pdfUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-[12px] text-[var(--ink-muted)] hover:text-[var(--ink)] inline-flex items-center gap-1"
-            title="원문 PDF 보기"
-          >
-            원문 <ExternalLink size={11} />
-          </a>
-          <button
-            onClick={onDelete}
-            className="text-[var(--ink-muted)] hover:text-red-600 transition"
-            title="삭제"
-          >
-            <Trash2 size={13} />
-          </button>
+          {pdfUrl && (
+            <a
+              href={pdfUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[12px] text-[var(--ink-muted)] hover:text-[var(--ink)] inline-flex items-center gap-1"
+              title="원문 PDF 보기"
+            >
+              원문 <ExternalLink size={11} />
+            </a>
+          )}
+          {!isMetaOnly && (
+            <button
+              onClick={onDelete}
+              className="text-[var(--ink-muted)] hover:text-red-600 transition"
+              title="삭제"
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
         </div>
       </header>
 
-      {!isAnalyzed ? (
+      {isMetaOnly ? (
+        <div className="px-5 py-6 text-[13px] text-[var(--ink-muted)]">
+          xlsx 지원정보의 학술지 게재 이력. PDF 를 업로드하면 본문 분석 (problem · solution · result 등) 이 자동 진행됩니다.
+        </div>
+      ) : !isAnalyzed ? (
         <div className="px-5 py-8 text-[13px] text-[var(--ink-muted)] text-center">
           {file.status === "extract_fail" || file.status === "analysis_fail"
             ? `처리 실패: ${file.error_message ?? "오류"}`
