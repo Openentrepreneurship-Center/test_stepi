@@ -163,10 +163,9 @@ export default async function JobDetailPage({
             <div className="grid grid-cols-12 gap-4 px-1 py-3 border-b border-[var(--line)] text-[12px] text-[var(--ink-soft)]">
               <div className="col-span-1">No.</div>
               <div className="col-span-3">지원자</div>
-              <div className="col-span-2">직군</div>
               <div className="col-span-2 text-right">직무적합 평균</div>
               <div className="col-span-1 text-center">게재</div>
-              <div className="col-span-2">상위 부서 (v2)</div>
+              <div className="col-span-4">종합 요약</div>
               <div className="col-span-1"></div>
             </div>
             {result.results.map((a, i) => {
@@ -195,9 +194,6 @@ export default async function JobDetailPage({
                       </div>
                     )}
                   </div>
-                  <div className="col-span-2 text-[14px] text-[var(--ink-muted)]">
-                    {a.job_track}
-                  </div>
                   <div className="col-span-2 text-right">
                     <span className="serif text-[20px] text-[var(--ink)] tabular-nums">
                       {fitAvg100.toFixed(0)}
@@ -213,18 +209,9 @@ export default async function JobDetailPage({
                       <span className="text-[var(--ink-soft)]">—</span>
                     )}
                   </div>
-                  <div className="col-span-2 flex items-center justify-between gap-2">
-                    {meta?.topDept ? (
-                      <>
-                        <span className="text-[14px] truncate">{meta.topDept.department}</span>
-                        <span className="text-[13px] tabular-nums text-[var(--ink-muted)]">
-                          {meta.topDept.score.toFixed(0)}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-[13px] text-[var(--ink-soft)]">
-                        {meta?.deptSkipped ? "행정직" : "—"}
-                      </span>
+                  <div className="col-span-4 text-[13px] leading-[1.5] text-[var(--ink-muted)] line-clamp-2">
+                    {a.summary?.overall || (
+                      <span className="text-[var(--ink-soft)]">—</span>
                     )}
                   </div>
                   <div className="col-span-1 flex items-center justify-end gap-1">
