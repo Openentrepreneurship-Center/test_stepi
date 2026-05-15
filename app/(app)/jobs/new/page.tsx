@@ -25,6 +25,27 @@ export default function NewJobPage() {
   const [busyMsg, setBusyMsg] = useState<string>("업로드 중…");
   const [err, setErr] = useState<string | null>(null);
   const [zipSummary, setZipSummary] = useState<string | null>(null);
+  const [sheets, setSheets] = useState<string[]>([]);
+  const [sheetName, setSheetName] = useState<string>("");
+  const [infoSheets, setInfoSheets] = useState<string[]>([]);
+  const [infoSheetName, setInfoSheetName] = useState<string>("");
+
+  const loadSheets = async (f: File, target: "essay" | "info") => {
+    try {
+      const names = await api.listExcelSheets(f);
+      if (target === "essay") {
+        setSheets(names);
+        setSheetName(names.length === 1 ? names[0] : "");
+      } else {
+        setInfoSheets(names);
+        setInfoSheetName(names.length === 1 ? names[0] : "");
+      }
+    } catch (e) {
+      setErr(
+        `시트 목록을 읽지 못했습니다: ${e instanceof Error ? e.message : String(e)}`,
+      );
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +60,8 @@ export default function NewJobPage() {
         mode,
         job_track: track || undefined,
         info_file: infoFile ?? undefined,
+        sheet_name: sheetName || undefined,
+        info_sheet_name: infoSheetName || undefined,
       });
       if (pdfZip) {
         setBusyMsg("논문 PDF zip 업로드 중…");
@@ -90,7 +113,13 @@ export default function NewJobPage() {
               type="file"
               accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               className="sr-only"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                setFile(f);
+                setSheets([]);
+                setSheetName("");
+                if (f) loadSheets(f, "essay");
+              }}
               required
             />
             {file ? (
@@ -115,6 +144,24 @@ export default function NewJobPage() {
               </>
             )}
           </label>
+          {sheets.length > 0 && (
+            <div className="mt-3">
+              <span className="block text-[11px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-1.5">
+                분석할 시트 ({sheets.length}개 감지)
+              </span>
+              <select
+                className="input appearance-none"
+                value={sheetName}
+                onChange={(e) => setSheetName(e.target.value)}
+                required={sheets.length > 1}
+              >
+                {sheets.length > 1 && <option value="">시트 선택…</option>}
+                {sheets.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </label>
 
         <label className="block">
@@ -126,7 +173,13 @@ export default function NewJobPage() {
               type="file"
               accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               className="sr-only"
-              onChange={(e) => setInfoFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                setInfoFile(f);
+                setInfoSheets([]);
+                setInfoSheetName("");
+                if (f) loadSheets(f, "info");
+              }}
             />
             {infoFile ? (
               <>
@@ -150,6 +203,24 @@ export default function NewJobPage() {
               </>
             )}
           </label>
+          {infoSheets.length > 0 && (
+            <div className="mt-3">
+              <span className="block text-[11px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-1.5">
+                지원정보 시트 ({infoSheets.length}개 감지)
+              </span>
+              <select
+                className="input appearance-none"
+                value={infoSheetName}
+                onChange={(e) => setInfoSheetName(e.target.value)}
+                required={infoSheets.length > 1}
+              >
+                {infoSheets.length > 1 && <option value="">시트 선택…</option>}
+                {infoSheets.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </label>
 
         <label className="block">

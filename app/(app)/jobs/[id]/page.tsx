@@ -22,24 +22,20 @@ export default async function JobDetailPage({
       ? await api.getResult(id).catch(() => null)
       : null;
 
-  // v2 dept-fit + 논문 분석 상태를 지원자별로 병렬 fetch
-  const perApplicant = await Promise.all(
-    (result?.results ?? []).map(async (a) => {
-      const [papers, deptFit] = await Promise.all([
-        api.listPapers(id, a.applicant_id).catch(() => []),
-        api.getDeptFit(id, a.applicant_id).catch(() => null),
-      ]);
-      const analyzed = papers.filter((p) => p.status === "analyzed").length;
-      return {
-        applicantId: a.applicant_id,
-        analyzed,
-        totalPapers: papers.length,
-        topDept: deptFit?.items?.[0] ?? null,
-        deptSkipped: deptFit?.skipped ?? false,
-      };
-    }),
+  // v2 dept-fit + 논문 분석 상태를 단일 배치 endpoint 로 한 번에 fetch (N+1 회피)
+  const summary = await api.applicantsSummary(id).catch(() => []);
+  const perApplicantById = new Map(
+    summary.map((s) => [
+      s.applicant_id,
+      {
+        applicantId: s.applicant_id,
+        analyzed: s.papers_analyzed,
+        totalPapers: s.papers_total,
+        topDept: s.top_dept,
+        deptSkipped: s.dept_skipped,
+      },
+    ]),
   );
-  const perApplicantById = new Map(perApplicant.map((p) => [p.applicantId, p]));
 
   if (!status) {
     return (
@@ -220,7 +216,7 @@ export default async function JobDetailPage({
                   <div className="col-span-2 flex items-center justify-between gap-2">
                     {meta?.topDept ? (
                       <>
-                        <span className="text-[14px] truncate">{meta.topDept.dept_name}</span>
+                        <span className="text-[14px] truncate">{meta.topDept.department}</span>
                         <span className="text-[13px] tabular-nums text-[var(--ink-muted)]">
                           {meta.topDept.score.toFixed(0)}
                         </span>

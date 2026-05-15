@@ -223,6 +223,54 @@ export const api = {
       method: "DELETE",
     });
   },
+  applicantsSummary: (id: string) =>
+    http<
+      {
+        applicant_id: string;
+        papers_total: number;
+        papers_analyzed: number;
+        top_dept: { department: string; score: number } | null;
+        dept_skipped: boolean;
+      }[]
+    >(`/analysis-jobs/${id}/applicants/summary`),
+  listExcelSheets: async (file: File): Promise<string[]> => {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch(`${API_BASE}/analysis-jobs/excel-sheets`, {
+      method: "POST",
+      body: fd,
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`${res.status}: ${text}`);
+    }
+    return res.json() as Promise<string[]>;
+  },
+  injectInfoXlsx: async (
+    jobId: string,
+    infoFile: File,
+    opts?: { info_sheet_name?: string; replace?: boolean },
+  ) => {
+    const fd = new FormData();
+    fd.append("info_file", infoFile);
+    if (opts?.info_sheet_name) fd.append("info_sheet_name", opts.info_sheet_name);
+    if (opts?.replace) fd.append("replace", "true");
+    const res = await fetch(`${API_BASE}/analysis-jobs/${jobId}/inject-info-xlsx`, {
+      method: "POST",
+      body: fd,
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`${res.status}: ${text}`);
+    }
+    return res.json() as Promise<{
+      inserted_papers: number;
+      matched_applicants: number;
+      unmatched_count: number;
+      unmatched_applicants: string[];
+      replaced: boolean;
+    }>;
+  },
   uploadExcel: async (
     file: File,
     extra?: {
