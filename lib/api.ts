@@ -223,6 +223,37 @@ export const api = {
       method: "DELETE",
     });
   },
+  getSourceInput: (id: string) =>
+    http<{
+      job_id: string;
+      applicants: Array<{
+        applicant_id: string;
+        job_track: string;
+        job_field: string | null;
+        education: Array<{
+          kind: string;
+          school?: string;
+          degree?: string;
+          major?: string;
+          major_field?: string;
+          start_date?: string;
+          end_date?: string;
+          status?: string;
+          gpa?: string;
+          gpa_scale?: string;
+        }> | null;
+        career: Array<{
+          company: string;
+          department?: string;
+          title?: string;
+          duties?: string;
+          employment_type?: string;
+          period?: string;
+          start_date?: string;
+          end_date?: string;
+        }> | null;
+      }>;
+    }>(`/analysis-jobs/${id}/source-input`),
   applicantsSummary: (id: string) =>
     http<
       {

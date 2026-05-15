@@ -5,6 +5,7 @@ import RadarCard from "@/components/radar-card";
 import FeedbackButtons from "@/components/feedback-buttons";
 import RegenerateSummaryButton from "@/components/regenerate-summary-button";
 import PapersSection from "@/components/papers-section";
+import TimelineSection from "@/components/timeline-section";
 import DeptFitV2Section from "@/components/dept-fit-v2-section";
 import DetailTabs from "@/components/detail-tabs";
 
@@ -18,11 +19,15 @@ export default async function ApplicantDetailPage({
   const { id, applicantId } = await params;
   const decodedAppId = decodeURIComponent(applicantId);
 
-  const [result, fb, papers] = await Promise.all([
+  const [result, fb, papers, sourceInput] = await Promise.all([
     api.getResult(id).catch(() => null),
     api.listFeedback(id, decodedAppId).catch(() => ({ items: [] as never[] })),
     api.listPapers(id, decodedAppId).catch(() => []),
+    api.getSourceInput(id).catch(() => null),
   ]);
+  const sourceApplicant = sourceInput?.applicants.find(
+    (a) => a.applicant_id === decodedAppId,
+  );
 
   const applicant = result?.results?.find((r) => r.applicant_id === decodedAppId);
 
@@ -211,6 +216,14 @@ export default async function ApplicantDetailPage({
             />
           </div>
         </div>
+      </Section>
+
+      {/* 학력·이력 타임라인 */}
+      <Section number="01-A" title="학력 · 이력 타임라인">
+        <TimelineSection
+          education={sourceApplicant?.education}
+          career={sourceApplicant?.career}
+        />
       </Section>
 
       {/* 자기소개서 핵심 */}
