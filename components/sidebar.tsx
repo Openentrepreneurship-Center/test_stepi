@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, FilePlus2, Trash2, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { LayoutDashboard, FilePlus2, Trash2, Settings, ChevronsLeft, ChevronsRight } from "lucide-react";
 import StepiLogo from "./stepi-logo";
 
 const STORAGE_KEY = "stepi-sidebar-collapsed";
@@ -28,6 +28,7 @@ export default function Sidebar() {
     { href: "/", label: "대시보드", icon: LayoutDashboard },
     { href: "/jobs/new", label: "새 분석", icon: FilePlus2 },
     { href: "/trash", label: "휴지통", icon: Trash2 },
+    { href: "/settings", label: "표시 설정", icon: Settings },
   ];
 
   const logout = async () => {

@@ -117,12 +117,6 @@ function EduRow({ item }: { item: EducationItem }) {
       {detail && (
         <div className="text-[12px] text-[var(--ink-muted)] mt-0.5">{detail}</div>
       )}
-      {item.gpa && item.gpa !== "-" && (
-        <div className="text-[11px] text-[var(--ink-soft)] mt-0.5 tabular-nums">
-          학점 {item.gpa}
-          {item.gpa_scale && item.gpa_scale !== "-" ? ` / ${item.gpa_scale}` : ""}
-        </div>
-      )}
     </div>
   );
 }

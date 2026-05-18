@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Loader2, RefreshCw } from "lucide-react";
 import { api, type DeptFitResponse } from "@/lib/api";
+import { cleanReason } from "@/lib/clean-reason";
 
 export default function DeptFitV2Section({
   jobId,
@@ -136,7 +137,7 @@ export default function DeptFitV2Section({
               </div>
               {d.reason && (
                 <p className="col-span-12 lg:col-start-3 lg:col-span-10 text-[12px] leading-[1.7] text-[var(--ink-muted)]">
-                  {d.reason}
+                  {cleanReason(d.reason)}
                 </p>
               )}
             </li>

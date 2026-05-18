@@ -8,6 +8,8 @@ import PapersSection from "@/components/papers-section";
 import TimelineSection from "@/components/timeline-section";
 import DeptFitV2Section from "@/components/dept-fit-v2-section";
 import DetailTabs from "@/components/detail-tabs";
+import InterviewQuestionsToggle from "@/components/interview-questions-toggle";
+import { cleanReason } from "@/lib/clean-reason";
 
 export const dynamic = "force-dynamic";
 
@@ -338,7 +340,7 @@ export default async function ApplicantDetailPage({
                   {(v.score * 10).toFixed(0)}
                 </div>
                 <p className="col-span-9 lg:col-span-8 text-[14px] leading-[1.75] text-[var(--ink-muted)]">
-                  {v.reason}
+                  {cleanReason(v.reason)}
                 </p>
                 <div className="col-span-12 lg:col-span-1 flex lg:justify-end">
                   <FeedbackButtons
@@ -376,6 +378,7 @@ export default async function ApplicantDetailPage({
 
       {/* 추천 면접 질문 — 자소서 RAG (논문 기반 질문은 연구실적 탭의 각 논문 카드에서 별도 노출) */}
       {applicant.interview_questions && applicant.interview_questions.length > 0 && (
+        <InterviewQuestionsToggle>
         <Section number="06" title="추천 면접 질문">
           <div className="grid grid-cols-12 gap-x-8 border-t border-[var(--line)]">
             {applicant.interview_questions.map((q, idx) => (
@@ -415,6 +418,7 @@ export default async function ApplicantDetailPage({
             ))}
           </div>
         </Section>
+        </InterviewQuestionsToggle>
       )}
           </>
         }
