@@ -11,6 +11,7 @@ export default function TopBar() {
   const items = [
     { href: "/", label: "대시보드" },
     { href: "/jobs/new", label: "새 분석" },
+    { href: "/turing", label: "Turing" },
   ];
 
   const logout = async () => {

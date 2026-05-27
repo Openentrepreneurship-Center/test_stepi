@@ -146,6 +146,47 @@ export interface DeptFitResponse {
   prompt_version: string | null;
 }
 
+
+export interface TuringMetricsResponse {
+  generated_at: string;
+  window: { jobs: number; limit: number };
+  metrics: {
+    hallucination_prevention: {
+      rate: number | null;
+      numeric_consistency_rate: number | null;
+      entity_consistency_rate: number | null;
+      nli_entailment_rate: number | null;
+      nli_status: string;
+      samples: number;
+    };
+    format_compliance: {
+      rate: number | null;
+      passed: number;
+      total: number;
+    };
+    response_time: {
+      avg_seconds: number | null;
+      avg_seconds_per_applicant: number | null;
+      p50_seconds: number | null;
+      p95_seconds: number | null;
+    };
+  };
+  jobs: Array<{
+    job_id: string;
+    request_id: string | null;
+    status: JobStatus;
+    applicants_done: number;
+    applicants_total: number;
+    duration_seconds: number | null;
+    avg_seconds_per_applicant: number | null;
+    format_compliance_rate: number | null;
+    hallucination_prevention_rate: number | null;
+    created_at: string;
+    updated_at: string;
+    format_errors: string[];
+  }>;
+}
+
 export interface FeedbackEntry {
   job_id: string;
   applicant_id: string;
@@ -171,6 +212,7 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  getTuringMetrics: (limit = 30) => http<TuringMetricsResponse>(`/turing/metrics?limit=${limit}`),
   listJobs: (params?: { limit?: number; offset?: number; status?: string; trashed?: boolean }) => {
     const qs = new URLSearchParams();
     if (params?.limit != null) qs.set("limit", String(params.limit));
