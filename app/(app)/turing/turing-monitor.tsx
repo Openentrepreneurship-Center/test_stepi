@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Activity, Braces, Clock3, RefreshCcw, ShieldCheck } from "lucide-react";
-import { api, type TuringMetricsResponse } from "@/lib/api";
+import { Activity, AlertTriangle, Braces, Clock3, RefreshCcw, ShieldCheck } from "lucide-react";
+import { api, type TuringMetricsResponse, type TuringRiskItem } from "@/lib/api";
 
 const REFRESH_MS = 10000;
 
@@ -12,12 +12,17 @@ export default function TuringMonitor() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [risks, setRisks] = useState<TuringRiskItem[]>([]);
 
   const load = async () => {
     try {
       setError(null);
-      const next = await api.getTuringMetrics(50);
+      const [next, riskNext] = await Promise.all([
+        api.getTuringMetrics(50),
+        api.getTuringRisks(5, 8),
+      ]);
       setData(next);
+      setRisks(riskNext.items);
       setUpdatedAt(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Turing 지표를 불러오지 못했습니다.");
@@ -89,6 +94,37 @@ export default function TuringMonitor() {
           suffix="초/명"
           detail={`p50 ${seconds(metrics?.response_time.p50_seconds)} · p95 ${seconds(metrics?.response_time.p95_seconds)}`}
         />
+      </section>
+
+      <section className="mt-12">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="serif text-[22px]">의심 케이스 검수</h2>
+          <span className="inline-flex items-center gap-2 text-[12px] text-[var(--ink-muted)]"><AlertTriangle size={14} /> 숫자/개체 불일치 후보</span>
+        </div>
+        <div className="border-t border-[var(--line-strong)]">
+          {risks.length === 0 ? (
+            <div className="py-8 text-[13px] text-[var(--ink-muted)]">명백한 숫자/개체 불일치 후보가 없습니다.</div>
+          ) : risks.map((item) => (
+            <Link
+              key={`${item.job_id}-${item.applicant_id}`}
+              href={`/jobs/${item.job_id}`}
+              className="grid grid-cols-12 gap-4 px-1 py-4 border-b border-[var(--line)] hover:bg-[var(--paper)] transition"
+            >
+              <div className="col-span-12 lg:col-span-3 min-w-0">
+                <div className="font-mono text-[13px] text-[var(--ink)] truncate">{item.applicant_id}</div>
+                <div className="font-mono text-[11px] text-[var(--ink-soft)] truncate">{item.request_id || item.job_id}</div>
+              </div>
+              <div className="col-span-4 lg:col-span-2 tabular-nums text-[13px]">위험점수 {item.score.toFixed(1)}%</div>
+              <div className="col-span-8 lg:col-span-3 text-[12px] text-[var(--bad)] min-w-0">
+                {misses(item.numeric_misses, "숫자")}
+              </div>
+              <div className="col-span-12 lg:col-span-4 text-[12px] text-[var(--ink-muted)] min-w-0">
+                <div className="truncate">{misses(item.entity_misses, "개체")}</div>
+                <div className="mt-1 line-clamp-2">{item.generated_excerpt}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section className="mt-12">
@@ -187,4 +223,9 @@ function nliLabel(metric?: TuringMetricsResponse["metrics"]["hallucination_preve
   if (!metric) return "—";
   if (metric.nli_entailment_rate == null) return metric.nli_status;
   return `${metric.nli_entailment_rate.toFixed(1)}%`;
+}
+
+function misses(items: string[], label: string) {
+  if (items.length === 0) return `${label} 없음`;
+  return `${label} ${items.slice(0, 4).join(", ")}`;
 }
