@@ -188,6 +188,7 @@ export interface TuringMetricsResponse {
 }
 
 export interface TuringRiskItem {
+  risk_type?: "numeric_mismatch" | "nli_contradiction";
   job_id: string;
   request_id: string | null;
   applicant_id: string;
@@ -198,6 +199,13 @@ export interface TuringRiskItem {
   nli_status: string;
   numeric_misses: string[];
   entity_misses: string[];
+  nli_contradictions?: Array<{
+    generated: string;
+    source: string;
+    qid?: string | null;
+    max_con: number;
+    max_ent: number;
+  }>;
   generated_excerpt: string;
 }
 

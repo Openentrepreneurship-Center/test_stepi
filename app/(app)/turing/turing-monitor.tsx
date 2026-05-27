@@ -114,13 +114,22 @@ export default function TuringMonitor() {
                 <div className="font-mono text-[13px] text-[var(--ink)] truncate">{item.applicant_id}</div>
                 <div className="font-mono text-[11px] text-[var(--ink-soft)] truncate">{item.request_id || item.job_id}</div>
               </div>
-              <div className="col-span-4 lg:col-span-2 tabular-nums text-[13px]">위험점수 {item.score.toFixed(1)}%</div>
+              <div className="col-span-4 lg:col-span-2 tabular-nums text-[13px]">{riskLabel(item)}</div>
               <div className="col-span-8 lg:col-span-3 text-[12px] text-[var(--bad)] min-w-0">
-                {misses(item.numeric_misses, "숫자")}
+                {item.risk_type === "nli_contradiction" ? "NLI 모순 후보" : misses(item.numeric_misses, "숫자")}
               </div>
               <div className="col-span-12 lg:col-span-4 text-[12px] text-[var(--ink-muted)] min-w-0">
-                <div className="truncate">{misses(item.entity_misses, "개체")}</div>
-                <div className="mt-1 line-clamp-2">{item.generated_excerpt}</div>
+                {item.risk_type === "nli_contradiction" ? (
+                  <div>
+                    <div className="line-clamp-2 text-[var(--ink)]">생성: {item.nli_contradictions?.[0]?.generated || item.generated_excerpt}</div>
+                    <div className="mt-1 line-clamp-2">근거: {item.nli_contradictions?.[0]?.source || "—"}</div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="truncate">{misses(item.entity_misses, "개체")}</div>
+                    <div className="mt-1 line-clamp-2">{item.generated_excerpt}</div>
+                  </div>
+                )}
               </div>
             </Link>
           ))}
@@ -228,4 +237,9 @@ function nliLabel(metric?: TuringMetricsResponse["metrics"]["hallucination_preve
 function misses(items: string[], label: string) {
   if (items.length === 0) return `${label} 없음`;
   return `${label} ${items.slice(0, 4).join(", ")}`;
+}
+
+function riskLabel(item: TuringRiskItem) {
+  if (item.risk_type === "nli_contradiction") return `NLI ${item.score.toFixed(1)}%`;
+  return `위험점수 ${item.score.toFixed(1)}%`;
 }
