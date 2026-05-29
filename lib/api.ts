@@ -188,7 +188,7 @@ export interface TuringMetricsResponse {
 }
 
 export interface TuringRiskItem {
-  risk_type?: "numeric_mismatch" | "nli_contradiction";
+  risk_type?: "numeric_mismatch" | "nli_contradiction" | "llm_contradiction" | "llm_unsupported";
   job_id: string;
   request_id: string | null;
   applicant_id: string;
@@ -199,12 +199,15 @@ export interface TuringRiskItem {
   nli_status: string;
   numeric_misses: string[];
   entity_misses: string[];
+  verdict?: "contradiction" | "unsupported" | "faithful" | null;
+  reason?: string | null;
   nli_contradictions?: Array<{
     generated: string;
     source: string;
     qid?: string | null;
     max_con: number;
     max_ent: number;
+    reason?: string | null;
   }>;
   generated_excerpt: string;
 }
@@ -484,6 +487,60 @@ export function gradeFromScores(
   else grade = "D";
   return { grade, avg };
 }
+
+export interface BlindHit {
+  applicant_id: string;
+  essay_no: number;
+  category: string;
+  term: string;
+  snippet: string;
+  offset: number;
+  confidence: number;
+}
+export interface RecusalHit {
+  applicant_id: string;
+  rule: string;
+  verdict: string;
+  matched: Record<string, unknown>;
+}
+export interface PrelimCounts {
+  applicants: number;
+  blind_by_category: Record<string, number>;
+  blind_total: number;
+  recusal_by_rule: Record<string, number>;
+  recusal_total: number;
+}
+export interface PrelimRunResponse {
+  ticket: string;
+  label: string | null;
+  eval_date: string;
+  counts: PrelimCounts;
+  blind_hits: BlindHit[];
+  recusal_hits: RecusalHit[];
+  truncated_blind: boolean;
+  truncated_recusal: boolean;
+}
+export interface PrelimSummary {
+  ticket: string;
+  label: string | null;
+  eval_date: string | null;
+  counts: PrelimCounts;
+  applicant_count: number;
+  computed_at: string;
+}
+
+export const prelim = {
+  async run(form: FormData): Promise<PrelimRunResponse> {
+    const res = await fetch(`${API_BASE}/prelim/run`, {
+      method: "POST",
+      body: form,
+    });
+    if (!res.ok) throw new Error(`prelim/run failed: ${res.status} ${await res.text()}`);
+    return res.json() as Promise<PrelimRunResponse>;
+  },
+  list: () => http<{ items: PrelimSummary[] }>(`/prelim/results`),
+  get: (ticket: string) => http<PrelimRunResponse>(`/prelim/results/${ticket}`),
+};
 
 export function feedbackKey(component: string, itemKey = ""): string {
   return `${component}::${itemKey}`;

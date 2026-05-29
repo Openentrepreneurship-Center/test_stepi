@@ -99,40 +99,47 @@ export default function TuringMonitor() {
       <section className="mt-12">
         <div className="flex items-center justify-between mb-5">
           <h2 className="serif text-[22px]">의심 케이스 검수</h2>
-          <span className="inline-flex items-center gap-2 text-[12px] text-[var(--ink-muted)]"><AlertTriangle size={14} /> 숫자/개체 불일치 후보</span>
+          <span className="inline-flex items-center gap-2 text-[12px] text-[var(--ink-muted)]"><AlertTriangle size={14} /> LLM 판정 모순/무근거 · 숫자·개체 불일치</span>
         </div>
         <div className="border-t border-[var(--line-strong)]">
           {risks.length === 0 ? (
             <div className="py-8 text-[13px] text-[var(--ink-muted)]">명백한 숫자/개체 불일치 후보가 없습니다.</div>
-          ) : risks.map((item) => (
-            <Link
-              key={`${item.job_id}-${item.applicant_id}`}
-              href={`/jobs/${item.job_id}`}
-              className="grid grid-cols-12 gap-4 px-1 py-4 border-b border-[var(--line)] hover:bg-[var(--paper)] transition"
-            >
-              <div className="col-span-12 lg:col-span-3 min-w-0">
-                <div className="font-mono text-[13px] text-[var(--ink)] truncate">{item.applicant_id}</div>
-                <div className="font-mono text-[11px] text-[var(--ink-soft)] truncate">{item.request_id || item.job_id}</div>
-              </div>
-              <div className="col-span-4 lg:col-span-2 tabular-nums text-[13px]">{riskLabel(item)}</div>
-              <div className="col-span-8 lg:col-span-3 text-[12px] text-[var(--bad)] min-w-0">
-                {item.risk_type === "nli_contradiction" ? "NLI 모순 후보" : misses(item.numeric_misses, "숫자")}
-              </div>
-              <div className="col-span-12 lg:col-span-4 text-[12px] text-[var(--ink-muted)] min-w-0">
-                {item.risk_type === "nli_contradiction" ? (
-                  <div>
-                    <div className="line-clamp-2 text-[var(--ink)]">생성: {item.nli_contradictions?.[0]?.generated || item.generated_excerpt}</div>
-                    <div className="mt-1 line-clamp-2">근거: {item.nli_contradictions?.[0]?.source || "—"}</div>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="truncate">{misses(item.entity_misses, "개체")}</div>
-                    <div className="mt-1 line-clamp-2">{item.generated_excerpt}</div>
-                  </div>
-                )}
-              </div>
-            </Link>
-          ))}
+          ) : risks.map((item) => {
+            const isHallucinationFlag =
+              item.risk_type === "nli_contradiction"
+              || item.risk_type === "llm_contradiction"
+              || item.risk_type === "llm_unsupported";
+            return (
+              <Link
+                key={`${item.job_id}-${item.applicant_id}`}
+                href={`/jobs/${item.job_id}`}
+                className="grid grid-cols-12 gap-4 px-1 py-4 border-b border-[var(--line)] hover:bg-[var(--paper)] transition"
+              >
+                <div className="col-span-12 lg:col-span-3 min-w-0">
+                  <div className="font-mono text-[13px] text-[var(--ink)] truncate">{item.applicant_id}</div>
+                  <div className="font-mono text-[11px] text-[var(--ink-soft)] truncate">{item.request_id || item.job_id}</div>
+                </div>
+                <div className="col-span-4 lg:col-span-2 tabular-nums text-[13px]">{riskLabel(item)}</div>
+                <div className="col-span-8 lg:col-span-3 text-[12px] text-[var(--bad)] min-w-0">
+                  {isHallucinationFlag ? flagLabel(item.risk_type) : misses(item.numeric_misses, "숫자")}
+                </div>
+                <div className="col-span-12 lg:col-span-4 text-[12px] text-[var(--ink-muted)] min-w-0">
+                  {isHallucinationFlag ? (
+                    <div>
+                      <div className="line-clamp-2 text-[var(--ink)]">생성: {item.nli_contradictions?.[0]?.generated || item.generated_excerpt}</div>
+                      <div className="mt-1 line-clamp-2">근거: {item.nli_contradictions?.[0]?.source || "—"}</div>
+                      {item.reason && <div className="mt-1 line-clamp-2 text-[var(--ink-soft)]">판정: {item.reason}</div>}
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="truncate">{misses(item.entity_misses, "개체")}</div>
+                      <div className="mt-1 line-clamp-2">{item.generated_excerpt}</div>
+                    </div>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
@@ -240,6 +247,19 @@ function misses(items: string[], label: string) {
 }
 
 function riskLabel(item: TuringRiskItem) {
-  if (item.risk_type === "nli_contradiction") return `NLI ${item.score.toFixed(1)}%`;
-  return `위험점수 ${item.score.toFixed(1)}%`;
+  switch (item.risk_type) {
+    case "llm_contradiction": return "LLM 모순";
+    case "llm_unsupported": return "LLM 무근거";
+    case "nli_contradiction": return `NLI ${item.score.toFixed(1)}%`;
+    default: return `위험점수 ${item.score.toFixed(1)}%`;
+  }
+}
+
+function flagLabel(rt?: TuringRiskItem["risk_type"]) {
+  switch (rt) {
+    case "llm_contradiction": return "LLM 판정: 모순";
+    case "llm_unsupported": return "LLM 판정: 무근거";
+    case "nli_contradiction": return "NLI 모순 후보";
+    default: return "";
+  }
 }
