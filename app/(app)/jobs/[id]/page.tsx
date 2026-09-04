@@ -184,7 +184,7 @@ export default async function JobDetailPage({
                       {a.applicant_id}
                     </div>
                     {a.job_field && (
-                      <div className="text-[12.5px] text-[var(--ink-soft)] mt-0.5">
+                      <div className="text-[16.5px] text-[var(--ink-soft)] mt-0.5">
                         {a.job_field}
                       </div>
                     )}
@@ -204,7 +204,7 @@ export default async function JobDetailPage({
                       <span className="text-[var(--ink-soft)]">—</span>
                     )}
                   </div>
-                  <div className="col-span-4 text-[13.5px] leading-[1.55] text-[var(--ink-muted)] line-clamp-2">
+                  <div className="col-span-4 text-[16px] leading-[1.55] text-[var(--ink-muted)] line-clamp-2">
                     {a.summary?.overall || (
                       <span className="text-[var(--ink-soft)]">—</span>
                     )}

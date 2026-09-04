@@ -47,7 +47,7 @@ export default function DeptFitV2Section({
 
   if (loading) {
     return (
-      <div className="text-[13px] text-[var(--ink-muted)] flex items-center gap-2">
+      <div className="text-[15px] text-[var(--ink-muted)] flex items-center gap-2">
         <Loader2 size={14} className="animate-spin" /> 직군 적합도 로딩…
       </div>
     );
@@ -55,7 +55,7 @@ export default function DeptFitV2Section({
 
   if (data?.skipped) {
     return (
-      <p className="text-[13px] text-[var(--ink-muted)] italic">
+      <p className="text-[15px] text-[var(--ink-muted)] italic">
         {data.skipped_reason ?? "행정직은 직군 적합도 산출 대상이 아닙니다."}
       </p>
     );
@@ -68,7 +68,7 @@ export default function DeptFitV2Section({
   if (!data || data.items.length === 0) {
     return (
       <div className="flex items-center gap-3">
-        <p className="text-[13px] text-[var(--ink-muted)]">
+        <p className="text-[15px] text-[var(--ink-muted)]">
           아직 채점 결과가 없습니다. 자기소개서 + 분석된 논문이 모두 준비되면 자동 산출됩니다.
         </p>
         <button

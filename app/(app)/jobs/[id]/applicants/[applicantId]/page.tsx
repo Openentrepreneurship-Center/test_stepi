@@ -201,7 +201,7 @@ export default async function ApplicantDetailPage({
                 {coreData.length > 0 && (
                   <Card
                     title="핵심인재 유사도"
-                    desc="합격자들의 자기소개서와 얼마나 닮았는지를 나타냅니다. 연한 음영은 역대 합격자 평균입니다."
+                    desc={"합격자들의 자기소개서와 얼마나 닮았는지를 나타냅니다.\n연한 음영은 역대 합격자 평균입니다."}
                     action={
                       <FeedbackButtons
                         jobId={id}
@@ -249,7 +249,7 @@ export default async function ApplicantDetailPage({
                           <div className="col-span-6 lg:col-span-1 serif text-[24px] text-[var(--secondary-2)] tabular-nums">
                             {(v.score * 10).toFixed(0)}
                           </div>
-                          <p className="col-span-12 lg:col-span-8 text-[14.5px] leading-[1.75] text-[var(--ink-muted)]">
+                          <p className="col-span-12 lg:col-span-8 text-[16.5px] leading-[1.75] text-[var(--ink-muted)]">
                             {cleanReason(v.reason)}
                           </p>
                           <div className="col-span-12 lg:col-span-1 flex lg:justify-end">
@@ -471,7 +471,7 @@ function Card({
             {badge}
           </div>
           {desc && (
-            <p className="mt-1.5 text-[14px] text-[var(--ink-muted)] leading-[1.6] break-keep">
+            <p className="mt-1.5 text-[17px] text-[var(--ink-muted)] leading-[1.6] break-keep whitespace-pre-line">
               {desc}
             </p>
           )}

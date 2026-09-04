@@ -327,7 +327,7 @@ export default function TimelineBar({
           return (
             <span
               key={y}
-              className="absolute top-0 -translate-x-1/2 text-[11px] tabular-nums text-[var(--ink-muted)]"
+              className="absolute top-0 -translate-x-1/2 text-[13px] tabular-nums text-[var(--ink-muted)]"
               style={{ left: `${left}%` }}
             >
               {y}
@@ -365,13 +365,13 @@ export default function TimelineBar({
       {/* 범례 */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3.5">
         {car.length > 0 && (
-          <Legend icon={<Briefcase size={11} />} label="경력" color={CAR_COLORS[0]} />
+          <Legend icon={<Briefcase size={13} />} label="경력" color={CAR_COLORS[0]} />
         )}
         {edu.length > 0 && (
-          <Legend icon={<GraduationCap size={11} />} label="학력" color={EDU_COLORS[0]} />
+          <Legend icon={<GraduationCap size={13} />} label="학력" color={EDU_COLORS[0]} />
         )}
         {all.some((s) => s.end === null) && (
-          <span className="text-[11.5px] text-[var(--ink-soft)]">흐린 끝 = 계속</span>
+          <span className="text-[13.5px] text-[var(--ink-soft)]">흐린 끝은 아직 재직 및 재학 중을 의미합니다.</span>
         )}
       </div>
     </div>
@@ -388,7 +388,7 @@ function Legend({
   color: string;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-[11.5px] text-[var(--ink-muted)]">
+    <span className="inline-flex items-center gap-1.5 text-[13.5px] text-[var(--ink-muted)]">
       <span className="h-2.5 w-2.5 rounded-[2px]" style={{ background: color }} />
       {icon}
       {label}

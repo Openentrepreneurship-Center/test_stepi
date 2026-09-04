@@ -67,7 +67,7 @@ export default function TimelineSection({
 
   if (entries.length === 0) {
     return (
-      <p className="text-[13px] text-[var(--ink-soft)] italic py-3">
+      <p className="text-[15px] text-[var(--ink-soft)] italic py-3">
         학력·이력 정보가 없습니다. (지원정보 xlsx 미주입)
       </p>
     );
@@ -104,18 +104,18 @@ function EduRow({ item }: { item: EducationItem }) {
   return (
     <div>
       <div className="flex items-baseline gap-2 flex-wrap">
-        <span className="text-[14px] text-[var(--ink)] font-medium">{title}</span>
+        <span className="text-[16px] text-[var(--ink)] font-medium">{title}</span>
         {item.status === "졸업" && (
-          <span className="text-[11px] text-[var(--ink-soft)]">졸업</span>
+          <span className="text-[13px] text-[var(--ink-soft)]">졸업</span>
         )}
         {range && (
-          <span className="text-[12px] tabular-nums text-[var(--ink-muted)] ml-auto">
+          <span className="text-[14px] tabular-nums text-[var(--ink-muted)] ml-auto">
             {range}
           </span>
         )}
       </div>
       {detail && (
-        <div className="text-[12px] text-[var(--ink-muted)] mt-0.5">{detail}</div>
+        <div className="text-[14px] text-[var(--ink-muted)] mt-0.5">{detail}</div>
       )}
     </div>
   );
@@ -128,19 +128,19 @@ function CarRow({ item }: { item: CareerItem }) {
   return (
     <div>
       <div className="flex items-baseline gap-2 flex-wrap">
-        <span className="text-[14px] text-[var(--ink)] font-medium">{main}</span>
+        <span className="text-[16px] text-[var(--ink)] font-medium">{main}</span>
         {item.period && (
-          <span className="text-[11px] text-[var(--ink-soft)]">({item.period})</span>
+          <span className="text-[13px] text-[var(--ink-soft)]">({item.period})</span>
         )}
         {range && (
-          <span className="text-[12px] tabular-nums text-[var(--ink-muted)] ml-auto">
+          <span className="text-[14px] tabular-nums text-[var(--ink-muted)] ml-auto">
             {range}
           </span>
         )}
       </div>
-      {sub && <div className="text-[12px] text-[var(--ink-muted)] mt-0.5">{sub}</div>}
+      {sub && <div className="text-[14px] text-[var(--ink-muted)] mt-0.5">{sub}</div>}
       {item.duties && (
-        <div className="text-[12px] text-[var(--ink-muted)] mt-0.5 line-clamp-2">
+        <div className="text-[14px] text-[var(--ink-muted)] mt-0.5 line-clamp-2">
           {item.duties}
         </div>
       )}
