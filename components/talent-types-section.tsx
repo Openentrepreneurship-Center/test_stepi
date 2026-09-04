@@ -6,8 +6,9 @@ import { TALENT_TYPES } from "@/lib/talent-types";
 import { useTalentSets, type TalentSet } from "@/lib/talent-selection";
 import {
   getEvaluation,
-  formatScore,
+  formatScore100,
   TALENT_SCORE_MAX,
+  TALENT_SCORE_DISPLAY_MAX,
   type AxisResult,
 } from "@/lib/talent-evaluation";
 import RadarCard from "@/components/radar-card";
@@ -32,9 +33,6 @@ import { MockBadge } from "@/components/mock-mark";
  *
  * `"use client"` 인 이유는 펼치기 상태·근거 패널·세트 저장값 구독 때문이다.
  */
-
-/** 접힘 상태에서 전체 목록에 보여줄 상·하위 개수 */
-const PEEK = 5;
 
 /**
  * 레이더로 그리기 위한 최소 꼭짓점 수.
@@ -105,38 +103,34 @@ export default function TalentTypesSection({
   // 어느 세트든 선정된 항목은 전체 목록에서 강조한다
   const selectedNos = useMemo(() => new Set(sets.flatMap((s) => s.nos)), [sets]);
 
-  // 전체 목록 정렬.
-  //
-  // 점수만으로 줄 세우면 안 된다. 유효 문항이 1개인데 그 하나가 O 면 10점이 되어
-  // 실제로 열 문항을 다 통과한 인재상과 같은 자리에 선다. 문항표조차 없는
-  // 예시 유형도 마찬가지다. 그래서 근거의 두께를 먼저 보고 점수를 나중에 본다.
-  //   1) 문항표가 있는 유형 먼저
-  //   2) 유효 문항이 충분한 것 먼저, 판정 불가는 맨 뒤
-  //   3) 점수 내림차순
-  //   4) 번호 (동점이 잦으므로 타이브레이커가 없으면 정렬이 흔들려 보인다)
-  const ranked = useMemo(() => {
-    const tier = (a: AxisResult) => (a.score === null ? 2 : a.enough ? 0 : 1);
-    return [...evaluation.axes].sort(
-      (a, b) =>
-        Number(b.defined) - Number(a.defined) ||
-        tier(a) - tier(b) ||
-        (b.score ?? 0) - (a.score ?? 0) ||
-        a.no - b.no,
-    );
-  }, [evaluation]);
-
-  // 목록이 PEEK*2 이하면 상위·하위 구간이 겹쳐 같은 항목이 두 번 들어간다
-  // (예: 8개 → slice(0,5) 와 slice(-5) 가 3,4 를 공유 → key 중복).
-  // 그럴 땐 자를 이유도 없으므로 통째로 보여준다.
-  const allShown = expanded || printMode;
-  const visible = useMemo(
-    () =>
-      allShown || ranked.length <= PEEK * 2
-        ? ranked
-        : [...ranked.slice(0, PEEK), ...ranked.slice(-PEEK)],
-    [allShown, ranked],
+  // 선정분을 세트별 구획으로 묶는다. 한 인재상이 두 세트에 있으면 양쪽에 다 나온다.
+  // 세트마다 무엇을 골랐는지가 이 화면의 목적이라, 중복은 감출 정보가 아니다.
+  const groups = useMemo(() => {
+    const built = sets.map((set) => ({
+      id: set.id,
+      name: set.name,
+      items: [...new Set(set.nos)]
+        .map((no) => axisByNo.get(no))
+        .filter((a): a is AxisResult => a !== undefined)
+        .sort(byEvidenceThenScore),
+    }));
+    // start 는 막대 등장 애니메이션 지연용. 구획을 가로질러 이어져야 순차로 보인다
+    return built.map((g, i) => ({
+      ...g,
+      start: built.slice(0, i).reduce((n, x) => n + x.items.length, 0),
+    }));
+  }, [sets, axisByNo]);
+  const selectedRowCount = useMemo(
+    () => groups.reduce((n, g) => n + g.items.length, 0),
+    [groups],
   );
-  const hiddenCount = ranked.length - PEEK * 2;
+
+  // 어느 세트에도 없는 나머지. 기본 상태에서는 목록만 접히고 구획 머리는 남는다
+  const others = useMemo(
+    () => evaluation.axes.filter((a) => !selectedNos.has(a.no)).sort(byScoreDesc),
+    [evaluation, selectedNos],
+  );
+  const allShown = expanded || printMode;
 
   const openAxis = (axis: AxisResult, el: HTMLElement) => {
     triggerRef.current = el;
@@ -209,47 +203,161 @@ export default function TalentTypesSection({
         title="전체 인재상"
         count={`${TALENT_TYPES.length}개`}
         badge={<MockBadge />}
-        desc="인재상마다 사실 확인 문항 10개 중 충족한 수로 점수를 냅니다. 줄을 누르면 판정과 근거가 열립니다."
+        desc={
+          <>
+            인재상마다 사실 확인 문항 10개 중 충족한 수로 점수를 냅니다.{" "}
+            <b className="font-bold text-[var(--ink)]">줄을 누르면 판정과 근거가 열립니다.</b>
+          </>
+        }
         action={
           printMode ? null : (
+            /* 글자만 있으면 누를 수 있는지 모른다. 테두리를 둘러 버튼으로 보이게 한다 */
             <button
+              type="button"
               onClick={() => setExpanded((v) => !v)}
-              className="inline-flex items-center gap-1 text-[14px] text-[var(--ink-muted)] hover:text-[var(--ink)] transition"
+              aria-expanded={expanded}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-[var(--line-strong)] px-3.5 py-2 text-[15px] font-semibold text-[var(--ink)] transition hover:border-[var(--ink)] hover:bg-[var(--ink)] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--secondary)]"
             >
               {expanded ? "접기" : `전체 보기 (${TALENT_TYPES.length})`}
-              {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
           )
         }
       >
-        <ul className="space-y-1">
-          {visible.map((axis, i) => (
-            <li key={axis.no}>
-              {/* 접힘 상태에서 상위 5와 하위 5 사이에 생략 표시 */}
-              {!allShown && i === PEEK && hiddenCount > 0 && (
-                <div className="flex items-center gap-3 py-1.5 mb-2">
-                  <span className="h-px flex-1 bg-[var(--line)]" />
-                  <span className="text-[14px] text-[var(--ink-soft)] tabular-nums">
-                    {hiddenCount}개 생략
-                  </span>
-                  <span className="h-px flex-1 bg-[var(--line)]" />
-                </div>
+        <div className="flex flex-col gap-6">
+          {groups.map((g) => (
+            <section key={g.id}>
+              <GroupHeading label={g.name} count={g.items.length} />
+              {g.items.length === 0 ? (
+                <p className="px-1 py-2 text-[15px] text-[var(--ink-soft)]">
+                  고른 인재상이 없습니다.
+                </p>
+              ) : (
+                <ul className="space-y-1">
+                  {g.items.map((axis, i) => (
+                    // 같은 인재상이 여러 구획에 나오므로 번호만으로는 key 가 겹친다
+                    <li key={`${g.id}-${axis.no}`}>
+                      <Row axis={axis} index={g.start + i} highlight onOpen={openAxis} />
+                    </li>
+                  ))}
+                </ul>
               )}
-              <Row
-                axis={axis}
-                index={i}
-                highlight={selectedNos.has(axis.no)}
-                onOpen={openAxis}
-              />
-            </li>
+            </section>
           ))}
-        </ul>
+
+          {others.length > 0 && (
+            /* 접힌 상태에서도 구획 머리는 남긴다. 아래에 무엇이 더 있는지 보여야
+               「전체 보기」가 무엇을 펼치는 버튼인지 알 수 있다 */
+            <section>
+              <GroupHeading
+                label="그 외"
+                count={others.length}
+                onToggle={printMode ? undefined : () => setExpanded((v) => !v)}
+                expanded={expanded}
+              />
+              {allShown && (
+                <ul className="space-y-1">
+                  {others.map((axis, i) => (
+                    <li key={`other-${axis.no}`}>
+                      <Row axis={axis} index={selectedRowCount + i} onOpen={openAxis} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+        </div>
       </Block>
 
       {opened && (
         <TalentEvidenceDrawer axis={opened} applicantId={applicantId} onClose={closeDrawer} />
       )}
     </div>
+  );
+}
+
+/**
+ * 목록 정렬 규칙.
+ *
+ * 점수만으로 줄 세우면 안 된다. 유효 문항이 1개인데 그 하나가 O 면 10점이 되어
+ * 실제로 열 문항을 다 통과한 인재상과 같은 자리에 선다. 문항표조차 없는
+ * 예시 유형도 마찬가지다. 그래서 근거의 두께를 먼저 보고 점수를 나중에 본다.
+ *   1) 문항표가 있는 유형 먼저
+ *   2) 유효 문항이 충분한 것 먼저, 판정 불가는 맨 뒤
+ *   3) 점수 내림차순
+ *   4) 번호 (동점이 잦으므로 타이브레이커가 없으면 정렬이 흔들려 보인다)
+ */
+function byEvidenceThenScore(a: AxisResult, b: AxisResult): number {
+  const tier = (x: AxisResult) => (x.score === null ? 2 : x.enough ? 0 : 1);
+  return (
+    Number(b.defined) - Number(a.defined) ||
+    tier(a) - tier(b) ||
+    (b.score ?? 0) - (a.score ?? 0) ||
+    a.no - b.no
+  );
+}
+
+/**
+ * 「그 외」 정렬 — 점수 내림차순.
+ *
+ * 선정 구획과 달리 근거 두께(유효 문항 수)를 앞세우지 않는다. 선정되지 않은
+ * 29개는 훑어보는 목록이라 높은 점수가 위에 있는 편이 읽기 쉽다는 요청.
+ * 판정 불가는 순위를 매길 수 없어 맨 뒤로 보낸다.
+ */
+function byScoreDesc(a: AxisResult, b: AxisResult): number {
+  if (a.score === null || b.score === null) {
+    return Number(a.score === null) - Number(b.score === null) || a.no - b.no;
+  }
+  return b.score - a.score || a.no - b.no;
+}
+
+/**
+ * 구획 머리 — 세트 이름으로 목록을 나눈다. 세트가 한 벌이어도 붙인다.
+ * onToggle 을 주면 머리 줄 전체가 펼치기 버튼이 된다 (「그 외」 전용).
+ */
+function GroupHeading({
+  label,
+  count,
+  onToggle,
+  expanded,
+}: {
+  label: string;
+  count: number;
+  onToggle?: () => void;
+  expanded?: boolean;
+}) {
+  const inner = (
+    <>
+      <span className="min-w-0 shrink truncate text-[16px] font-bold text-[var(--ink)]">
+        {label}
+      </span>
+      <span className="h-[2px] flex-1 translate-y-[-4px] bg-[var(--line-strong)]" />
+      <span className="shrink-0 text-[14px] font-medium tabular-nums text-[var(--ink-muted)]">
+        {count}개
+      </span>
+      {onToggle &&
+        (expanded ? (
+          <ChevronUp size={16} className="shrink-0 translate-y-[2px] text-[var(--ink-muted)]" />
+        ) : (
+          <ChevronDown size={16} className="shrink-0 translate-y-[2px] text-[var(--ink-muted)]" />
+        ))}
+    </>
+  );
+
+  if (!onToggle) {
+    return <h3 className="mb-3 flex items-baseline gap-3">{inner}</h3>;
+  }
+  return (
+    <h3 className="mb-3">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className="flex w-full items-baseline gap-3 rounded px-1 py-1 text-left transition hover:bg-[var(--bg-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--secondary)]"
+      >
+        {inner}
+      </button>
+    </h3>
   );
 }
 
@@ -282,8 +390,13 @@ function SetBox({
   );
   const { height, labelSize } = radarSize(total);
   // 매 렌더마다 새 배열을 넘기면 recharts 가 통째로 다시 계산한다
+  // 목록이 100점으로 적히므로 오각형 눈금(툴팁 값)도 같은 척도로 맞춘다
   const radarData = useMemo(
-    () => items.map((a) => ({ axis: a.axis, value: a.score })),
+    () =>
+      items.map((a) => ({
+        axis: a.axis,
+        value: a.score === null ? null : (a.score / TALENT_SCORE_MAX) * TALENT_SCORE_DISPLAY_MAX,
+      })),
     [items],
   );
 
@@ -303,7 +416,13 @@ function SetBox({
       ) : items.length >= RADAR_MIN ? (
         <>
           {/* 판정 불가는 null 로 넘겨 꼭짓점을 끊는다. 0 으로 그리면 "0점"으로 읽힌다 */}
-          <RadarCard data={radarData} color="#F39200" height={height} labelSize={labelSize} />
+          <RadarCard
+            data={radarData}
+            color="#F39200"
+            max={TALENT_SCORE_DISPLAY_MAX}
+            height={height}
+            labelSize={labelSize}
+          />
           {/* 오각형은 클릭 대상이 아니므로, 세트 안에서도 근거로 들어갈 길을 둔다 */}
           <ul className="mt-1 space-y-0.5">
             {items.map((a) => (
@@ -359,7 +478,7 @@ function Block({
             </h2>
             {badge}
           </div>
-          <p className="mt-1.5 text-[14px] leading-[1.6] text-[var(--ink-muted)] break-keep">
+          <p className="mt-1.5 text-[16px] leading-[1.6] text-[var(--ink-muted)] break-keep">
             {desc}
           </p>
         </div>
@@ -374,11 +493,11 @@ function Block({
 function ScoreText({ axis }: { axis: AxisResult }) {
   return (
     <span className="shrink-0 text-right">
-      <span className="serif text-[15.5px] tabular-nums text-[var(--ink-muted)]">
-        {formatScore(axis.score)}
+      <span className="serif text-[15.5px] tabular-nums text-[var(--ink)]">
+        {formatScore100(axis.score)}
         {axis.score !== null && (
-          <span className="ml-0.5 text-[12.5px] text-[var(--ink-soft)]">
-            / {TALENT_SCORE_MAX}
+          <span className="ml-0.5 text-[12.5px] font-normal text-[var(--ink-soft)]">
+            / {TALENT_SCORE_DISPLAY_MAX}
           </span>
         )}
       </span>
@@ -417,21 +536,18 @@ function Row({
       type="button"
       onClick={(e) => onOpen(axis, e.currentTarget)}
       aria-label={`${axis.axis} 판정 근거 보기`}
-      className="grid w-full grid-cols-[2.25rem_1fr] items-start gap-3 rounded px-1 py-2 text-left transition hover:bg-[var(--bg-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--secondary)]"
+      className="block w-full rounded px-1 py-2 text-left transition hover:bg-[var(--bg-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--secondary)]"
     >
-      <span className="pt-[2px] text-[14px] tabular-nums text-[var(--ink-soft)] text-right">
-        {axis.no}
-      </span>
       <span className="min-w-0 block">
-        <span className="flex items-baseline justify-between gap-3 mb-1.5">
-          <span className="min-w-0 flex items-baseline gap-1.5">
-            <span
-              className={`truncate text-[15.5px] leading-[1.5] ${
-                highlight ? "font-semibold text-[var(--ink)]" : "text-[var(--ink)]"
-              }`}
-            >
-              {axis.axis}
-            </span>
+        {/* 이름과 점수를 왼쪽에 붙여 둔다. 양 끝으로 벌려 놓으면 34줄을 훑을 때
+            시선이 줄마다 가로로 왕복해야 하고, 이름이 짧은 줄일수록 멀어진다 */}
+        <span className="flex items-baseline gap-2.5 mb-1.5">
+          <span
+            className={`min-w-0 truncate text-[17px] leading-[1.5] ${
+              highlight ? "font-semibold text-[var(--ink)]" : "text-[var(--ink)]"
+            }`}
+          >
+            {axis.axis}
           </span>
           <ScoreText axis={axis} />
         </span>
@@ -444,12 +560,15 @@ function Row({
               className="stepi-talent-grow block h-full rounded-full"
               style={{
                 width: `${pct}%`,
-                background: highlight
+                // 축약형 background 는 backgroundSize 까지 같이 초기화해서,
+                // 둘을 한 객체에 섞으면 리렌더 때 크기가 지워질 수 있다 (React 경고)
+                backgroundColor: highlight ? undefined : "var(--primary)",
+                backgroundImage: highlight
                   ? "linear-gradient(90deg, var(--gold), var(--gold-2))"
-                  : "var(--p-300)",
+                  : undefined,
                 // highlight 그라디언트를 막대 자기 폭이 아니라 트랙 전체 폭에 맞춘다.
                 // 안 그러면 같은 위치인데 값마다 색이 다르게 나온다 (단색 막대엔 무의미)
-                backgroundSize: pct > 0 ? `${(10000 / pct).toFixed(2)}% 100%` : "100% 100%",
+                backgroundSize: highlight && pct > 0 ? `${(10000 / pct).toFixed(2)}% 100%` : undefined,
                 transformOrigin: "left center",
                 animation: "stepi-talent-grow 0.9s cubic-bezier(0.22,0.68,0.28,1) both",
                 animationDelay: `${delay}ms`,
@@ -475,11 +594,11 @@ function CompactRow({
       type="button"
       onClick={(e) => onOpen(axis, e.currentTarget)}
       aria-label={`${axis.axis} 판정 근거 보기`}
-      className="flex w-full items-baseline justify-between gap-3 rounded px-1.5 py-1 text-left transition hover:bg-[var(--bg-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--secondary)]"
+      className="grid w-full grid-cols-[auto_1fr_auto] items-baseline gap-2 rounded px-1.5 py-1 text-left transition hover:bg-[var(--bg-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--secondary)]"
     >
-      <span className="min-w-0 flex items-baseline gap-1.5">
-        <span className="truncate text-[14px] text-[var(--ink)]">{axis.axis}</span>
-      </span>
+      <span className="min-w-0 truncate text-[16px] text-[var(--ink)]">{axis.axis}</span>
+      {/* 안내선 — 이름과 점수가 멀어도 눈이 같은 줄을 따라간다 (목차 방식) */}
+      <span className="translate-y-[-4px] border-b border-[var(--line-mid)]" />
       <ScoreText axis={axis} />
     </button>
   );

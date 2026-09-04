@@ -32,6 +32,7 @@
   --surface: #FFFFFF;
   --line: #E5E5EA;
   --line-strong: #C7C7CC;
+  --line-mid: #A9A9B1;        /* line-strong 과 ink-soft 의 중간. 안내선용 */
   --line-ink: rgba(27, 26, 64, 0.18);
   --ink-muted: #5A5A66;       /* AA contrast on white */
   --ink-soft: #8B8B96;        /* tertiary, captions only */
@@ -60,6 +61,7 @@
   --color-ink-soft: var(--ink-soft);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
+  --color-line-mid: var(--line-mid);
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
   --color-secondary-2: var(--secondary-2);

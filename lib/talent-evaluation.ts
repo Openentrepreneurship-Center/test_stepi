@@ -526,11 +526,13 @@ export function computeScore(items: ItemResult[]): number | null {
   return (o / effective) * TALENT_SCORE_MAX;
 }
 
-/** 7 → "7", 7.78 → "7.8". 불필요한 .0 을 붙이지 않는다 */
-export function formatScore(score: number | null): string {
+/** 화면 표기용 100점 만점. 계산은 유효 문항 기준 0~10 으로 하고 보여줄 때만 환산한다 */
+export const TALENT_SCORE_DISPLAY_MAX = 100;
+
+/** 7 → "70", 7.78 → "78". 소수점은 버린다 — 100점 척도에서 .8 은 읽는 데 방해만 된다 */
+export function formatScore100(score: number | null): string {
   if (score === null) return "판정 불가";
-  const rounded = Math.round(score * 10) / 10;
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  return String(Math.round((score / TALENT_SCORE_MAX) * TALENT_SCORE_DISPLAY_MAX));
 }
 
 function buildAxis(applicantId: string, no: number, name: string, profile: MockProfile): AxisResult {

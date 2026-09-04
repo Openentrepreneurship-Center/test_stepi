@@ -8,8 +8,8 @@ import {
   type ItemResult,
   type Evidence,
   evidenceFor,
-  formatScore,
-  TALENT_SCORE_MAX,
+  formatScore100,
+  TALENT_SCORE_DISPLAY_MAX,
 } from "@/lib/talent-evaluation";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import { MockBadge } from "@/components/mock-mark";
@@ -110,25 +110,25 @@ export default function TalentEvidenceDrawer({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="min-w-0 truncate text-[18px] font-bold text-[var(--ink)]">{axis.axis}</h3>
+                  <h3 className="min-w-0 truncate text-[18.5px] font-bold text-[var(--ink)]">{axis.axis}</h3>
                   <MockBadge />
                 </div>
-                <p className="mt-1 text-[13px] text-[var(--ink-muted)] tabular-nums">
+                <p className="mt-1 text-[13.5px] text-[var(--ink-muted)] tabular-nums">
                   충족 {axis.o_count} · 미충족 {axis.x_count} · 판정 불가 {axis.n_count}
                 </p>
               </div>
               <div className="flex shrink-0 items-start gap-3">
                 <div className="text-right">
-                  <div className="serif text-[22px] leading-none tabular-nums text-[var(--ink)]">
-                    {axis.score === null ? "판정 불가" : `${formatScore(axis.score)}`}
+                  <div className="serif text-[22.5px] leading-none tabular-nums text-[var(--ink)]">
+                    {axis.score === null ? "판정 불가" : formatScore100(axis.score)}
                     {axis.score !== null && (
-                      <span className="ml-1 text-[14px] text-[var(--ink-soft)]">
-                        / {TALENT_SCORE_MAX}
+                      <span className="ml-1 text-[14.5px] text-[var(--ink-soft)]">
+                        / {TALENT_SCORE_DISPLAY_MAX}
                       </span>
                     )}
                   </div>
                   {axis.n_count > 0 && (
-                    <div className="mt-1.5 text-[12px] text-[var(--secondary-2)] tabular-nums">
+                    <div className="mt-1.5 text-[12.5px] text-[var(--secondary-2)] tabular-nums">
                       유효 {axis.effective_total}문항 기준
                     </div>
                   )}
@@ -144,16 +144,16 @@ export default function TalentEvidenceDrawer({
             </div>
 
             {/* 점수가 왜 이 값인지 한 줄로 밝힌다. 소수점이 붙은 이유가 여기 있다 */}
-            <p className="mt-2.5 text-[12.5px] leading-[1.6] text-[var(--ink-muted)]">
+            <p className="mt-2.5 text-[13px] leading-[1.6] text-[var(--ink-muted)]">
               {axis.score === null
                 ? "판정할 수 있는 문항이 없어 점수를 내지 못했습니다."
                 : axis.n_count > 0
-                  ? `문항 ${axis.items.length}개 중 ${axis.n_count}개는 근거 데이터가 없어 계산에서 뺐습니다. 남은 ${axis.effective_total}개 중 ${axis.o_count}개를 충족해 ${formatScore(axis.score)}점입니다.`
-                  : `문항 ${axis.items.length}개 중 ${axis.o_count}개를 충족해 ${formatScore(axis.score)}점입니다.`}
+                  ? `문항 ${axis.items.length}개 중 ${axis.n_count}개는 근거 데이터가 없어 계산에서 뺐습니다. 남은 ${axis.effective_total}개 중 ${axis.o_count}개를 충족해 ${formatScore100(axis.score)}점입니다.`
+                  : `문항 ${axis.items.length}개 중 ${axis.o_count}개를 충족해 ${formatScore100(axis.score)}점입니다.`}
             </p>
 
             {!axis.defined && (
-              <p className="mt-1.5 text-[12.5px] leading-[1.6] text-[var(--ink-soft)]">
+              <p className="mt-1.5 text-[13px] leading-[1.6] text-[var(--ink-soft)]">
                 이 인재상은 아직 문항표가 없어 아래 문항은 예시입니다.
               </p>
             )}
@@ -167,7 +167,7 @@ export default function TalentEvidenceDrawer({
                   // 계단 이름은 떨어져 있으면 겹칠 수 있으므로 첫 문항 id 를 key 로 쓴다
                   <li key={g.items[0].item_id}>
                     <div className="rounded-lg border border-[var(--line)] px-2.5 pt-2 pb-1">
-                      <div className="mb-1 px-1 text-[11.5px] font-medium tracking-wide text-[var(--ink-soft)]">
+                      <div className="mb-1 px-1 text-[12px] font-medium tracking-wide text-[var(--ink-soft)]">
                         {g.ladder} 계단
                       </div>
                       <ul>
@@ -235,7 +235,7 @@ function VerdictBadge({ verdict }: { verdict: ItemResult["verdict"] }) {
     <span
       role="img"
       aria-label={verdict === "O" ? "충족" : verdict === "X" ? "미충족" : "판정 불가"}
-      className={`mt-[1px] inline-flex h-[21px] w-[21px] shrink-0 items-center justify-center rounded-full border text-[12px] font-bold ${style}`}
+      className={`mt-[1px] inline-flex h-[21px] w-[21px] shrink-0 items-center justify-center rounded-full border text-[12.5px] font-bold ${style}`}
     >
       <span aria-hidden="true">{verdict}</span>
     </span>
@@ -269,8 +269,8 @@ function ItemRow({
       >
         <VerdictBadge verdict={item.verdict} />
         <span className="min-w-0 flex-1">
-          <span className="block text-[14px] leading-[1.55] text-[var(--ink)]">{item.question}</span>
-          <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-[var(--ink-soft)]">
+          <span className="block text-[14.5px] leading-[1.55] text-[var(--ink)]">{item.question}</span>
+          <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[var(--ink-soft)]">
             <span>{item.judged_by === "code" ? "코드 판정" : "LLM 판정"}</span>
             {review && <span className="text-[var(--secondary-2)]">검토 권장</span>}
             {item.flags.includes("date_calc") && <span>날짜 계산</span>}
@@ -287,15 +287,15 @@ function ItemRow({
       {open && (
         <div className="space-y-3 pb-3.5 pl-[31px] pr-1">
           <Field label="판정 규칙">
-            <p className="text-[13px] leading-[1.65] text-[var(--ink-2)]">{item.rule}</p>
+            <p className="text-[13.5px] leading-[1.65] text-[var(--ink-2)]">{item.rule}</p>
           </Field>
 
           {item.verdict === "N" && (
             <Field label="판정 불가">
-              <p className="text-[13px] leading-[1.65] text-[var(--ink-2)]">
+              <p className="text-[13.5px] leading-[1.65] text-[var(--ink-2)]">
                 {item.reason}
               </p>
-              <p className="mt-1 text-[12px] leading-[1.6] text-[var(--secondary-2)]">
+              <p className="mt-1 text-[12.5px] leading-[1.6] text-[var(--secondary-2)]">
                 점수 계산에서 제외되었습니다.
               </p>
             </Field>
@@ -315,7 +315,7 @@ function ItemRow({
 
           {item.verdict === "X" && (
             <Field label="판정">
-              <p className="text-[13px] leading-[1.65] text-[var(--ink-2)]">
+              <p className="text-[13.5px] leading-[1.65] text-[var(--ink-2)]">
                 조건을 충족하는 근거를 찾지 못했습니다.
               </p>
             </Field>
@@ -323,7 +323,7 @@ function ItemRow({
 
           {item.x_example && (
             <Field label="이런 경우는 미충족">
-              <p className="text-[13px] leading-[1.65] text-[var(--ink-muted)]">{item.x_example}</p>
+              <p className="text-[13.5px] leading-[1.65] text-[var(--ink-muted)]">{item.x_example}</p>
             </Field>
           )}
         </div>
@@ -335,7 +335,7 @@ function ItemRow({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="mb-1 text-[11px] uppercase tracking-wide text-[var(--ink-muted)]">{label}</div>
+      <div className="mb-1 text-[11.5px] uppercase tracking-wide text-[var(--ink-muted)]">{label}</div>
       {children}
     </div>
   );
@@ -350,10 +350,10 @@ function EvidenceView({ ev }: { ev: Evidence }) {
   if (ev.type === "essay") {
     return (
       <div>
-        <p className="border-l-2 border-[var(--line-strong)] pl-2.5 text-[13px] italic leading-[1.7] text-[var(--ink-muted)]">
+        <p className="border-l-2 border-[var(--line-strong)] pl-2.5 text-[13.5px] italic leading-[1.7] text-[var(--ink-muted)]">
           “{ev.quote}”
         </p>
-        <p className="mt-1 pl-2.5 text-[11.5px] text-[var(--ink-soft)]">
+        <p className="mt-1 pl-2.5 text-[12px] text-[var(--ink-soft)]">
           자기소개서 {ev.essay_index}번 {ev.question && `· ${ev.question}`}
         </p>
       </div>
@@ -364,15 +364,15 @@ function EvidenceView({ ev }: { ev: Evidence }) {
     return (
       <div className="rounded border border-[var(--line)] px-2.5 py-2">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-[13px] leading-[1.55] text-[var(--ink)]">{ev.title}</p>
+          <p className="text-[13.5px] leading-[1.55] text-[var(--ink)]">{ev.title}</p>
           {ev.match_status !== "matched" && (
             // 자기보고 서지 메타일 뿐 원문으로 확인된 게 아니다. 1022건 중 1010건이 여기 해당한다
-            <span className="shrink-0 rounded-full border border-[var(--line-strong)] px-1.5 py-[1px] text-[11px] text-[var(--ink-soft)]">
+            <span className="shrink-0 rounded-full border border-[var(--line-strong)] px-1.5 py-[1px] text-[11.5px] text-[var(--ink-soft)]">
               미검증
             </span>
           )}
         </div>
-        <p className="mt-1 text-[11.5px] text-[var(--ink-soft)] tabular-nums">
+        <p className="mt-1 text-[12px] text-[var(--ink-soft)] tabular-nums">
           {ev.journal} · {ev.year} · 저자 {ev.author_order}
         </p>
       </div>
@@ -382,25 +382,25 @@ function EvidenceView({ ev }: { ev: Evidence }) {
   if (ev.type === "career") {
     return (
       <div className="rounded border border-[var(--line)] px-2.5 py-2">
-        <p className="text-[13px] leading-[1.55] text-[var(--ink)]">
+        <p className="text-[13.5px] leading-[1.55] text-[var(--ink)]">
           {ev.company} {ev.title_text && <span className="text-[var(--ink-muted)]">{ev.title_text}</span>}
         </p>
-        <p className="mt-1 text-[11.5px] text-[var(--ink-soft)] tabular-nums">{ev.period_text}</p>
+        <p className="mt-1 text-[12px] text-[var(--ink-soft)] tabular-nums">{ev.period_text}</p>
       </div>
     );
   }
 
   return (
     <div className="rounded border border-[var(--line)] px-2.5 py-2">
-      <p className="text-[13px] leading-[1.55] text-[var(--ink)]">
+      <p className="text-[13.5px] leading-[1.55] text-[var(--ink)]">
         {ev.school}
         {ev.degree && <span className="ml-1.5 text-[var(--ink-muted)]">{ev.degree}</span>}
         {ev.status && <span className="ml-1.5 text-[var(--ink-soft)]">{ev.status}</span>}
       </p>
-      <p className="mt-1 whitespace-pre-line text-[11.5px] leading-[1.6] text-[var(--ink-soft)]">
+      <p className="mt-1 whitespace-pre-line text-[12px] leading-[1.6] text-[var(--ink-soft)]">
         {ev.major_field ?? ev.major}
       </p>
-      <p className="mt-1 text-[11.5px] text-[var(--ink-soft)] tabular-nums">{ev.period_text}</p>
+      <p className="mt-1 text-[12px] text-[var(--ink-soft)] tabular-nums">{ev.period_text}</p>
     </div>
   );
 }
