@@ -39,7 +39,7 @@ function LoginInner() {
     <main className="min-h-screen grid grid-cols-12">
       {/* Left — intro */}
       <section className="col-span-12 lg:col-span-7 border-r border-[var(--line)] px-8 lg:px-16 py-14 lg:py-20 flex flex-col justify-between min-w-0">
-        <StepiLogo size={26} />
+        <StepiLogo size={64} />
 
         <div className="mt-14 lg:mt-20 max-w-[44ch]">
           <h1 className="serif text-[clamp(30px,4vw,46px)] leading-[1.32] text-[var(--ink)]">
@@ -64,7 +64,7 @@ function LoginInner() {
       {/* Right — login */}
       <section className="col-span-12 lg:col-span-5 px-8 lg:px-14 py-14 lg:py-20 flex flex-col">
         <div className="lg:hidden mb-12">
-          <StepiLogo size={22} />
+          <StepiLogo size={48} />
         </div>
 
         <div className="max-w-[360px]">

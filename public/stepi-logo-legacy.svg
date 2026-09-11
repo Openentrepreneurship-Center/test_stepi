@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 100" width="260" height="100" aria-label="STEPI">
+  <!-- 2026-09 기관 CI(stepi-ci.png) 도입 전까지 쓰던 로고. components/stepi-logo.tsx 에서 옮겨 보관 -->
+  <text x="0" y="78" font-family="Pretendard, system-ui, sans-serif" font-weight="800" font-size="84" letter-spacing="-2" fill="#33307A">STEPI</text>
+  <g>
+    <circle cx="200" cy="8" r="5" fill="#33307A"/>
+    <circle cx="200" cy="22" r="5" fill="#33307A"/>
+    <circle cx="200" cy="36" r="5" fill="#33307A"/>
+    <circle cx="214" cy="8" r="5" fill="#33307A"/>
+    <circle cx="214" cy="22" r="5" fill="#33307A"/>
+    <circle cx="214" cy="36" r="5" fill="#33307A"/>
+    <circle cx="228" cy="8" r="5" fill="#F39200"/>
+    <circle cx="228" cy="22" r="5" fill="#33307A"/>
+    <circle cx="228" cy="36" r="5" fill="#33307A"/>
+    <circle cx="242" cy="8" r="5" fill="#F39200"/>
+    <circle cx="242" cy="22" r="5" fill="#F39200"/>
+    <circle cx="242" cy="36" r="5" fill="#33307A"/>
+  </g>
+</svg>

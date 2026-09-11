@@ -126,11 +126,12 @@ export default function Sidebar() {
     >
       {/* 헤더 — 로고 + 접기 토글 */}
       <div
-        className={`${collapsed ? "px-2 pt-4 pb-4 flex flex-col items-center gap-3" : "px-5 lg:px-6 pt-5 pb-5 flex items-start justify-between gap-3"} border-b border-[var(--line-strong)]`}
+        className={`${collapsed ? "px-2 pt-4 pb-4 flex flex-col items-center gap-3" : "px-4 lg:px-5 pt-5 pb-5 flex items-start justify-between gap-2"} border-b border-[var(--line-strong)]`}
       >
         {!collapsed && (
-          <Link href="/" className="block flex-1" title="대시보드">
-            <StepiLogo size={26} />
+          <Link href="/" className="block min-w-0 flex-1" title="대시보드">
+            {/* 접기 버튼을 뺀 남은 폭을 다 쓴다 (md 약 188px, lg 약 212px) */}
+            <StepiLogo size={44} className="h-auto w-full" />
             <div className="mt-2.5 text-[12.5px] font-medium text-[var(--ink-muted)]">
               지원자 직무적합성 분석
             </div>
@@ -138,7 +139,7 @@ export default function Sidebar() {
         )}
         {collapsed && (
           <Link href="/" title="대시보드">
-            <StepiLogo size={22} />
+            <StepiLogo size={28} variant="mark" />
           </Link>
         )}
         <button

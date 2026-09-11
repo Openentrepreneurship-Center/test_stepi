@@ -1,54 +1,27 @@
+import Image from "next/image";
+import ci from "@/public/stepi-ci.png";
+import mark from "@/public/stepi-mark.png";
+
 interface Props {
+  /** 그림 높이(px). 폭은 원본 비율로 따라간다 */
   size?: number;
+  variant?: "full" | "mark";
+  /** 어두운 배경용 흰색 */
   inverted?: boolean;
   className?: string;
 }
 
-export default function StepiLogo({ size = 38, inverted = false, className }: Props) {
-  const ink = inverted ? "#FFFFFF" : "#33307A";
-  const accent = "#F39200";
-  const accentDim = inverted ? "#FFFFFF" : "#33307A";
-
+export default function StepiLogo({ size = 38, variant = "full", inverted = false, className }: Props) {
+  const src = variant === "full" ? ci : mark;
+  const width = Math.round((size * src.width) / src.height);
   return (
-    <svg
-      width={size * 2.6}
+    <Image
+      src={src}
+      alt={variant === "full" ? "과학기술정책연구원 STEPI" : "STEPI"}
+      width={width}
       height={size}
-      viewBox="0 0 260 100"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-label="STEPI"
-    >
-      <text
-        x="0"
-        y="78"
-        fontFamily="Pretendard, system-ui, sans-serif"
-        fontWeight={800}
-        fontSize="84"
-        letterSpacing="-2"
-        fill={ink}
-      >
-        STEPI
-      </text>
-      {/* dot pattern, top-right */}
-      <g>
-        {Array.from({ length: 4 }).flatMap((_, col) =>
-          Array.from({ length: 3 }).map((_, row) => {
-            const cx = 200 + col * 14;
-            const cy = 8 + row * 14;
-            // top-right cluster orange
-            const isOrange = (col >= 2 && row === 0) || (col === 3 && row === 1);
-            return (
-              <circle
-                key={`${col}-${row}`}
-                cx={cx}
-                cy={cy}
-                r={5}
-                fill={isOrange ? accent : accentDim}
-              />
-            );
-          }),
-        )}
-      </g>
-    </svg>
+      loading="eager"
+      className={`${inverted ? "brightness-0 invert" : ""} ${className ?? ""}`}
+    />
   );
 }
