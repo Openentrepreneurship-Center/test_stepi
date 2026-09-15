@@ -81,7 +81,7 @@ export default function TimelineSection({
         const Icon = entry.type === "edu" ? GraduationCap : Briefcase;
         const isLast = i === entries.length - 1;
         return (
-          <div key={i} className={`relative ${isLast ? "" : "pb-5"}`}>
+          <div key={i} className={`print-row relative ${isLast ? "" : "pb-5"}`}>
             <div className="absolute -left-[22px] top-[3px] w-4 h-4 rounded-full bg-[var(--bg)] border-2 border-[var(--ink-muted)] flex items-center justify-center">
               <Icon size={9} strokeWidth={2} className="text-[var(--ink-muted)]" />
             </div>

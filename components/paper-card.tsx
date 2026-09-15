@@ -45,7 +45,7 @@ export default function PaperCard({
   return (
     <article className="border border-[var(--line)] rounded-sm overflow-hidden">
       {/* 헤더 */}
-      <header className="flex items-start justify-between gap-4 px-5 py-4 border-b border-[var(--line)] bg-[var(--bg-2)]">
+      <header className="print-head flex items-start justify-between gap-4 px-5 py-4 border-b border-[var(--line)] bg-[var(--bg-2)]">
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
             <FileText size={13} className="text-[var(--ink-muted)] shrink-0" />

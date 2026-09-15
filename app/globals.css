@@ -325,9 +325,11 @@ body {
     display: none !important;
   }
 
+  /* 카드가 인쇄 폭 끝에 딱 붙으면 오른쪽 테두리 1px 이 영역 밖으로 밀려 잘린다 */
   .print-page {
     max-width: none;
-    padding: 0;
+    padding-block: 0;
+    padding-inline: 2px;
     margin: 0;
   }
 
@@ -337,6 +339,46 @@ body {
     break-inside: avoid;
     page-break-inside: avoid;
     box-shadow: none;
+  }
+
+  /* 긴 카드는 통째로 넘기면 앞 페이지가 비므로 이어 쓰고, 항목 하나만 쪼개지 않는다 */
+  .print-page .panel.print-split {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  .print-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-head {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* 레이더는 화면에서 잰 픽셀 크기가 남는다. 종이 칸보다 넓으면 오른쪽으로 넘치므로 줄이고 가운데 둔다 */
+  .print-page .recharts-responsive-container > div {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .print-page .recharts-wrapper {
+    max-width: 100%;
+    height: auto !important;
+    margin-inline: auto;
+  }
+
+  .print-page .recharts-wrapper > .recharts-surface {
+    display: block;
+    max-width: 100%;
+    height: auto !important;
+    overflow: visible;
+  }
+
+  .print-page .recharts-legend-wrapper {
+    width: 100% !important;
+    left: 0 !important;
   }
 
   /* 인쇄 중에는 애니메이션이 중간 상태로 굳어 그림이 잘린다 */

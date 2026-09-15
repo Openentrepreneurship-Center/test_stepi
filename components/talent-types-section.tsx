@@ -201,6 +201,7 @@ export default function TalentTypesSection({
       {/* ── 2안 : 전체 목록 ── */}
       <Block
         title="전체 인재상"
+        split
         count={`${TALENT_TYPES.length}개`}
         badge={<MockBadge />}
         desc={
@@ -236,7 +237,7 @@ export default function TalentTypesSection({
                 <ul className="space-y-1">
                   {g.items.map((axis, i) => (
                     // 같은 인재상이 여러 구획에 나오므로 번호만으로는 key 가 겹친다
-                    <li key={`${g.id}-${axis.no}`}>
+                    <li key={`${g.id}-${axis.no}`} className="print-row">
                       <Row axis={axis} index={g.start + i} highlight onOpen={openAxis} />
                     </li>
                   ))}
@@ -258,7 +259,7 @@ export default function TalentTypesSection({
               {allShown && (
                 <ul className="space-y-1">
                   {others.map((axis, i) => (
-                    <li key={`other-${axis.no}`}>
+                    <li key={`other-${axis.no}`} className="print-row">
                       <Row axis={axis} index={selectedRowCount + i} onOpen={openAxis} />
                     </li>
                   ))}
@@ -345,7 +346,7 @@ function GroupHeading({
   );
 
   if (!onToggle) {
-    return <h3 className="mb-3 flex items-baseline gap-3">{inner}</h3>;
+    return <h3 className="print-head mb-3 flex items-baseline gap-3">{inner}</h3>;
   }
   return (
     <h3 className="mb-3">
@@ -453,6 +454,7 @@ function Block({
   badge,
   desc,
   action,
+  split,
   children,
 }: {
   title: string;
@@ -462,11 +464,13 @@ function Block({
   // 문장 안 일부만 굵게 쓰는 곳이 있어 문자열이 아니라 노드를 받는다
   desc: React.ReactNode;
   action?: React.ReactNode;
+  /** 인쇄 때 페이지를 넘겨 이어 쓴다 */
+  split?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <section className="panel">
-      <div className="flex items-start justify-between gap-4 pb-3.5 mb-4 border-b border-[var(--line)]">
+    <section className={`panel${split ? " print-split" : ""}`}>
+      <div className="print-head flex items-start justify-between gap-4 pb-3.5 mb-4 border-b border-[var(--line)]">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2.5">
             <span className="mark" />
