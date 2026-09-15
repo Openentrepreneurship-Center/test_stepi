@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldAlert, FileSearch, Upload, Loader2 } from "lucide-react";
+import { ShieldAlert, FileSearch, Upload, Loader2, AlertTriangle } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import {
   prelim,
@@ -81,7 +81,7 @@ export default function PrelimMonitor() {
               {running ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
               {running ? "실행 중…" : "검토 실행"}
             </button>
-            {error && <span className="text-[12px] text-[var(--bad)]">{error}</span>}
+            {error && <span className="text-[13px] text-[var(--bad)]">{error}</span>}
           </div>
         </form>
       </section>
@@ -97,10 +97,12 @@ export default function PrelimMonitor() {
             <TabButton active={tab === "recusal"} onClick={() => setTab("recusal")}>
               제척 ({current.counts.recusal_total})
             </TabButton>
-            <span className="ml-auto text-[12px] text-[var(--ink-muted)] font-mono">
+            <span className="ml-auto text-[13px] text-[var(--ink-muted)] font-mono">
               ticket: {current.ticket} · eval: {current.eval_date}
             </span>
           </div>
+
+          <PrelimWarnings res={current} />
 
           {tab === "summary" && <SummaryTab res={current} />}
           {tab === "blind" && <BlindTab hits={current.blind_hits} truncated={current.truncated_blind} />}
@@ -113,22 +115,22 @@ export default function PrelimMonitor() {
         <h2 className="flex items-center gap-2.5 text-[19px] font-bold tracking-[-0.01em] mb-4"><span className="mark" />최근 실행 기록</h2>
         <div className="bg-[var(--paper)] border border-[var(--line-strong)] rounded-xl overflow-hidden">
           {history.length === 0 ? (
-            <div className="py-10 px-4 text-[13px] text-[var(--ink-muted)]">아직 실행 기록이 없습니다.</div>
+            <div className="py-10 px-4 text-[14px] text-[var(--ink-muted)]">아직 실행 기록이 없습니다.</div>
           ) : history.map((h) => (
             <button
               key={h.ticket}
               onClick={() => loadTicket(h.ticket)}
               className="w-full text-left grid grid-cols-12 gap-4 px-4 py-3.5 border-b border-[var(--line)] last:border-b-0 hover:bg-[var(--bg-2)] transition"
             >
-              <div className="col-span-3 font-mono text-[12px] text-[var(--ink-soft)] truncate">{h.ticket}</div>
-              <div className="col-span-3 text-[13px] truncate">{h.label || "—"}</div>
-              <div className="col-span-2 text-[12px] text-[var(--ink-muted)]">
+              <div className="col-span-3 font-mono text-[13px] text-[var(--ink-soft)] truncate">{h.ticket}</div>
+              <div className="col-span-3 text-[14px] truncate">{h.label || "—"}</div>
+              <div className="col-span-2 text-[13px] text-[var(--ink-muted)]">
                 지원자 {h.applicant_count}
               </div>
-              <div className="col-span-2 text-[12px] text-[var(--ink-muted)]">
+              <div className="col-span-2 text-[13px] text-[var(--ink-muted)]">
                 블라인드 {h.counts?.blind_total ?? 0} · 제척 {h.counts?.recusal_total ?? 0}
               </div>
-              <div className="col-span-2 text-[12px] text-[var(--ink-muted)] text-right">
+              <div className="col-span-2 text-[13px] text-[var(--ink-muted)] text-right">
                 {new Date(h.computed_at).toLocaleString("ko-KR")}
               </div>
             </button>
@@ -142,7 +144,7 @@ export default function PrelimMonitor() {
 function FileField({ name, label, hint, required }: { name: string; label: string; hint?: string; required?: boolean }) {
   return (
     <label className="col-span-12 lg:col-span-4 block">
-      <div className="text-[12px] text-[var(--ink-muted)] mb-1">
+      <div className="text-[13px] text-[var(--ink-muted)] mb-1">
         {label} {required && <span className="text-[var(--bad)]">*</span>}
       </div>
       <input
@@ -150,9 +152,9 @@ function FileField({ name, label, hint, required }: { name: string; label: strin
         name={name}
         required={required}
         accept=".xlsx,.xlsm"
-        className="block w-full text-[13px] file:mr-3 file:px-3 file:py-1 file:border file:border-[var(--line-strong)] file:bg-transparent file:text-[12px] file:cursor-pointer"
+        className="block w-full text-[14px] file:mr-3 file:px-3 file:py-1 file:border file:border-[var(--line-strong)] file:bg-transparent file:text-[13px] file:cursor-pointer"
       />
-      {hint && <div className="text-[11px] text-[var(--ink-soft)] mt-1">{hint}</div>}
+      {hint && <div className="text-[12px] text-[var(--ink-soft)] mt-1">{hint}</div>}
     </label>
   );
 }
@@ -160,13 +162,13 @@ function FileField({ name, label, hint, required }: { name: string; label: strin
 function TextField({ name, label, defaultValue, placeholder }: { name: string; label: string; defaultValue?: string; placeholder?: string }) {
   return (
     <label className="col-span-6 lg:col-span-3 block">
-      <div className="text-[12px] text-[var(--ink-muted)] mb-1">{label}</div>
+      <div className="text-[13px] text-[var(--ink-muted)] mb-1">{label}</div>
       <input
         type="text"
         name={name}
         defaultValue={defaultValue}
         placeholder={placeholder}
-        className="block w-full px-2 py-1 border border-[var(--line-strong)] bg-transparent text-[13px]"
+        className="block w-full px-2 py-1 border border-[var(--line-strong)] bg-transparent text-[14px]"
       />
     </label>
   );
@@ -176,10 +178,28 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
   return (
     <button
       onClick={onClick}
-      className={`pb-2 text-[14px] border-b-2 ${active ? "border-[var(--ink)] text-[var(--ink)]" : "border-transparent text-[var(--ink-muted)] hover:text-[var(--ink)]"}`}
+      className={`pb-2 text-[15px] border-b-2 ${active ? "border-[var(--ink)] text-[var(--ink)]" : "border-transparent text-[var(--ink-muted)] hover:text-[var(--ink)]"}`}
     >
       {children}
     </button>
+  );
+}
+
+/** 수험번호 누락·시트 읽기 실패를 결과 위에 그대로 드러낸다 (조용한 합성 번호 방지). */
+function PrelimWarnings({ res }: { res: PrelimRunResponse }) {
+  const lines = res.warnings ?? res.counts.skipped ?? [];
+  if (lines.length === 0) return null;
+  return (
+    <div className="mb-5 rounded-lg border border-[var(--bad)]/30 bg-[var(--bad)]/8 px-4 py-3">
+      <div className="flex items-center gap-2 text-[14px] font-semibold text-[var(--bad)]">
+        <AlertTriangle size={15} /> 확인 필요
+      </div>
+      <ul className="mt-2 space-y-1 text-[14px] text-[var(--ink)]">
+        {lines.map((w, i) => (
+          <li key={i} className="leading-6">· {w}</li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -192,8 +212,8 @@ function SummaryTab({ res }: { res: PrelimRunResponse }) {
           <ShieldAlert size={15} /> 블라인드 위배
         </div>
         <div className="text-[40px] leading-none numeral">{c.blind_total}</div>
-        <div className="mt-2 text-[12px] text-[var(--ink-soft)]">지원자 {c.applicants}명 중</div>
-        <div className="mt-5 text-[13px] space-y-1">
+        <div className="mt-2 text-[13px] text-[var(--ink-soft)]">지원자 {c.applicants}명 중</div>
+        <div className="mt-5 text-[14px] space-y-1">
           {Object.entries(c.blind_by_category).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
             <div key={k} className="flex justify-between">
               <span>{k}</span><span className="tabular-nums">{v}</span>
@@ -206,8 +226,8 @@ function SummaryTab({ res }: { res: PrelimRunResponse }) {
           <FileSearch size={15} /> 제척
         </div>
         <div className="text-[40px] leading-none numeral">{c.recusal_total}</div>
-        <div className="mt-2 text-[12px] text-[var(--ink-soft)]">지원자 {c.applicants}명 중</div>
-        <div className="mt-5 text-[13px] space-y-1">
+        <div className="mt-2 text-[13px] text-[var(--ink-soft)]">지원자 {c.applicants}명 중</div>
+        <div className="mt-5 text-[14px] space-y-1">
           {Object.entries(c.recusal_by_rule).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
             <div key={k} className="flex justify-between">
               <span className="truncate pr-2">{k}</span><span className="tabular-nums">{v}</span>
@@ -215,7 +235,7 @@ function SummaryTab({ res }: { res: PrelimRunResponse }) {
           ))}
         </div>
       </div>
-      <div className="col-span-12 lg:col-span-4 panel text-[12px] text-[var(--ink-muted)]">
+      <div className="col-span-12 lg:col-span-4 panel text-[13px] text-[var(--ink-muted)]">
         <div className="mb-3 text-[var(--ink)]">참고</div>
         <p className="leading-6">
           블라인드 hit 은 substring + 5단계 FP 필터를 통과한 키워드. 최종 위배 판단은 검수자가 함.
@@ -230,11 +250,11 @@ function SummaryTab({ res }: { res: PrelimRunResponse }) {
 
 function BlindTab({ hits, truncated }: { hits: BlindHit[]; truncated: boolean }) {
   if (hits.length === 0) {
-    return <div className="py-8 text-[13px] text-[var(--ink-muted)]">블라인드 hit 없음.</div>;
+    return <div className="py-8 text-[14px] text-[var(--ink-muted)]">블라인드 hit 없음.</div>;
   }
   return (
     <div>
-      <div className="grid grid-cols-12 gap-4 px-1 py-2 border-b border-[var(--line-strong)] text-[12px] text-[var(--ink-soft)]">
+      <div className="grid grid-cols-12 gap-4 px-1 py-2 border-b border-[var(--line-strong)] text-[13px] text-[var(--ink-soft)]">
         <div className="col-span-2">지원자</div>
         <div className="col-span-1">문항</div>
         <div className="col-span-1">카테고리</div>
@@ -243,17 +263,17 @@ function BlindTab({ hits, truncated }: { hits: BlindHit[]; truncated: boolean })
         <div className="col-span-1 text-right">offset</div>
       </div>
       {hits.map((h, i) => (
-        <div key={i} className="grid grid-cols-12 gap-4 px-1 py-2 border-b border-[var(--line)] text-[13px]">
-          <div className="col-span-2 font-mono text-[12px] truncate">{h.applicant_id}</div>
+        <div key={i} className="grid grid-cols-12 gap-4 px-1 py-2 border-b border-[var(--line)] text-[14px]">
+          <div className="col-span-2 font-mono text-[13px] truncate">{h.applicant_id}</div>
           <div className="col-span-1">Q{h.essay_no}</div>
           <div className="col-span-1">{h.category}</div>
-          <div className="col-span-2 font-mono text-[12px] truncate">{h.term}</div>
+          <div className="col-span-2 font-mono text-[13px] truncate">{h.term}</div>
           <div className="col-span-5 text-[var(--ink-muted)] truncate">{h.snippet}</div>
-          <div className="col-span-1 tabular-nums text-[12px] text-right text-[var(--ink-soft)]">{h.offset}</div>
+          <div className="col-span-1 tabular-nums text-[13px] text-right text-[var(--ink-soft)]">{h.offset}</div>
         </div>
       ))}
       {truncated && (
-        <div className="mt-3 text-[12px] text-[var(--ink-muted)]">
+        <div className="mt-3 text-[13px] text-[var(--ink-muted)]">
           (500 건으로 자름 — 전체는 ticket get API)
         </div>
       )}
@@ -263,34 +283,34 @@ function BlindTab({ hits, truncated }: { hits: BlindHit[]; truncated: boolean })
 
 function RecusalTab({ hits, truncated }: { hits: RecusalHit[]; truncated: boolean }) {
   if (hits.length === 0) {
-    return <div className="py-8 text-[13px] text-[var(--ink-muted)]">제척 hit 없음.</div>;
+    return <div className="py-8 text-[14px] text-[var(--ink-muted)]">제척 hit 없음.</div>;
   }
   return (
     <div>
-      <div className="grid grid-cols-12 gap-4 px-1 py-2 border-b border-[var(--line-strong)] text-[12px] text-[var(--ink-soft)]">
+      <div className="grid grid-cols-12 gap-4 px-1 py-2 border-b border-[var(--line-strong)] text-[13px] text-[var(--ink-soft)]">
         <div className="col-span-2">지원자</div>
         <div className="col-span-3">규칙</div>
         <div className="col-span-1">verdict</div>
         <div className="col-span-6">매칭 상세</div>
       </div>
       {hits.map((h, i) => (
-        <div key={i} className="grid grid-cols-12 gap-4 px-1 py-2 border-b border-[var(--line)] text-[13px]">
-          <div className="col-span-2 font-mono text-[12px] truncate">{h.applicant_id}</div>
-          <div className="col-span-3 text-[12px]">{h.rule}</div>
-          <div className="col-span-1 text-[12px] font-medium">
+        <div key={i} className="grid grid-cols-12 gap-4 px-1 py-2 border-b border-[var(--line)] text-[14px]">
+          <div className="col-span-2 font-mono text-[13px] truncate">{h.applicant_id}</div>
+          <div className="col-span-3 text-[13px]">{h.rule}</div>
+          <div className="col-span-1 text-[13px] font-medium">
             <span className={
               h.verdict === "제척대상" ? "text-[var(--bad)]"
               : h.verdict === "제척" ? "text-[var(--bad)]"
               : "text-[var(--ink-muted)]"
             }>{h.verdict}</span>
           </div>
-          <div className="col-span-6 text-[12px] text-[var(--ink-muted)] font-mono truncate">
+          <div className="col-span-6 text-[13px] text-[var(--ink-muted)] font-mono truncate">
             {JSON.stringify(h.matched, null, 0)}
           </div>
         </div>
       ))}
       {truncated && (
-        <div className="mt-3 text-[12px] text-[var(--ink-muted)]">
+        <div className="mt-3 text-[13px] text-[var(--ink-muted)]">
           (500 건으로 자름 — 전체는 ticket get API)
         </div>
       )}

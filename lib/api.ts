@@ -535,6 +535,10 @@ export interface PrelimCounts {
   blind_total: number;
   recusal_by_rule: Record<string, number>;
   recusal_total: number;
+  /** 수험번호가 빈 줄 수 — 대시보드 지원자 번호와 연결되지 않는 줄 */
+  no_id_rows?: number;
+  /** 읽지 못해 건너뛴 파일·시트 안내 */
+  skipped?: string[];
 }
 export interface PrelimRunResponse {
   ticket: string;
@@ -545,6 +549,7 @@ export interface PrelimRunResponse {
   recusal_hits: RecusalHit[];
   truncated_blind: boolean;
   truncated_recusal: boolean;
+  warnings?: string[];
 }
 export interface PrelimSummary {
   ticket: string;
