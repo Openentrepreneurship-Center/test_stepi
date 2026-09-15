@@ -18,6 +18,7 @@ export default async function DashboardPage() {
         icon={LayoutDashboard}
         title="분석 현황"
         description="업로드된 자기소개서 배치 단위로 분석 결과를 관리합니다. 새 배치를 시작하거나 진행 상태를 확인할 수 있습니다."
+        wideDescription
         aside={
           <Link href="/jobs/new" className="btn-primary">
             + 새 분석 시작
@@ -75,9 +76,6 @@ export default async function DashboardPage() {
                   <div className="col-span-5">
                     <div className="text-[16.5px] font-medium text-[var(--ink)] group-hover:underline underline-offset-4 decoration-[var(--secondary)] truncate">
                       {label}
-                    </div>
-                    <div className="mt-0.5 font-mono text-[12.5px] text-[var(--ink-soft)]">
-                      {j.job_id}
                     </div>
                   </div>
                   <div className="col-span-2">

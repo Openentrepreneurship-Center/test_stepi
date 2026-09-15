@@ -8,13 +8,15 @@ interface Props {
   icon?: LucideIcon;
   title: ReactNode;
   description?: ReactNode;
+  /** 설명 문구 폭 제한(64ch)을 풀어 가능한 한 한 줄로 */
+  wideDescription?: boolean;
   /** 우측 액션/통계 클러스터 */
   aside?: ReactNode;
   /** 뒤로가기 링크 */
   back?: { href: string; label: string };
 }
 
-export default function PageHeader({ eyebrow, icon: Icon, title, description, aside, back }: Props) {
+export default function PageHeader({ eyebrow, icon: Icon, title, description, wideDescription, aside, back }: Props) {
   return (
     <header className="relative">
       {back && (
@@ -41,7 +43,7 @@ export default function PageHeader({ eyebrow, icon: Icon, title, description, as
             {title}
           </h1>
           {description && (
-            <p className="mt-3 text-[15px] leading-[1.7] text-[var(--ink-muted)] max-w-[64ch]">
+            <p className={`mt-3 text-[15px] leading-[1.7] text-[var(--ink-muted)] ${wideDescription ? "" : "max-w-[64ch]"}`}>
               {description}
             </p>
           )}
