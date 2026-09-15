@@ -65,7 +65,7 @@ export default function TuringMonitor() {
         title="Turing"
         description="AI가 생성한 분석 결과의 신뢰성을 자동으로 점검합니다. ① 제출 자료에 없는 내용을 생성하지 않았는지, ② 모든 항목이 빠짐없이 완성됐는지, ③ 지원자 1명당 처리 시간을 최근 작업 기준으로 보여줍니다."
         aside={
-          <div className="flex items-center gap-3 text-[13px] text-[var(--ink-muted)]">
+          <div className="flex items-center gap-3 text-[14px] text-[var(--ink-muted)]">
             {updatedAt && (
               <span className="tabular-nums">
                 {updatedAt.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })} 기준
@@ -79,7 +79,7 @@ export default function TuringMonitor() {
       />
 
       {error && (
-        <div className="mt-8 border-l-2 border-[var(--bad)] pl-4 py-2 text-[13px] text-[var(--bad)]">
+        <div className="mt-8 border-l-2 border-[var(--bad)] pl-4 py-2 text-[14px] text-[var(--bad)]">
           {error}
         </div>
       )}
@@ -115,14 +115,14 @@ export default function TuringMonitor() {
       <section className="mt-12">
         <div className="flex items-center justify-between mb-5">
           <h2 className="flex items-center gap-2.5 text-[19px] font-bold tracking-[-0.01em]"><span className="mark" />검수 권장 분석</h2>
-          <span className="inline-flex items-center gap-2 text-[12px] text-[var(--ink-muted)]"><AlertTriangle size={14} /> 제출 자료와 일치하지 않을 가능성이 있는 항목</span>
+          <span className="inline-flex items-center gap-2 text-[13px] text-[var(--ink-muted)]"><AlertTriangle size={14} /> 제출 자료와 일치하지 않을 가능성이 있는 항목</span>
         </div>
         <div className="bg-[var(--paper)] border border-[var(--line-strong)] rounded-xl overflow-hidden">
           {risks.length === 0 ? (
-            <div className="py-10 px-4 text-[13px] text-[var(--ink-muted)]">검수가 필요한 항목이 없습니다. 모든 분석이 제출 자료와 일치합니다.</div>
+            <div className="py-10 px-4 text-[14px] text-[var(--ink-muted)]">검수가 필요한 항목이 없습니다. 모든 분석이 제출 자료와 일치합니다.</div>
           ) : (
           <>
-          <div className="hidden lg:grid grid-cols-12 gap-4 px-4 py-3 bg-[var(--bg-2)] border-b border-[var(--line-strong)] text-[12.5px] font-semibold tracking-wide text-[var(--ink-muted)]">
+          <div className="hidden lg:grid grid-cols-12 gap-4 px-4 py-3 bg-[var(--bg-2)] border-b border-[var(--line-strong)] text-[13.5px] font-semibold tracking-wide text-[var(--ink-muted)]">
             <div className="col-span-3">지원자</div>
             <div className="col-span-2">유형</div>
             <div className="col-span-3">지적 사항</div>
@@ -140,14 +140,14 @@ export default function TuringMonitor() {
                 className="grid grid-cols-12 gap-4 px-4 py-4 border-b border-[var(--line)] last:border-b-0 hover:bg-[var(--bg-2)] transition"
               >
                 <div className="col-span-12 lg:col-span-3 min-w-0">
-                  <div className="font-mono text-[13px] text-[var(--ink)] truncate">{item.applicant_id}</div>
-                  <div className="font-mono text-[11px] text-[var(--ink-soft)] truncate">{item.request_id || item.job_id}</div>
+                  <div className="font-mono text-[14px] text-[var(--ink)] truncate">{item.applicant_id}</div>
+                  <div className="font-mono text-[12px] text-[var(--ink-soft)] truncate">{item.request_id || item.job_id}</div>
                 </div>
-                <div className="col-span-4 lg:col-span-2 tabular-nums text-[13px]">{riskLabel(item)}</div>
-                <div className="col-span-8 lg:col-span-3 text-[12px] text-[var(--bad)] min-w-0">
+                <div className="col-span-4 lg:col-span-2 tabular-nums text-[14px]">{riskLabel(item)}</div>
+                <div className="col-span-8 lg:col-span-3 text-[13px] text-[var(--bad)] min-w-0">
                   {isHallucinationFlag ? flagLabel(item.risk_type) : misses(item.numeric_misses, "숫자")}
                 </div>
-                <div className="col-span-12 lg:col-span-4 text-[12px] text-[var(--ink-muted)] min-w-0">
+                <div className="col-span-12 lg:col-span-4 text-[13px] text-[var(--ink-muted)] min-w-0">
                   {isHallucinationFlag ? (
                     <div>
                       <div className="line-clamp-2 text-[var(--ink)]">AI 분석: {item.nli_contradictions?.[0]?.generated || item.generated_excerpt}</div>
@@ -172,10 +172,10 @@ export default function TuringMonitor() {
       <section className="mt-12">
         <div className="flex items-center justify-between mb-5">
           <h2 className="flex items-center gap-2.5 text-[19px] font-bold tracking-[-0.01em]"><span className="mark" />최근 분석 점검 내역</h2>
-          {loading && <span className="text-[13px] text-[var(--ink-muted)] dots-anim">집계 중</span>}
+          {loading && <span className="text-[14px] text-[var(--ink-muted)] dots-anim">집계 중</span>}
         </div>
         <div className="bg-[var(--paper)] border border-[var(--line-strong)] rounded-xl overflow-hidden">
-          <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-[var(--bg-2)] border-b border-[var(--line-strong)] text-[12.5px] font-semibold tracking-wide text-[var(--ink-muted)]">
+          <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-[var(--bg-2)] border-b border-[var(--line-strong)] text-[13.5px] font-semibold tracking-wide text-[var(--ink-muted)]">
             <div className="col-span-3">분석 작업</div>
             <div className="col-span-1 text-center">상태</div>
             <div className="col-span-2 text-right">할루시네이션 방지</div>
@@ -184,7 +184,7 @@ export default function TuringMonitor() {
             <div className="col-span-2 text-right">지원자</div>
           </div>
           {latestRows.length === 0 ? (
-            <div className="py-16 text-center text-[14px] text-[var(--ink-muted)]">
+            <div className="py-16 text-center text-[15px] text-[var(--ink-muted)]">
               아직 집계할 분석 결과가 없습니다.
             </div>
           ) : latestRows.map((row) => (
@@ -194,10 +194,10 @@ export default function TuringMonitor() {
               className="grid grid-cols-12 gap-4 items-center px-4 py-4 border-b border-[var(--line)] last:border-b-0 hover:bg-[var(--bg-2)] transition"
             >
               <div className="col-span-3 min-w-0">
-                <div className="font-mono text-[13px] truncate text-[var(--ink)]">{row.request_id || row.job_id}</div>
-                <div className="font-mono text-[11px] truncate text-[var(--ink-soft)]">{row.job_id}</div>
+                <div className="font-mono text-[14px] truncate text-[var(--ink)]">{row.request_id || row.job_id}</div>
+                <div className="font-mono text-[12px] truncate text-[var(--ink-soft)]">{row.job_id}</div>
               </div>
-              <div className="col-span-1 text-center text-[12px] text-[var(--ink-muted)]">{statusLabel(row.status)}</div>
+              <div className="col-span-1 text-center text-[13px] text-[var(--ink-muted)]">{statusLabel(row.status)}</div>
               <div className="col-span-2 text-right tabular-nums">{percent(row.hallucination_prevention_rate)}</div>
               <div className="col-span-2 text-right tabular-nums">{percent(row.format_compliance_rate)}</div>
               <div className="col-span-2 text-right tabular-nums">{minutes(row.avg_seconds_per_applicant)}</div>
@@ -211,13 +211,13 @@ export default function TuringMonitor() {
 
       <section className="mt-5 grid grid-cols-12 gap-5">
         <div className="col-span-12 lg:col-span-4 panel">
-          <div className="flex items-center gap-2 text-[14px] font-semibold text-[var(--ink)]"><Activity size={15} className="text-[var(--secondary-2)]" /> 점검 방식</div>
-          <p className="mt-3 text-[13px] leading-6 text-[var(--ink-muted)]">
+          <div className="flex items-center gap-2 text-[15px] font-semibold text-[var(--ink)]"><Activity size={15} className="text-[var(--secondary-2)]" /> 점검 방식</div>
+          <p className="mt-3 text-[14px] leading-6 text-[var(--ink-muted)]">
             AI가 작성한 문장 속 숫자와 이름·기관을, 지원자가 제출한 자료·논문과 하나씩 대조합니다. 자료에 없거나 다른 값이 발견되면 위 &lsquo;검수 권장 분석&rsquo;에 모아 표시합니다.
           </p>
         </div>
         <div className="col-span-12 lg:col-span-8 panel">
-          <div className="grid grid-cols-2 gap-4 text-[13px]">
+          <div className="grid grid-cols-2 gap-4 text-[14px]">
             <StatusItem label="분석 대상 지원자" value={`${metrics?.hallucination_prevention.samples ?? 0}명`} />
             <StatusItem label="1명당 평균 처리 시간" value={minutes(perAppAvgSec)} />
           </div>
@@ -231,15 +231,15 @@ function MetricPanel({ icon, label, hint, value, suffix, detail, decimals = 1 }:
   return (
     <div className="col-span-12 lg:col-span-4 panel min-h-[170px] relative overflow-hidden">
       <span className="absolute left-0 top-0 h-full w-[3px] bg-[var(--secondary)]" />
-      <div className="flex items-center gap-2 text-[13.5px] font-semibold text-[var(--ink-2)]">
+      <div className="flex items-center gap-2 text-[14.5px] font-semibold text-[var(--ink-2)]">
         <span className="text-[var(--secondary-2)]">{icon}</span>{label}
       </div>
-      <div className="mt-1.5 text-[12px] text-[var(--ink-muted)]">{hint}</div>
+      <div className="mt-1.5 text-[13px] text-[var(--ink-muted)]">{hint}</div>
       <div className="mt-3 flex items-baseline gap-2">
         <span className="numeral text-[52px] leading-none text-[var(--ink)]">{value == null ? "—" : value.toFixed(decimals)}</span>
-        <span className="text-[14px] font-medium text-[var(--ink-muted)]">{suffix}</span>
+        <span className="text-[15px] font-medium text-[var(--ink-muted)]">{suffix}</span>
       </div>
-      <div className="mt-4 pt-3 border-t border-[var(--line)] text-[12.5px] text-[var(--ink-muted)]">{detail}</div>
+      <div className="mt-4 pt-3 border-t border-[var(--line)] text-[13.5px] text-[var(--ink-muted)]">{detail}</div>
     </div>
   );
 }

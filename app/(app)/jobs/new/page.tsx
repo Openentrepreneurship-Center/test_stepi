@@ -129,7 +129,7 @@ export default function NewJobPage() {
 
       <form onSubmit={submit} className="space-y-10 mt-6 panel">
         <label className="block">
-          <span className="block text-[11px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
+          <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
             자기소개서 (.xlsx)
           </span>
           <label
@@ -156,8 +156,8 @@ export default function NewJobPage() {
               <>
                 <FileSpreadsheet size={28} strokeWidth={1.4} className="text-[var(--gold-2)]" />
                 <div className="text-center">
-                  <div className="text-sm font-medium">{file.name}</div>
-                  <div className="text-xs text-[var(--ink-muted)] mt-1">
+                  <div className="text-[15px] font-medium">{file.name}</div>
+                  <div className="text-[13px] text-[var(--ink-muted)] mt-1">
                     {(file.size / 1024).toFixed(0)} KB · 클릭하여 변경
                   </div>
                 </div>
@@ -166,8 +166,8 @@ export default function NewJobPage() {
               <>
                 <UploadCloud size={28} strokeWidth={1.4} className="text-[var(--ink-muted)]" />
                 <div className="text-center">
-                  <div className="text-sm font-medium">자기소개서 엑셀을 끌어놓거나 클릭해서 선택하세요</div>
-                  <div className="text-xs text-[var(--ink-muted)] mt-1">
+                  <div className="text-[15px] font-medium">자기소개서 엑셀을 끌어놓거나 클릭해서 선택하세요</div>
+                  <div className="text-[13px] text-[var(--ink-muted)] mt-1">
                     지원자들의 자기소개서가 담긴 엑셀(.xlsx) 파일
                   </div>
                 </div>
@@ -176,7 +176,7 @@ export default function NewJobPage() {
           </label>
           {sheets.length > 0 && (
             <div className="mt-3">
-              <span className="block text-[11px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-1.5">
+              <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-1.5">
                 분석할 시트 ({sheets.length}개 감지)
               </span>
               <select
@@ -195,7 +195,7 @@ export default function NewJobPage() {
         </label>
 
         <label className="block">
-          <span className="block text-[11px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
+          <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
             지원정보 (선택 · 논문·학술지 게재 내역)
           </span>
           <label
@@ -222,8 +222,8 @@ export default function NewJobPage() {
               <>
                 <FileSpreadsheet size={22} strokeWidth={1.4} className="text-[var(--gold-2)]" />
                 <div className="text-center">
-                  <div className="text-sm font-medium">{infoFile.name}</div>
-                  <div className="text-xs text-[var(--ink-muted)] mt-1">
+                  <div className="text-[15px] font-medium">{infoFile.name}</div>
+                  <div className="text-[13px] text-[var(--ink-muted)] mt-1">
                     {(infoFile.size / 1024).toFixed(0)} KB · 클릭하여 변경
                   </div>
                 </div>
@@ -232,8 +232,8 @@ export default function NewJobPage() {
               <>
                 <UploadCloud size={22} strokeWidth={1.4} className="text-[var(--ink-muted)]" />
                 <div className="text-center">
-                  <div className="text-sm font-medium">지원정보 엑셀을 끌어놓거나 클릭해서 선택하세요</div>
-                  <div className="text-xs text-[var(--ink-muted)] mt-1">
+                  <div className="text-[15px] font-medium">지원정보 엑셀을 끌어놓거나 클릭해서 선택하세요</div>
+                  <div className="text-[13px] text-[var(--ink-muted)] mt-1">
                     지원자별 논문·학술지 게재 내역이 담긴 엑셀입니다. 같은 지원자 번호로 자기소개서와 자동 연결됩니다. 없으면 이 정보 없이 분석합니다.
                   </div>
                 </div>
@@ -242,7 +242,7 @@ export default function NewJobPage() {
           </label>
           {infoSheets.length > 0 && (
             <div className="mt-3">
-              <span className="block text-[11px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-1.5">
+              <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-1.5">
                 지원정보 시트 ({infoSheets.length}개 감지)
               </span>
               <select
@@ -261,7 +261,7 @@ export default function NewJobPage() {
         </label>
 
         <label className="block">
-          <span className="block text-[11px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
+          <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
             논문 PDF (선택 · 압축파일)
           </span>
           <label
@@ -282,8 +282,8 @@ export default function NewJobPage() {
               <>
                 <FileArchive size={22} strokeWidth={1.4} className="text-[var(--gold-2)]" />
                 <div className="text-center">
-                  <div className="text-sm font-medium">{pdfZip.name}</div>
-                  <div className="text-xs text-[var(--ink-muted)] mt-1">
+                  <div className="text-[15px] font-medium">{pdfZip.name}</div>
+                  <div className="text-[13px] text-[var(--ink-muted)] mt-1">
                     {(pdfZip.size / 1024 / 1024).toFixed(1)} MB · 클릭하여 변경
                   </div>
                 </div>
@@ -292,8 +292,8 @@ export default function NewJobPage() {
               <>
                 <UploadCloud size={22} strokeWidth={1.4} className="text-[var(--ink-muted)]" />
                 <div className="text-center">
-                  <div className="text-sm font-medium">논문 PDF 압축파일(zip)을 끌어놓거나 클릭해서 선택하세요</div>
-                  <div className="text-xs text-[var(--ink-muted)] mt-1">
+                  <div className="text-[15px] font-medium">논문 PDF 압축파일(zip)을 끌어놓거나 클릭해서 선택하세요</div>
+                  <div className="text-[13px] text-[var(--ink-muted)] mt-1">
                     지원자 번호로 된 폴더를 만들어 그 안에 해당 지원자의 논문 PDF를 넣고, 전체를 zip으로 압축해 올려주세요. 폴더 이름이 지원자 번호와 같아야 자동 연결됩니다.
                   </div>
                 </div>
@@ -304,7 +304,7 @@ export default function NewJobPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <label className="block">
-            <span className="block text-[11px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
+            <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
               배치 라벨 (선택)
             </span>
             <input
@@ -315,7 +315,7 @@ export default function NewJobPage() {
             />
           </label>
           <label className="block">
-            <span className="block text-[11px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
+            <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
               직군 지정
             </span>
             <select
@@ -333,7 +333,7 @@ export default function NewJobPage() {
         </div>
 
         <fieldset>
-          <span className="block text-[11px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-3">
+          <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-3">
             분석 깊이
           </span>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -358,20 +358,20 @@ export default function NewJobPage() {
                   onChange={() => setMode(opt.v as typeof mode)}
                   className="sr-only"
                 />
-                <div className="font-medium text-sm">{opt.t}</div>
-                <div className="text-xs text-[var(--ink-muted)] mt-1">{opt.d}</div>
+                <div className="font-medium text-[15px]">{opt.t}</div>
+                <div className="text-[13px] text-[var(--ink-muted)] mt-1">{opt.d}</div>
               </label>
             ))}
           </div>
         </fieldset>
 
         {err && (
-          <div className="text-sm text-[var(--bad)] bg-[var(--bad)]/8 border border-[var(--bad)]/30 rounded-lg px-3.5 py-2.5">
+          <div className="text-[15px] text-[var(--bad)] bg-[var(--bad)]/8 border border-[var(--bad)]/30 rounded-lg px-3.5 py-2.5">
             {err}
           </div>
         )}
         {zipSummary && (
-          <div className="text-sm text-[var(--ink-muted)] bg-[var(--bg-2)] border border-[var(--line)] rounded-lg px-3.5 py-2.5">
+          <div className="text-[15px] text-[var(--ink-muted)] bg-[var(--bg-2)] border border-[var(--line)] rounded-lg px-3.5 py-2.5">
             {zipSummary}
           </div>
         )}

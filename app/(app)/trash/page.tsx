@@ -22,16 +22,16 @@ export default async function TrashPage() {
       <section className="mt-8">
         {list === null ? (
           <div className="panel py-16 text-center">
-            <p className="text-[15px] text-[var(--ink-muted)]">백엔드에 연결할 수 없습니다.</p>
+            <p className="text-[16px] text-[var(--ink-muted)]">백엔드에 연결할 수 없습니다.</p>
           </div>
         ) : jobs.length === 0 ? (
           <div className="panel py-16 text-center">
             <p className="text-[19px] font-bold mb-2">휴지통이 비어있습니다.</p>
-            <p className="text-[13.5px] text-[var(--ink-muted)]">삭제된 작업이 여기로 옵니다.</p>
+            <p className="text-[14.5px] text-[var(--ink-muted)]">삭제된 작업이 여기로 옵니다.</p>
           </div>
         ) : (
           <div className="bg-[var(--paper)] border border-[var(--line-strong)] rounded-xl overflow-hidden">
-            <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-[var(--bg-2)] border-b border-[var(--line-strong)] text-[12.5px] font-semibold tracking-wide text-[var(--ink-muted)]">
+            <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-[var(--bg-2)] border-b border-[var(--line-strong)] text-[13.5px] font-semibold tracking-wide text-[var(--ink-muted)]">
               <div className="col-span-5">작업</div>
               <div className="col-span-2">상태</div>
               <div className="col-span-2 text-right">진행</div>
@@ -45,19 +45,19 @@ export default async function TrashPage() {
                   className="grid grid-cols-12 items-center gap-4 px-4 py-4 border-b border-[var(--line)] last:border-b-0"
                 >
                   <div className="col-span-5">
-                    <div className="text-[15px] font-medium text-[var(--ink-muted)] truncate">{label}</div>
-                    <div className="mt-0.5 font-mono text-[12px] text-[var(--ink-soft)]">
+                    <div className="text-[16px] font-medium text-[var(--ink-muted)] truncate">{label}</div>
+                    <div className="mt-0.5 font-mono text-[13px] text-[var(--ink-soft)]">
                       {j.job_id}
                     </div>
                   </div>
                   <div className="col-span-2">
                     <JobStatusBadge status={j.status} />
                   </div>
-                  <div className="col-span-2 text-right text-[14px] tabular-nums text-[var(--ink-muted)]">
+                  <div className="col-span-2 text-right text-[15px] tabular-nums text-[var(--ink-muted)]">
                     {j.progress.done} / {j.progress.total}
                   </div>
                   <div className="col-span-3 flex items-center justify-end gap-3">
-                    <span className="text-[12px] text-[var(--ink-soft)] tabular-nums">
+                    <span className="text-[13px] text-[var(--ink-soft)] tabular-nums">
                       {j.deleted_at
                         ? new Date(j.deleted_at).toLocaleDateString("ko-KR", {
                             year: "numeric",

@@ -48,7 +48,7 @@ export default function TrashRowActions({ jobId }: { jobId: string }) {
         disabled={pending}
         title="복구"
         aria-label="복구"
-        className="inline-flex items-center gap-1.5 rounded-[2px] border border-[var(--line-strong)] px-2.5 py-1.5 text-[12.5px] text-[var(--ink)] hover:border-[var(--ink)] hover:bg-[var(--bg-2)] transition disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 rounded-[2px] border border-[var(--line-strong)] px-2.5 py-1.5 text-[13.5px] text-[var(--ink)] hover:border-[var(--ink)] hover:bg-[var(--bg-2)] transition disabled:opacity-50"
       >
         <Undo2 size={13} strokeWidth={1.7} />
         복구
@@ -59,12 +59,12 @@ export default function TrashRowActions({ jobId }: { jobId: string }) {
         disabled={pending}
         title="영구 삭제"
         aria-label="영구 삭제"
-        className="inline-flex items-center gap-1.5 rounded-[2px] border border-[var(--line-strong)] px-2.5 py-1.5 text-[12.5px] text-[var(--ink-muted)] hover:border-[var(--bad)] hover:text-[var(--bad)] hover:bg-[var(--bad)]/8 transition disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 rounded-[2px] border border-[var(--line-strong)] px-2.5 py-1.5 text-[13.5px] text-[var(--ink-muted)] hover:border-[var(--bad)] hover:text-[var(--bad)] hover:bg-[var(--bad)]/8 transition disabled:opacity-50"
       >
         <Trash2 size={13} strokeWidth={1.7} />
         영구삭제
       </button>
-      {err && <span className="text-[11px] text-[var(--bad)] ml-2">{err}</span>}
+      {err && <span className="text-[12px] text-[var(--bad)] ml-2">{err}</span>}
     </div>
   );
 }
