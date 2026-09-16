@@ -528,6 +528,8 @@ export interface RecusalHit {
   rule: string;
   verdict: string;
   matched: Record<string, unknown>;
+  /** 백엔드가 규칙별 템플릿으로 만든 제척사유 문장. 옛 결과에는 없을 수 있다 */
+  reason?: string;
 }
 export interface PrelimCounts {
   applicants: number;

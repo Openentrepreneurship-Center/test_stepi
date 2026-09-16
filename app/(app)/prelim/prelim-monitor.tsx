@@ -291,7 +291,7 @@ function RecusalTab({ hits, truncated }: { hits: RecusalHit[]; truncated: boolea
         <div className="col-span-2">지원자</div>
         <div className="col-span-3">규칙</div>
         <div className="col-span-1">verdict</div>
-        <div className="col-span-6">매칭 상세</div>
+        <div className="col-span-6">제척 사유</div>
       </div>
       {hits.map((h, i) => (
         <div key={i} className="grid grid-cols-12 gap-4 px-1 py-2 border-b border-[var(--line)] text-[14px]">
@@ -304,8 +304,13 @@ function RecusalTab({ hits, truncated }: { hits: RecusalHit[]; truncated: boolea
               : "text-[var(--ink-muted)]"
             }>{h.verdict}</span>
           </div>
-          <div className="col-span-6 text-[13px] text-[var(--ink-muted)] font-mono truncate">
-            {JSON.stringify(h.matched, null, 0)}
+          {/* 사유 문장이 본문. 옛 결과엔 reason 이 없어 그때만 원본 값을 보여준다 */}
+          <div className="col-span-6 text-[13px] leading-6" title={JSON.stringify(h.matched)}>
+            {h.reason ?? (
+              <span className="text-[var(--ink-muted)] font-mono break-all">
+                {JSON.stringify(h.matched, null, 0)}
+              </span>
+            )}
           </div>
         </div>
       ))}
