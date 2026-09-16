@@ -56,7 +56,7 @@ export default function PrelimMonitor() {
         eyebrow="사전 스크리닝"
         icon={ShieldAlert}
         title="사전스크리닝검토"
-        description="블라인드 위배(자기소개서 키워드 스캔)와 위원·기관 제척 매칭을 한 번에 점검합니다. 파일 업로드 후 즉시 실행됩니다."
+        description={"자기소개서의 블라인드 위배 여부와 위원·기관 제척사항을 한 번에 점검합니다.\n파일 업로드 후 자동으로 점검이 시작됩니다."}
       />
 
       {/* 업로드 폼 */}
@@ -66,12 +66,12 @@ export default function PrelimMonitor() {
           <h2 className="text-[18px] font-bold tracking-[-0.012em] text-[var(--ink)]">검토 파일 업로드</h2>
         </div>
         <form onSubmit={onSubmit} className="grid grid-cols-12 gap-5">
-          <FileField name="apply_xlsx" label="블라인드 가공 지원자 xlsx" required hint="자기소개서 + 식별정보" />
-          <FileField name="raw_xlsm" label="원본 xlsm (선택)" hint="동적 키워드 + 제척 검토용" />
-          <FileField name="academic_xlsx" label="학력제척 xlsx (선택, 암호화)" hint="학력제척 + 백데이터1 시트" />
+          <FileField name="apply_xlsx" label="자기소개서 xlsx" required />
+          <FileField name="raw_xlsm" label="원본 xlsm (선택)" />
+          <FileField name="academic_xlsx" label="학력제척 xlsx (선택, 암호화)" />
           <TextField name="academic_password" label="학력제척 암호" defaultValue="2216" />
           <TextField name="eval_date" label="평가기준일" placeholder="YYYY-MM-DD (기본: 오늘)" />
-          <TextField name="label" label="라벨 (저장용)" placeholder="2026년 1차 등" />
+          <TextField name="label" label="저장명" placeholder="2026년 1차 등" />
           <div className="col-span-12 flex items-center gap-3 mt-2">
             <button
               type="submit"

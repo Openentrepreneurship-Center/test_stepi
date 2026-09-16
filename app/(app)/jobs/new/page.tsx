@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import PageHeader from "@/components/page-header";
 
 const TRACKS = [
-  { value: "", label: "자동 추정 (시트 이름 기반)" },
+  { value: "", label: "선택 (미선택 시 자동 추정)" },
   { value: "연구직", label: "연구직" },
   { value: "전문연구직", label: "전문연구직" },
   { value: "행정직", label: "행정직" },
@@ -123,8 +123,8 @@ export default function NewJobPage() {
         back={{ href: "/", label: "분석 목록" }}
         eyebrow="지원자 분석"
         icon={FilePlus2}
-        title="새 분석"
-        description="엑셀 파일에 담긴 지원자 자기소개서를 일괄 분석합니다. 분석은 비동기로 진행되며, 진행 상태는 다음 화면에서 실시간으로 확인할 수 있습니다."
+        title="신규 분석 생성"
+        description={"업로드 파일에 담긴 자기소개서를 일괄 분석합니다.\n분석은 백그라운드에서 진행되며, 진행 상태는 다음 화면에서 실시간으로 확인할 수 있습니다."}
       />
 
       <form onSubmit={submit} className="space-y-10 mt-6 panel">
@@ -167,9 +167,6 @@ export default function NewJobPage() {
                 <UploadCloud size={28} strokeWidth={1.4} className="text-[var(--ink-muted)]" />
                 <div className="text-center">
                   <div className="text-[15px] font-medium">자기소개서 엑셀을 끌어놓거나 클릭해서 선택하세요</div>
-                  <div className="text-[13px] text-[var(--ink-muted)] mt-1">
-                    지원자들의 자기소개서가 담긴 엑셀(.xlsx) 파일
-                  </div>
                 </div>
               </>
             )}
@@ -233,9 +230,6 @@ export default function NewJobPage() {
                 <UploadCloud size={22} strokeWidth={1.4} className="text-[var(--ink-muted)]" />
                 <div className="text-center">
                   <div className="text-[15px] font-medium">지원정보 엑셀을 끌어놓거나 클릭해서 선택하세요</div>
-                  <div className="text-[13px] text-[var(--ink-muted)] mt-1">
-                    지원자별 논문·학술지 게재 내역이 담긴 엑셀입니다. 같은 지원자 번호로 자기소개서와 자동 연결됩니다. 없으면 이 정보 없이 분석합니다.
-                  </div>
                 </div>
               </>
             )}
@@ -293,8 +287,8 @@ export default function NewJobPage() {
                 <UploadCloud size={22} strokeWidth={1.4} className="text-[var(--ink-muted)]" />
                 <div className="text-center">
                   <div className="text-[15px] font-medium">논문 PDF 압축파일(zip)을 끌어놓거나 클릭해서 선택하세요</div>
-                  <div className="text-[13px] text-[var(--ink-muted)] mt-1">
-                    지원자 번호로 된 폴더를 만들어 그 안에 해당 지원자의 논문 PDF를 넣고, 전체를 zip으로 압축해 올려주세요. 폴더 이름이 지원자 번호와 같아야 자동 연결됩니다.
+                  <div className="text-[13px] text-[var(--ink-muted)] mt-1 whitespace-pre-line">
+                    {"지원자 번호로 폴더를 구성하고 해당 지원자의 논문 PDF를 넣어 전체 폴더를 ZIP 파일로 압축하여 업로드해 주세요.\n폴더명은 지원자 번호와 동일해야 자기소개서와 자동 연결됩니다."}
                   </div>
                 </div>
               </>
@@ -305,7 +299,7 @@ export default function NewJobPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <label className="block">
             <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
-              배치 라벨 (선택)
+              분석명 (선택)
             </span>
             <input
               className="input"
@@ -334,7 +328,7 @@ export default function NewJobPage() {
 
         <fieldset>
           <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-3">
-            분석 깊이
+            분석 수준 선택
           </span>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {[

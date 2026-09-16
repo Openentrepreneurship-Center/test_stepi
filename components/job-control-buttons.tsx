@@ -46,8 +46,8 @@ export default function JobControlButtons({
 
   const trash = () => {
     const msg = canCancel
-      ? "진행 중인 분석을 중단하고 휴지통으로 이동합니다. 계속할까요?\n(휴지통에서 복구 또는 영구삭제 가능)"
-      : "이 작업을 휴지통으로 이동합니다. 계속할까요?\n(휴지통에서 복구 또는 영구삭제 가능)";
+      ? "진행 중인 분석을 중단하고 삭제 항목으로 이동합니다. 계속할까요?\n(삭제 항목에서 복구 또는 영구삭제 가능)"
+      : "이 작업을 삭제 항목으로 이동합니다. 계속할까요?\n(삭제 항목에서 복구 또는 영구삭제 가능)";
     if (!confirm(msg)) return;
     setErr(null);
     startTransition(async () => {
@@ -82,8 +82,8 @@ export default function JobControlButtons({
         type="button"
         onClick={trash}
         disabled={pending}
-        title="휴지통으로 이동"
-        aria-label="휴지통으로 이동"
+        title="삭제 항목으로 이동"
+        aria-label="삭제 항목으로 이동"
         className="inline-flex items-center gap-1.5 rounded-[2px] border border-[var(--line-strong)] px-3 py-[7px] text-[13px] text-[var(--ink-muted)] hover:border-[var(--bad)] hover:text-[var(--bad)] hover:bg-[var(--bad)]/5 transition disabled:opacity-50"
       >
         <Trash2 size={14} strokeWidth={1.7} />

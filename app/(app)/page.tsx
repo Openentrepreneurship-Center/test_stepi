@@ -17,11 +17,11 @@ export default async function DashboardPage() {
         eyebrow="지원자 분석"
         icon={LayoutDashboard}
         title="분석 현황"
-        description="업로드된 자기소개서 배치 단위로 분석 결과를 관리합니다. 새 배치를 시작하거나 진행 상태를 확인할 수 있습니다."
+        description={"업로드된 자기소개서를 분석하여 직무적합성 분석 결과를 제공합니다.\n새 분석을 시작하거나 분석 진행 현황을 확인할 수 있습니다."}
         wideDescription
         aside={
           <Link href="/jobs/new" className="btn-primary">
-            + 새 분석 시작
+            + 신규 분석 생성
           </Link>
         }
       />
@@ -59,14 +59,14 @@ export default async function DashboardPage() {
         ) : (
           <div className="bg-[var(--paper)] border border-[var(--line-strong)] rounded-xl overflow-hidden">
             <div className="grid grid-cols-12 items-center gap-6 px-4 py-3 bg-[var(--bg-2)] border-b border-[var(--line-strong)] text-[12.5px] font-semibold tracking-wide text-[var(--ink-muted)]">
-              <div className="col-span-5">배치</div>
+              <div className="col-span-5">분석명</div>
               <div className="col-span-2">상태</div>
-              <div className="col-span-2 text-right">진행</div>
+              <div className="col-span-2 text-right">진행률</div>
               <div className="col-span-2 text-right">생성일</div>
               <div className="col-span-1"></div>
             </div>
             {jobs.map((j) => {
-              const label = (j.request_id || "").replace(/^excel:/, "") || "이름 없는 배치";
+              const label = (j.request_id || "").replace(/^excel:/, "") || "이름 없는 분석";
               return (
                 <Link
                   key={j.job_id}

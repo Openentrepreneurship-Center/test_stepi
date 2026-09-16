@@ -15,8 +15,8 @@ export default async function TrashPage() {
       <PageHeader
         eyebrow="지원자 분석"
         icon={Trash2}
-        title="휴지통"
-        description="삭제된 분석 작업이 보관됩니다. 복구하거나 영구 삭제할 수 있습니다. 영구 삭제 시 원본 자기소개서·분석 결과·논문·평가가 모두 함께 사라집니다."
+        title="삭제 항목"
+        description={"삭제한 분석 작업을 보관합니다. 복구하거나 영구 삭제할 수 있습니다.\n영구 삭제 시 원본 자기소개서, 분석 결과, 논문 및 평가 정보가 모두 삭제되며 복구할 수 없습니다."}
       />
 
       <section className="mt-8">
@@ -26,7 +26,7 @@ export default async function TrashPage() {
           </div>
         ) : jobs.length === 0 ? (
           <div className="panel py-16 text-center">
-            <p className="text-[19px] font-bold mb-2">휴지통이 비어있습니다.</p>
+            <p className="text-[19px] font-bold mb-2">삭제 항목이 비어있습니다.</p>
             <p className="text-[14.5px] text-[var(--ink-muted)]">삭제된 작업이 여기로 옵니다.</p>
           </div>
         ) : (
@@ -38,7 +38,7 @@ export default async function TrashPage() {
               <div className="col-span-3 text-right">삭제일 / 작업</div>
             </div>
             {jobs.map((j) => {
-              const label = (j.request_id || "").replace(/^excel:/, "") || "이름 없는 배치";
+              const label = (j.request_id || "").replace(/^excel:/, "") || "이름 없는 분석";
               return (
                 <div
                   key={j.job_id}

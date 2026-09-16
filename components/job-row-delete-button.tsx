@@ -22,7 +22,7 @@ export default function JobRowDeleteButton({
     const name = label?.trim() || jobId;
     if (
       !confirm(
-        `"${name}" 작업을 휴지통으로 이동합니다.\n진행 중이면 자동으로 중단되며, 휴지통에서 복구 가능합니다.`,
+        `"${name}" 작업을 삭제 항목으로 이동합니다.\n진행 중이면 자동으로 중단되며, 삭제 항목에서 복구 가능합니다.`,
       )
     )
       return;
@@ -41,8 +41,8 @@ export default function JobRowDeleteButton({
       type="button"
       onClick={onClick}
       disabled={pending}
-      title="휴지통으로 이동"
-      aria-label="휴지통으로 이동"
+      title="삭제 항목으로 이동"
+      aria-label="삭제 항목으로 이동"
       className="grid place-items-center h-8 w-8 rounded-[2px] border border-transparent text-[var(--ink-soft)] opacity-0 group-hover:opacity-100 hover:border-[var(--bad)] hover:bg-[var(--bad)]/8 hover:text-[var(--bad)] transition disabled:opacity-50"
     >
       <Trash2 size={14} strokeWidth={1.7} />

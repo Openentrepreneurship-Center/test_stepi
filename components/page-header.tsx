@@ -42,8 +42,9 @@ export default function PageHeader({ eyebrow, icon: Icon, title, description, wi
           <h1 className="text-[clamp(27px,3.1vw,34px)] font-bold tracking-[-0.02em] leading-[1.12] text-[var(--ink)]">
             {title}
           </h1>
+          {/* whitespace-pre-line — 설명문의 줄바꿈을 요청서에 지정된 위치 그대로 보여준다 */}
           {description && (
-            <p className={`mt-3 text-[15px] leading-[1.7] text-[var(--ink-muted)] ${wideDescription ? "" : "max-w-[64ch]"}`}>
+            <p className={`mt-3 whitespace-pre-line text-[15px] leading-[1.7] text-[var(--ink-muted)] ${wideDescription ? "" : "max-w-[64ch]"}`}>
               {description}
             </p>
           )}
