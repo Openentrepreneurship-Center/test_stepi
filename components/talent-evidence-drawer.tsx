@@ -222,20 +222,20 @@ function groupByLadder(items: ItemResult[]): Array<{ ladder: string | null; item
   return out;
 }
 
-/** 판정 배지. --bad 는 쓰지 않는다. 오류 색이고, 미충족은 잘못이 아니다 */
+/** 판정 표시. 테두리 없이 글자만, O 초록 · X 적색 · N 주황 단색 */
 function VerdictBadge({ verdict }: { verdict: ItemResult["verdict"] }) {
   const style =
     verdict === "O"
-      ? "border-[var(--good)] text-[var(--good)]"
+      ? "text-[var(--good)]"
       : verdict === "X"
-        ? "border-[var(--line-strong)] text-[var(--ink-soft)]"
-        : "border-dashed border-[var(--secondary)] text-[var(--secondary-2)]";
+        ? "text-[var(--bad)]"
+        : "text-[var(--secondary)]";
   return (
     // role 없는 span 의 aria-label 은 스크린리더가 무시하고 "O" 를 그대로 읽는다
     <span
       role="img"
       aria-label={verdict === "O" ? "충족" : verdict === "X" ? "미충족" : "판정 불가"}
-      className={`mt-[1px] inline-flex h-[21px] w-[21px] shrink-0 items-center justify-center rounded-full border text-[12.5px] font-bold ${style}`}
+      className={`mt-[1px] inline-flex h-[21px] w-[21px] shrink-0 items-center justify-center text-[16px] font-extrabold ${style}`}
     >
       <span aria-hidden="true">{verdict}</span>
     </span>
