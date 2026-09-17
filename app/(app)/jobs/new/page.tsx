@@ -340,8 +340,8 @@ export default function NewJobPage() {
                 key={opt.v}
                 className={`cursor-pointer rounded-xl border px-4 py-3 transition ${
                   mode === opt.v
-                    ? "border-[var(--gold)] bg-[var(--gold)]/8"
-                    : "border-[var(--line-strong)] hover:bg-[var(--bg-2)]"
+                    ? "border-[var(--primary)] bg-[var(--primary)] text-white"
+                    : "border-[var(--line-strong)] hover:border-[var(--primary)]"
                 }`}
               >
                 <input
@@ -352,8 +352,8 @@ export default function NewJobPage() {
                   onChange={() => setMode(opt.v as typeof mode)}
                   className="sr-only"
                 />
-                <div className="font-medium text-[15px]">{opt.t}</div>
-                <div className="text-[13px] text-[var(--ink-muted)] mt-1">{opt.d}</div>
+                <div className="font-semibold text-[15px]">{opt.t}</div>
+                <div className={`text-[13px] mt-1 ${mode === opt.v ? "text-white" : "text-[var(--ink-muted)]"}`}>{opt.d}</div>
               </label>
             ))}
           </div>

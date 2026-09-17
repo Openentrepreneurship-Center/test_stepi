@@ -43,9 +43,9 @@ export default function JobRowDeleteButton({
       disabled={pending}
       title="삭제 항목으로 이동"
       aria-label="삭제 항목으로 이동"
-      className="grid place-items-center h-8 w-8 rounded-[2px] border border-transparent text-[var(--ink-soft)] opacity-0 group-hover:opacity-100 hover:border-[var(--bad)] hover:bg-[var(--bad)]/8 hover:text-[var(--bad)] transition disabled:opacity-50"
+      className="grid place-items-center h-9 w-9 rounded-[2px] border border-transparent text-[var(--ink-muted)] opacity-0 group-hover:opacity-100 hover:border-[var(--bad)] hover:bg-[var(--bad)] hover:text-white transition disabled:opacity-50"
     >
-      <Trash2 size={14} strokeWidth={1.7} />
+      <Trash2 size={17} strokeWidth={2} />
     </button>
   );
 }
