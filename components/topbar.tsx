@@ -9,8 +9,8 @@ export default function TopBar() {
   const router = useRouter();
 
   const items = [
-    { href: "/", label: "대시보드" },
-    { href: "/jobs/new", label: "새 분석" },
+    { href: "/", label: "분석 현황" },
+    { href: "/jobs/new", label: "신규 분석 생성" },
     { href: "/turing", label: "Turing" },
   ];
 
@@ -41,7 +41,7 @@ export default function TopBar() {
           <Link href="/" className="block leading-none">
             <StepiLogo size={22} />
             <div className="mt-1 text-[10px] tracking-[0.04em] text-[var(--ink-muted)]">
-              지원자 직무적합성 분석
+              AI 채용지원 시스템
             </div>
           </Link>
           <nav className="flex items-center gap-1">

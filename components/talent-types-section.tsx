@@ -56,8 +56,10 @@ const RADAR_MIN = 3;
  * `grid-cols-${n}` 처럼 조립한 이름은 그 스캔에 안 잡혀 스타일이 통째로 빠진다.
  * 그래서 완성된 문자열을 그대로 돌려준다.
  */
-function gridCols(n: number): string {
+function gridCols(n: number, printMode = false): string {
   if (n <= 1) return "grid-cols-1";
+  // PDF 는 렌더러 창 폭에 따라 xl 구간을 못 탈 수 있어, 인쇄에서는 화면 폭과 무관하게 고정한다
+  if (printMode) return n === 2 || n === 4 ? "grid-cols-2" : "grid-cols-3";
   if (n === 2 || n === 4) return "grid-cols-1 sm:grid-cols-2";
   return "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3";
 }
@@ -131,6 +133,8 @@ export default function TalentTypesSection({
     [evaluation, selectedNos],
   );
   const allShown = expanded || printMode;
+  // 인쇄에서는 34줄이 여러 장을 차지하므로 두 단으로 나누고 줄 간격을 줄인다
+  const listClass = printMode ? "grid grid-cols-2 gap-x-6" : "space-y-1";
 
   const openAxis = (axis: AxisResult, el: HTMLElement) => {
     triggerRef.current = el;
@@ -181,7 +185,7 @@ export default function TalentTypesSection({
           </p>
         )}
         <div
-          className={`grid gap-5 ${gridCols(sets.length)} ${
+          className={`grid ${printMode ? "gap-3" : "gap-5"} ${gridCols(sets.length, printMode)} ${
             status === "ready" ? "" : "opacity-55"
           }`}
         >
@@ -234,11 +238,11 @@ export default function TalentTypesSection({
                   고른 인재상이 없습니다.
                 </p>
               ) : (
-                <ul className="space-y-1">
+                <ul className={listClass}>
                   {g.items.map((axis, i) => (
                     // 같은 인재상이 여러 구획에 나오므로 번호만으로는 key 가 겹친다
                     <li key={`${g.id}-${axis.no}`} className="print-row">
-                      <Row axis={axis} index={g.start + i} highlight onOpen={openAxis} />
+                      <Row axis={axis} index={g.start + i} highlight dense={printMode} onOpen={openAxis} />
                     </li>
                   ))}
                 </ul>
@@ -257,10 +261,10 @@ export default function TalentTypesSection({
                 expanded={expanded}
               />
               {allShown && (
-                <ul className="space-y-1">
+                <ul className={listClass}>
                   {others.map((axis, i) => (
                     <li key={`other-${axis.no}`} className="print-row">
-                      <Row axis={axis} index={selectedRowCount + i} onOpen={openAxis} />
+                      <Row axis={axis} index={selectedRowCount + i} dense={printMode} onOpen={openAxis} />
                     </li>
                   ))}
                 </ul>
@@ -525,11 +529,14 @@ function Row({
   axis,
   index,
   highlight,
+  dense = false,
   onOpen,
 }: {
   axis: AxisResult;
   index: number;
   highlight?: boolean;
+  /** 인쇄용 축소 표시 */
+  dense?: boolean;
   onOpen: (axis: AxisResult, el: HTMLElement) => void;
 }) {
   const pct = ((axis.score ?? 0) / TALENT_SCORE_MAX) * 100;
@@ -540,14 +547,14 @@ function Row({
       type="button"
       onClick={(e) => onOpen(axis, e.currentTarget)}
       aria-label={`${axis.axis} 판정 근거 보기`}
-      className="block w-full rounded px-1 py-2 text-left transition hover:bg-[var(--bg-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--secondary)]"
+      className={`block w-full rounded px-1 ${dense ? "py-1" : "py-2"} text-left transition hover:bg-[var(--bg-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--secondary)]`}
     >
       <span className="min-w-0 block">
         {/* 이름과 점수를 왼쪽에 붙여 둔다. 양 끝으로 벌려 놓으면 34줄을 훑을 때
             시선이 줄마다 가로로 왕복해야 하고, 이름이 짧은 줄일수록 멀어진다 */}
-        <span className="flex items-baseline gap-2.5 mb-1.5">
+        <span className={`flex items-baseline gap-2.5 ${dense ? "mb-1" : "mb-1.5"}`}>
           <span
-            className={`min-w-0 truncate text-[17px] leading-[1.5] ${
+            className={`min-w-0 truncate ${dense ? "text-[13px]" : "text-[17px]"} leading-[1.5] ${
               highlight ? "font-semibold text-[var(--ink)]" : "text-[var(--ink)]"
             }`}
           >
@@ -557,9 +564,9 @@ function Row({
         </span>
         {/* 판정 불가는 폭 0 막대로 그리면 0점처럼 보인다. 아예 다른 표시로 바꾼다 */}
         {axis.score === null ? (
-          <span className="block h-2 w-full rounded-full border border-dashed border-[var(--line-strong)]" />
+          <span className={`block ${dense ? "h-1.5" : "h-2"} w-full rounded-full border border-dashed border-[var(--line-strong)]`} />
         ) : (
-          <span className="relative block h-2 w-full rounded-full bg-[var(--line)] overflow-hidden">
+          <span className={`relative block ${dense ? "h-1.5" : "h-2"} w-full rounded-full bg-[var(--line)] overflow-hidden`}>
             <span
               className="stepi-talent-grow block h-full rounded-full"
               style={{

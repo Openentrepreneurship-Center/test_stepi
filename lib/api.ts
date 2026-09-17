@@ -573,6 +573,9 @@ export const prelim = {
   },
   list: () => http<{ items: PrelimSummary[] }>(`/prelim/results`),
   get: (ticket: string) => http<PrelimRunResponse>(`/prelim/results/${ticket}`),
+  /** 제척사유 / 블라인드위배 / 요약 3시트 xlsx. 서버가 attachment 로 내려주므로 링크로 연다 */
+  exportUrl: (ticket: string) =>
+    `${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/export`,
 };
 
 export function feedbackKey(component: string, itemKey = ""): string {

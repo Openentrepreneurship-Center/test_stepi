@@ -21,7 +21,7 @@ const pretendard = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "과학기술정책연구원 - 지원자 직무적합 분석",
+  title: "과학기술정책연구원 AI 채용지원 시스템",
   description: "AI 기반 직무적합성 분석 및 역량 진단 시스템",
   icons: { icon: [] },
 };

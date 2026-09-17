@@ -56,7 +56,7 @@ export default function Sidebar() {
     if (hydrated) localStorage.setItem(STORAGE_KEY, collapsed ? "1" : "0");
   }, [collapsed, hydrated]);
 
-  // 세 개의 동급 기능. 「지원자 분석」만 하위 탭(분석 현황 / 신규 분석 생성)을 가진다.
+  // 세 개의 동급 기능. 「지원자 분석」과 「사전스크리닝검토」는 하위 탭을 가진다.
   const features: Feature[] = [
     {
       key: "analysis",
@@ -88,8 +88,15 @@ export default function Sidebar() {
       key: "prelim",
       label: "사전스크리닝검토",
       icon: ShieldAlert,
-      href: "/prelim",
       match: (p) => p.startsWith("/prelim"),
+      children: [
+        {
+          href: "/prelim",
+          label: "지원자 적정성 검토",
+          icon: ShieldAlert,
+          match: (p) => p.startsWith("/prelim"),
+        },
+      ],
     },
     {
       key: "turing",
