@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldAlert, FileSearch, Upload, Loader2, AlertTriangle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ShieldAlert, FileSearch, Upload, Loader2, Download } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import {
   prelim,
@@ -13,7 +14,8 @@ import {
 
 type Tab = "blind" | "recusal" | "summary";
 
-export default function PrelimMonitor() {
+export default function PrelimMonitor({ initialTicket }: { initialTicket?: string }) {
+  const router = useRouter();
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [current, setCurrent] = useState<PrelimRunResponse | null>(null);
@@ -24,6 +26,14 @@ export default function PrelimMonitor() {
     prelim.list().then((d) => setHistory(d.items)).catch(() => {});
   }, [current]);
 
+  useEffect(() => {
+    if (!initialTicket) return;
+    prelim
+      .get(initialTicket)
+      .then(setCurrent)
+      .catch((err) => setError(err instanceof Error ? err.message : String(err)));
+  }, [initialTicket]);
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setRunning(true);
@@ -33,6 +43,7 @@ export default function PrelimMonitor() {
       const res = await prelim.run(form);
       setCurrent(res);
       setTab("summary");
+      openTicket(res.ticket);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -40,27 +51,22 @@ export default function PrelimMonitor() {
     }
   }
 
-  async function loadTicket(t: string) {
-    try {
-      const res = await prelim.get(t);
-      setCurrent(res);
-      setTab("summary");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    }
+  // 결과는 주소에 담는다. 그래야 사이드바 메뉴로 /prelim 에 돌아왔을 때 첫 화면이 나온다
+  function openTicket(t: string) {
+    router.push(`/prelim?ticket=${encodeURIComponent(t)}`);
   }
 
   return (
     <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
       <PageHeader
-        eyebrow="사전 스크리닝"
+        eyebrow="사전스크리닝검토"
         icon={ShieldAlert}
-        title="사전스크리닝검토"
+        title="지원자 적정성 검토"
         description={"자기소개서의 블라인드 위배 여부와 위원·기관 제척사항을 한 번에 점검합니다.\n파일 업로드 후 자동으로 점검이 시작됩니다."}
       />
 
       {/* 업로드 폼 */}
-      <section className="mt-6 mb-8 panel">
+      <section id="prelim-upload" className="mt-6 mb-8 panel scroll-mt-6">
         <div className="flex items-center gap-2.5 pb-3.5 mb-5 border-b border-[var(--line)]">
           <span className="mark" />
           <h2 className="text-[18px] font-bold tracking-[-0.012em] text-[var(--ink)]">검토 파일 업로드</h2>
@@ -100,6 +106,13 @@ export default function PrelimMonitor() {
             <span className="ml-auto text-[13px] text-[var(--ink-muted)] font-mono">
               ticket: {current.ticket} · eval: {current.eval_date}
             </span>
+            <a
+              href={prelim.exportUrl(current.ticket)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-[var(--line-strong)] px-3 py-1.5 text-[13.5px] font-semibold text-[var(--ink)] transition hover:border-[var(--ink)] hover:bg-[var(--bg-2)]"
+            >
+              <Download size={14} strokeWidth={2} />
+              엑셀 다운로드
+            </a>
           </div>
 
           <PrelimWarnings res={current} />
@@ -119,7 +132,7 @@ export default function PrelimMonitor() {
           ) : history.map((h) => (
             <button
               key={h.ticket}
-              onClick={() => loadTicket(h.ticket)}
+              onClick={() => openTicket(h.ticket)}
               className="w-full text-left grid grid-cols-12 gap-4 px-4 py-3.5 border-b border-[var(--line)] last:border-b-0 hover:bg-[var(--bg-2)] transition"
             >
               <div className="col-span-3 font-mono text-[13px] text-[var(--ink-soft)] truncate">{h.ticket}</div>
@@ -185,21 +198,51 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
   );
 }
 
+// 백엔드 경고 문구 중 파일을 고쳐 다시 올려야 풀리는 것. 나머지는 조치 없는 안내로 본다
+const REUPLOAD_RE = /다시 올려|읽지 못해|시트가 없습니다|파일을 읽는 중|건너뜀/;
+
 /** 수험번호 누락·시트 읽기 실패를 결과 위에 그대로 드러낸다 (조용한 합성 번호 방지). */
 function PrelimWarnings({ res }: { res: PrelimRunResponse }) {
   const lines = res.warnings ?? res.counts.skipped ?? [];
   if (lines.length === 0) return null;
+  const infoOnly = lines.every((w) => !REUPLOAD_RE.test(w));
+
+  const focusUpload = () => {
+    const form = document.getElementById("prelim-upload");
+    form?.scrollIntoView({ behavior: "smooth", block: "start" });
+    form?.querySelector<HTMLInputElement>('input[type="file"]')?.focus({ preventScroll: true });
+  };
+
   return (
-    <div className="mb-5 rounded-lg border border-[var(--bad)]/30 bg-[var(--bad)]/8 px-4 py-3">
-      <div className="flex items-center gap-2 text-[14px] font-semibold text-[var(--bad)]">
-        <AlertTriangle size={15} /> 확인 필요
+    <section
+      className={`notice mb-5${infoOnly ? " is-info" : ""}`}
+      role="alert"
+      aria-labelledby="notice-title"
+    >
+      <div className="notice-head">
+        <span id="notice-title">확인 필요</span>
+        <span className="notice-count">{lines.length}건</span>
       </div>
-      <ul className="mt-2 space-y-1 text-[14px] text-[var(--ink)]">
+      <ol className="notice-list">
         {lines.map((w, i) => (
-          <li key={i} className="leading-6">· {w}</li>
+          <li key={i}>
+            {emphasizeCounts(w)}
+            {REUPLOAD_RE.test(w) && (
+              <button type="button" className="notice-action" onClick={focusUpload}>
+                파일 다시 올리기
+              </button>
+            )}
+          </li>
         ))}
-      </ul>
-    </div>
+      </ol>
+    </section>
+  );
+}
+
+/** 문장 속 "48건" 같은 건수만 굵게 */
+function emphasizeCounts(text: string) {
+  return text.split(/(\d[\d,]*건)/).map((part, i) =>
+    i % 2 === 1 ? <strong key={i}>{part}</strong> : part,
   );
 }
 

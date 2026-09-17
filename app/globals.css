@@ -48,6 +48,9 @@
 
   --good: #2F6B4F;
   --bad: #B33A3A;
+
+  --brand: var(--primary);
+  --brand-dark: var(--p-800);
 }
 
 @theme inline {
@@ -302,6 +305,66 @@ body {
   letter-spacing: 0.01em;
 }
 
+/* ===== 확인 필요 알림 — 적색 머리띠 =====
+   틴트 바탕을 쓰지 않는다. 빨강은 테두리와 머리띠에만 쓰고 본문은 --ink 로 둔다 */
+.notice {
+  border: 1px solid var(--bad);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+.notice-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 1rem;
+  background: var(--bad);
+  color: #FFFFFF;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.notice-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.notice-list {
+  margin: 0;
+  padding: 0.85rem 1rem 0.9rem 2.1rem;
+  list-style: decimal;
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+.notice-list li + li {
+  margin-top: 0.45rem;
+}
+.notice-list li::marker {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+.notice-list strong {
+  font-weight: 700;
+}
+.notice-action {
+  margin-left: 0.35rem;
+  color: var(--brand);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+.notice-action:hover {
+  color: var(--brand-dark);
+}
+.notice-action:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* 항목이 단순 안내일 때 — 머리띠만 회색으로 바꾼다 */
+.notice.is-info { border-color: var(--line-strong); }
+.notice.is-info .notice-head { background: var(--ink-muted); }
+
 /* ===== 인쇄 (지원자 PDF 저장) =====
    화면과 같은 색·카드를 그대로 종이에 옮긴다. 브라우저 기본값이 배경색을 지우므로
    print-color-adjust 로 막고, 카드가 페이지 경계에서 잘리지 않게 붙여 둔다. */
@@ -356,6 +419,8 @@ body {
     break-after: avoid;
     page-break-after: avoid;
   }
+
+  .notice { break-inside: avoid; page-break-inside: avoid; }
 
   /* 레이더는 화면에서 잰 픽셀 크기가 남는다. 종이 칸보다 넓으면 오른쪽으로 넘치므로 줄이고 가운데 둔다 */
   .print-page .recharts-responsive-container > div {
