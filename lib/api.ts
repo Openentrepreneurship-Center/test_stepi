@@ -8,6 +8,10 @@ export interface JobSummary {
   progress: JobProgress;
   created_at: string;
   updated_at: string;
+  started_at?: string | null;
+  finished_at?: string | null;
+  estimated_finished_at?: string | null;
+  estimated_overdue?: boolean;
   error?: string | null;
   deleted_at?: string | null;
 }
