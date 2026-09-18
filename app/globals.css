@@ -373,9 +373,21 @@ body {
    화면과 같은 색·카드를 그대로 종이에 옮긴다. 브라우저 기본값이 배경색을 지우므로
    print-color-adjust 로 막고, 카드가 페이지 경계에서 잘리지 않게 붙여 둔다. */
 @media print {
+  /* 쪽 번호만 바닥에 둔다. 여백에 직접 내용을 넣으면 브라우저가 붙이는 날짜, 제목, 주소 머리글과 바닥글이 빠진다 */
   @page {
     size: A4;
     margin: 12mm;
+
+    /* 크롬은 여백 칸을 선언한 변에만 자기 머리글, 바닥글을 뺀다. 위쪽은 비워 둔다 */
+    @top-left { content: ""; }
+    @top-center { content: ""; }
+    @top-right { content: ""; }
+
+    @bottom-center {
+      content: counter(page) " / " counter(pages);
+      font-size: 9pt;
+      color: #6b7280;
+    }
   }
 
   html, body {
@@ -400,20 +412,47 @@ body {
     margin: 0;
   }
 
-  /* 카드 한 장은 되도록 한 페이지 안에 둔다 */
+  /* 인쇄물은 카드 틀 없이 한 흐름으로 잇는다. 카드째 넘기지 않아 앞 장 아래가 비지 않는다 */
   .print-block,
   .print-page .panel {
-    break-inside: avoid;
-    page-break-inside: avoid;
-    box-shadow: none;
-  }
-
-  /* 긴 카드는 통째로 넘기면 앞 페이지가 비므로 이어 쓰고, 항목 하나만 쪼개지 않는다 */
-  .print-page .panel.print-split {
     break-inside: auto;
     page-break-inside: auto;
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    background: transparent;
   }
 
+  /* 제목 밑 구분선은 빼고, 영역이 바뀌는 곳에만 옅은 선 한 줄 */
+  .print-page .panel > .print-head {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 10px;
+  }
+
+  .print-page .print-flow {
+    gap: 14px;
+  }
+
+  .print-page header.panel {
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .print-page .print-sections > * + * {
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+  }
+
+  /* 잘리면 안 되는 것은 도형뿐이다 */
+  .print-figure,
+  .print-page svg {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* 글은 항목 하나(역량 1축, 질문 1개 등) 단위로만 넘긴다 */
   .print-row {
     break-inside: avoid;
     page-break-inside: avoid;

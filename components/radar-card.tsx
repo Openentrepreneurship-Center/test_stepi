@@ -44,7 +44,7 @@ export default function RadarCard({
   }));
 
   return (
-    <div className="w-full" style={{ height }}>
+    <div className="print-figure w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={merged} outerRadius="65%">
           <PolarGrid stroke="var(--line)" />

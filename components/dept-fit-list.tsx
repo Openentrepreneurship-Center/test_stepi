@@ -35,7 +35,7 @@ export default function DeptFitList({
           return (
             <li
               key={d.dept_name}
-              className="grid grid-cols-12 gap-x-4 gap-y-2 py-4 border-b border-[var(--line)]"
+              className="print-figure grid grid-cols-12 gap-x-4 gap-y-2 py-4 border-b border-[var(--line)]"
             >
               <div className="col-span-1 text-[15px] font-medium text-[var(--ink-muted)] tabular-nums">
                 {String(i + 1).padStart(2, "0")}

@@ -18,6 +18,9 @@ export const dynamic = "force-dynamic";
 
 const aiUsageHead = aiUsageHeadline();
 
+// 화면 기본(320)대로 그리면 레이더 카드가 첫 장 남은 자리에 안 들어가 통째로 다음 장으로 밀린다
+const PRINT_RADAR_HEIGHT = 230;
+
 /**
  * 지원자 1명 인쇄(PDF) 화면.
  *
@@ -154,7 +157,7 @@ export default async function ApplicantPrintPage({
         </div>
       </header>
 
-      <div className="mt-5 flex flex-col gap-5">
+      <div className="print-flow print-sections mt-5 flex flex-col gap-5">
         {/* 종합 요약 */}
         <Card title="종합 요약">
           {applicant.summary?.overall && (
@@ -178,25 +181,26 @@ export default async function ApplicantPrintPage({
 
         {/* 학력 · 이력 */}
         <Card title="학력 · 이력" split>
-          <div className="print-row">
+          <div className="print-figure">
             <TimelineBar education={sourceApplicant?.education} career={sourceApplicant?.career} />
           </div>
           <TimelineSection education={sourceApplicant?.education} career={sourceApplicant?.career} />
         </Card>
 
         {/* 역량 진단 */}
-        <div className="grid grid-cols-2 gap-5">
+        <div className="print-flow grid grid-cols-2 gap-5">
           {coreData.length > 0 && (
             <Card
+              figure
               title="핵심인재 유사도"
               desc="합격자들의 자기소개서와 얼마나 닮았는지를 나타냅니다. 연한 음영은 역대 합격자 평균입니다."
             >
-              <RadarCard data={coreData} color="#33307A" baseline={coreBaseline} />
+              <RadarCard data={coreData} color="#33307A" baseline={coreBaseline} height={PRINT_RADAR_HEIGHT} />
             </Card>
           )}
           {fitData.length > 0 && (
-            <Card title="직무 적합도" desc="직무에서 요구하는 5개 역량을 기준으로 평가한 적합도입니다.">
-              <RadarCard data={fitData} color="#F39200" max={100} />
+            <Card figure title="직무 적합도" desc="직무에서 요구하는 5개 역량을 기준으로 평가한 적합도입니다.">
+              <RadarCard data={fitData} color="#F39200" max={100} height={PRINT_RADAR_HEIGHT} />
             </Card>
           )}
         </div>
@@ -354,12 +358,13 @@ export default async function ApplicantPrintPage({
   );
 }
 
-/** 상세 화면의 Card 와 같은 모양. 인쇄에서 카드가 페이지 경계에 걸리지 않게 print-block 을 붙인다 */
+/** 상세 화면의 Card 와 같은 모양. 인쇄에서는 페이지 경계에서 이어 쓰고, 도형만 print-figure 로 자르지 않는다 */
 function Card({
   title,
   badge,
   desc,
   split,
+  figure,
   children,
 }: {
   title: string;
@@ -368,10 +373,12 @@ function Card({
   desc?: string;
   /** 길이가 지원자마다 달라지는 카드. 페이지를 넘겨 이어 쓴다 */
   split?: boolean;
+  /** 제목과 도형만 있는 카드. 쪽 끝에 제목만 남지 않게 통째로 자르지 않는다 */
+  figure?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <section className={`panel print-block${split ? " print-split" : ""}`}>
+    <section className={`panel print-block${split ? " print-split" : ""}${figure ? " print-figure" : ""}`}>
       <div className="print-head flex items-start justify-between gap-4 pb-3.5 mb-4 border-b border-[var(--line)]">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2.5">

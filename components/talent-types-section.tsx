@@ -65,7 +65,13 @@ function gridCols(n: number, printMode = false): string {
 }
 
 /** 한 층에 여러 개가 놓이면 칸이 좁아지므로 오각형도 같이 줄인다 */
-function radarSize(n: number): { height: number; labelSize: number } {
+function radarSize(n: number, printMode = false): { height: number; labelSize: number } {
+  // 인쇄에서는 세트 도형을 작게 그려 한 장에 더 담는다
+  if (printMode) {
+    if (n <= 1) return { height: 200, labelSize: 11.5 };
+    if (n === 2 || n === 4) return { height: 190, labelSize: 11 };
+    return { height: 170, labelSize: 10.5 };
+  }
   if (n <= 1) return { height: 320, labelSize: 13 };
   if (n === 2 || n === 4) return { height: 280, labelSize: 12.5 };
   return { height: 250, labelSize: 11.5 };
@@ -148,7 +154,7 @@ export default function TalentTypesSection({
 
   return (
     // 자기소개서 탭과 같은 간격으로 카드를 쌓는다
-    <div className="flex flex-col gap-5">
+    <div className="print-flow print-sections flex flex-col gap-5">
       <style>{`
         @keyframes stepi-talent-grow {
           from {transform: scaleX(0);}
@@ -197,6 +203,7 @@ export default function TalentTypesSection({
               total={sets.length}
               axisByNo={axisByNo}
               onOpen={openAxis}
+              printMode={printMode}
             />
           ))}
         </div>
@@ -377,12 +384,14 @@ function SetBox({
   total,
   axisByNo,
   onOpen,
+  printMode = false,
 }: {
   set: TalentSet;
   index: number;
   total: number;
   axisByNo: Map<number, AxisResult>;
   onOpen: (axis: AxisResult, el: HTMLElement) => void;
+  printMode?: boolean;
 }) {
   // 사용자가 고르는 값이라 목록에 없는 번호나 중복이 섞일 수 있다.
   // `!` 단언은 undefined 를 통과시켜 화면이 터지고, 중복은 React key 를 겹치게 한다.
@@ -393,7 +402,7 @@ function SetBox({
         .filter((a): a is AxisResult => a !== undefined),
     [set.nos, axisByNo],
   );
-  const { height, labelSize } = radarSize(total);
+  const { height, labelSize } = radarSize(total, printMode);
   // 매 렌더마다 새 배열을 넘기면 recharts 가 통째로 다시 계산한다
   // 목록이 100점으로 적히므로 오각형 눈금(툴팁 값)도 같은 척도로 맞춘다
   const radarData = useMemo(
@@ -406,12 +415,26 @@ function SetBox({
   );
 
   return (
+    // 박스 전체를 묶으면 점수 줄까지 함께 다음 장으로 밀려 앞 장이 빈다.
+    // 제목과 레이더만 한 덩어리로 묶어, 쪽 끝에 제목만 남고 레이더가 넘어가는 일을 막는다
     <section className="rounded-lg border border-[var(--line)] bg-[var(--paper)] px-4 pt-3.5 pb-4">
-      <div className="flex items-baseline justify-between gap-3 mb-2">
-        <h4 className="truncate text-[15px] font-bold text-[var(--ink)]">{set.name}</h4>
-        <span className="shrink-0 text-[14px] tabular-nums text-[var(--ink-muted)]">
-          {items.length}개
-        </span>
+      <div className="print-figure">
+        <div className="flex items-baseline justify-between gap-3 mb-2">
+          <h4 className="truncate text-[15px] font-bold text-[var(--ink)]">{set.name}</h4>
+          <span className="shrink-0 text-[14px] tabular-nums text-[var(--ink-muted)]">
+            {items.length}개
+          </span>
+        </div>
+        {/* 판정 불가는 null 로 넘겨 꼭짓점을 끊는다. 0 으로 그리면 "0점"으로 읽힌다 */}
+        {items.length >= RADAR_MIN && (
+          <RadarCard
+            data={radarData}
+            color="#F39200"
+            max={TALENT_SCORE_DISPLAY_MAX}
+            height={height}
+            labelSize={labelSize}
+          />
+        )}
       </div>
 
       {items.length === 0 ? (
@@ -420,19 +443,11 @@ function SetBox({
         </p>
       ) : items.length >= RADAR_MIN ? (
         <>
-          {/* 판정 불가는 null 로 넘겨 꼭짓점을 끊는다. 0 으로 그리면 "0점"으로 읽힌다 */}
-          <RadarCard
-            data={radarData}
-            color="#F39200"
-            max={TALENT_SCORE_DISPLAY_MAX}
-            height={height}
-            labelSize={labelSize}
-          />
           {/* 오각형은 클릭 대상이 아니므로, 세트 안에서도 근거로 들어갈 길을 둔다 */}
           <ul className="mt-1 space-y-0.5">
             {items.map((a) => (
-              <li key={a.no}>
-                <CompactRow axis={a} onOpen={onOpen} />
+              <li key={a.no} className="print-row">
+                <CompactRow axis={a} onOpen={onOpen} printMode={printMode} />
               </li>
             ))}
           </ul>
@@ -498,7 +513,7 @@ function Block({
 }
 
 /** 점수 + 유효 문항 표기. 목록과 세트 박스가 같은 문장을 쓰도록 한곳에 둔다 */
-function ScoreText({ axis }: { axis: AxisResult }) {
+function ScoreText({ axis, hideValid = false }: { axis: AxisResult; hideValid?: boolean }) {
   return (
     <span className="shrink-0 text-right">
       <span className="serif text-[15.5px] tabular-nums text-[var(--ink)]">
@@ -511,7 +526,7 @@ function ScoreText({ axis }: { axis: AxisResult }) {
       </span>
       {/* N 문항이 있으면 분모가 10이 아니다. 패널을 열어야 알 수 있으면 늦다.
           유효 문항이 너무 적으면 점수를 그대로 믿으면 안 되므로 더 눈에 띄게 적는다 */}
-      {axis.n_count > 0 && axis.score !== null && (
+      {!hideValid && axis.n_count > 0 && axis.score !== null && (
         <span
           className={`ml-1.5 text-[11.5px] tabular-nums ${
             axis.enough ? "text-[var(--secondary-2)]" : "font-semibold text-[var(--secondary-2)]"
@@ -596,9 +611,12 @@ function Row({
 function CompactRow({
   axis,
   onOpen,
+  printMode = false,
 }: {
   axis: AxisResult;
   onOpen: (axis: AxisResult, el: HTMLElement) => void;
+  /** 인쇄에서는 유효 문항 표기를 빼 점수 끝을 가지런히 맞춘다. 붙는 줄과 안 붙는 줄이 섞여 들쭉날쭉하다 */
+  printMode?: boolean;
 }) {
   return (
     <button
@@ -610,7 +628,7 @@ function CompactRow({
       <span className="min-w-0 truncate text-[16px] text-[var(--ink)]">{axis.axis}</span>
       {/* 안내선 — 이름과 점수가 멀어도 눈이 같은 줄을 따라간다 (목차 방식) */}
       <span className="translate-y-[-4px] border-b border-[var(--line-mid)]" />
-      <ScoreText axis={axis} />
+      <ScoreText axis={axis} hideValid={printMode} />
     </button>
   );
 }
