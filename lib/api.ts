@@ -572,7 +572,15 @@ export const prelim = {
       method: "POST",
       body: form,
     });
-    if (!res.ok) throw new Error(`prelim/run failed: ${res.status} ${await res.text()}`);
+    if (!res.ok) {
+      // 서버가 detail 에 담아 보낸 한글 안내(예: 학력제척 파일 암호)는 그대로 보여 준다
+      const text = await res.text();
+      let detail: unknown;
+      try {
+        detail = JSON.parse(text).detail;
+      } catch {}
+      throw new Error(typeof detail === "string" ? detail : `prelim/run failed: ${res.status} ${text}`);
+    }
     return res.json() as Promise<PrelimRunResponse>;
   },
   list: () => http<{ items: PrelimSummary[] }>(`/prelim/results`),

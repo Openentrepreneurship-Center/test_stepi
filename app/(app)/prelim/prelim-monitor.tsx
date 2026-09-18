@@ -74,8 +74,7 @@ export default function PrelimMonitor({ initialTicket }: { initialTicket?: strin
         <form onSubmit={onSubmit} className="grid grid-cols-12 gap-5">
           <FileField name="apply_xlsx" label="자기소개서 xlsx" required />
           <FileField name="raw_xlsm" label="원본 xlsm (선택)" />
-          <FileField name="academic_xlsx" label="학력제척 xlsx (선택, 암호화)" />
-          <TextField name="academic_password" label="학력제척 암호" defaultValue="2216" />
+          <FileField name="academic_xlsx" label="학력제척 xlsx (선택)" />
           <TextField name="eval_date" label="평가기준일" placeholder="YYYY-MM-DD (기본: 오늘)" />
           <TextField name="label" label="저장명" placeholder="2026년 1차 등" />
           <div className="col-span-12 flex items-center gap-3 mt-2">
