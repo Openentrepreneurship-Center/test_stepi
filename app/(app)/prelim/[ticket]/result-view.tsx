@@ -281,9 +281,10 @@ export default function ResultView({ ticket }: { ticket: string }) {
   }
 
   const counts = derived.summary_fixed.tab_counts as Record<string, number>;
+  const baseUsed = (data.files_used?.base ?? {}) as Record<string, string | null>;
   const files = FILE_LABELS.filter(([k]) =>
     k === "attach" ? data.attach_status !== "none" : !!data.files_used?.[k],
-  ).map(([, label]) => label);
+  ).map(([k, label]) => (baseUsed[k] ? `${label}(기준 자료)` : label));
   const warnings = [...(data.counts.skipped ?? []), ...derived.warnings];
   const ctx: Ctx = {
     ticket,

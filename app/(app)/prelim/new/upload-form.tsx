@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/page-header";
-import { prelim } from "@/lib/api";
+import { prelim, type PrelimBaseResponse } from "@/lib/api";
 import "../prelim.css";
 
 type Slot = "essay" | "attach" | "origin" | "edu";
@@ -67,6 +67,31 @@ export default function UploadForm() {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
+  const [base, setBase] = useState<PrelimBaseResponse | null>(null);
+
+  // 등록된 기준 자료. 안 올린 칸은 이걸로 채워진다는 안내용
+  useEffect(() => {
+    let alive = true;
+    prelim.base
+      .get()
+      .then((r) => alive && setBase(r))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const baseHint = (kind: "raw_xlsm" | "academic_xlsx") => {
+    const f = base?.items[kind];
+    return f ? (
+      <div className="hint basehint">
+        비우면 등록된 기준 파일 사용: <b>{f.file_name}</b> ({f.uploaded_at.slice(0, 10)} 등록)
+      </div>
+    ) : base ? (
+      <div className="hint basehint" style={{ color: "var(--red-text)" }}>
+        등록된 기준 파일이 없습니다. 올리지 않으면 이 검사는 빠집니다
+      </div>
+    ) : null;
+  };
 
   const pick = (slot: Slot) => (f: File | null) =>
     setFiles((prev) => ({ ...prev, [slot]: f }));
@@ -169,6 +194,7 @@ export default function UploadForm() {
                   <div className="hint">
                     읽는 시트: <b>원본</b>, <b>내부제척</b>, <b>외부제척</b>
                   </div>
+                  {baseHint("raw_xlsm")}
                 </div>
                 <DropBox
                   accept=".xlsm"
@@ -187,6 +213,7 @@ export default function UploadForm() {
                   <div className="hint">
                     읽는 시트: <b>학력제척</b> (학력제척_백데이터1 은 있으면 사용)
                   </div>
+                  {baseHint("academic_xlsx")}
                 </div>
                 <DropBox
                   accept=".xlsx"

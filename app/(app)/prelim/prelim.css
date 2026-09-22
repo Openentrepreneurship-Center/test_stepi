@@ -297,3 +297,4 @@
 .prelim tr.gfocus.gf-last td { --fb: 3px; }
 .prelim tr.gfocus td:first-child { --fl: 3px; }
 .prelim tr.gfocus td.gf-span { --ft: 3px; --fb: 3px; --fr: 3px; }
+.prelim .basehint b { color: var(--ink); }
