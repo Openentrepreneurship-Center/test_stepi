@@ -90,7 +90,7 @@ export interface Ctx {
     itemId: string,
     value: string | null,
     reason?: string | null,
-  ) => void;
+  ) => Promise<boolean>;
   upload: (kind: PrelimUploadKind, file: File) => void;
   exportUrl: (key: string) => string;
 }
@@ -113,10 +113,16 @@ export default function ResultView({ ticket }: { ticket: string }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const paneRef = useRef<HTMLDivElement>(null);
+  // 판정·업로드 저장은 한 줄로 차례대로 보내고, 그사이 끝난 조회 결과는 버린다
+  const writeChain = useRef<Promise<void>>(Promise.resolve());
+  const writeSeq = useRef(0);
+  const writesPending = useRef(0);
 
   const load = useCallback(async () => {
+    const seq = writeSeq.current;
     try {
       const r = await prelim.result(ticket);
+      if (writesPending.current > 0 || writeSeq.current !== seq) return;
       setData(r);
       setDerived(r.derived);
       setVerdicts(r.verdicts);
@@ -182,11 +188,36 @@ export default function ResultView({ ticket }: { ticket: string }) {
     if (el) setTimeout(() => el.scrollIntoView({ block: "center" }), 0);
   }, [focusNo, tab, derived]);
 
-  const judge = useCallback<Ctx["judge"]>(
-    async (kind, itemId, value, reason) => {
-      setBusy(`${kind}:${itemId}`);
-      setNotice(null);
+  const enqueueWrite = useCallback((busyKey: string, run: () => Promise<void>) => {
+    writeSeq.current += 1;
+    writesPending.current += 1;
+    const job = writeChain.current.then(async () => {
+      setBusy(busyKey);
       try {
+        await run();
+        setNotice(null);
+        return true;
+      } catch (e) {
+        setNotice(
+          e instanceof Error && e.name === "TimeoutError"
+            ? "응답이 늦어 저장하지 못했습니다. 새로고침한 뒤 다시 눌러 주세요."
+            : e instanceof Error ? e.message : String(e),
+        );
+        return false;
+      } finally {
+        // 저장 중에 출발한 조회도 옛 판정을 읽었을 수 있으니 끝날 때 한 번 더 올린다
+        writeSeq.current += 1;
+        writesPending.current -= 1;
+        setBusy(null);
+      }
+    });
+    writeChain.current = job.then(() => undefined);
+    return job;
+  }, []);
+
+  const judge = useCallback<Ctx["judge"]>(
+    (kind, itemId, value, reason) =>
+      enqueueWrite(`${kind}:${itemId}`, async () => {
         const r = await prelim.verdict.put(ticket, {
           kind,
           item_id: itemId,
@@ -195,30 +226,18 @@ export default function ResultView({ ticket }: { ticket: string }) {
         });
         setVerdicts(r.verdicts);
         setDerived(r.derived);
-      } catch (e) {
-        setNotice(e instanceof Error ? e.message : String(e));
-      } finally {
-        setBusy(null);
-      }
-    },
-    [ticket],
+      }),
+    [ticket, enqueueWrite],
   );
 
   const upload = useCallback<Ctx["upload"]>(
-    async (kind, file) => {
-      setBusy(`up:${kind}`);
-      setNotice(null);
-      try {
+    (kind, file) =>
+      enqueueWrite(`up:${kind}`, async () => {
         const r = await prelim.upload.put(ticket, kind, file);
         setUploads(r.uploads);
         setDerived(r.derived);
-      } catch (e) {
-        setNotice(e instanceof Error ? e.message : String(e));
-      } finally {
-        setBusy(null);
-      }
-    },
-    [ticket],
+      }),
+    [ticket, enqueueWrite],
   );
 
   const exportUrl = useCallback(

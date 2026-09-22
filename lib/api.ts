@@ -1,5 +1,9 @@
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
+/** AbortSignal.timeout 이 없는 옛 Safari 에서는 시간 제한 없이 보낸다 */
+const timeoutSignal = (ms: number) =>
+  typeof AbortSignal.timeout === "function" ? AbortSignal.timeout(ms) : undefined;
+
 export interface JobSummary {
   job_id: string;
   request_id: string | null;
@@ -813,6 +817,8 @@ export const prelim = {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        // 저장은 한 줄로 차례대로 가므로, 멈춘 요청 하나가 뒤의 저장을 붙잡지 않게 끊는다
+        signal: timeoutSignal(30_000),
       });
       return prelimJson<{ verdicts: PrelimVerdicts; derived: PrelimDerived }>(res, "판정 저장 실패");
     },
@@ -824,6 +830,7 @@ export const prelim = {
       const res = await fetch(`${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/uploads/${kind}`, {
         method: "PUT",
         body: form,
+        signal: timeoutSignal(120_000),
       });
       return prelimJson<{ uploads: PrelimResult["uploads"]; derived: PrelimDerived }>(res, "파일 업로드 실패");
     },

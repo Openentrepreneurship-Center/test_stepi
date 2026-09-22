@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { API_BASE, type PrelimAttachItem, type PrelimVerdict } from "@/lib/api";
 import { XBtn } from "./parts";
 import type { Ctx } from "./result-view";
@@ -17,6 +17,8 @@ export const langLabel = (a: PrelimAttachItem) => `${a.lang}(${a.match})`;
 /** 담당자가 누른 판정이 없으면 시스템 제안 판정을 보여 준다 */
 export function attachState(a: PrelimAttachItem, v: Record<string, PrelimVerdict>): { value?: string; reason?: string | null } {
   const mine = v[a.id];
+  // none: 시스템 제안을 담당자가 미판정으로 되돌린 것
+  if (mine?.value === "none") return {};
   if (mine) return mine;
   return a.suggested ?? {};
 }
@@ -163,31 +165,58 @@ export function Viewer({
   );
 }
 
-function ReasonBox({ ctx, item, value }: { ctx: Ctx; item: PrelimAttachItem; value: { value?: string; reason?: string | null } }) {
-  const [text, setText] = useState(value.reason ?? "");
-  const active = value.value === "dismiss";
-  return (
-    <textarea
-      rows={2}
-      disabled={!active}
-      value={text}
-      placeholder={active ? "사유를 입력하세요 (예: 가림 확인, 다중 성명 나열, 동명이인 확인)" : "문제 없음 선택 시 사유 입력"}
-      aria-label="위배 아님 사유"
-      onChange={(e) => setText(e.target.value)}
-      onBlur={() => {
-        if (active && text !== (value.reason ?? "")) ctx.judge("attach", item.id, "dismiss", text || null);
-      }}
-    />
-  );
-}
-
 export default function AttachTab({ ctx }: { ctx: Ctx }) {
-  const { data, derived, verdicts, busy, judge, focusNo, exportUrl, ticket } = ctx;
+  const { data, derived, verdicts, judge, focusNo, exportUrl, ticket } = ctx;
   const [viewing, setViewing] = useState<{ id: string; mode: "hit" | "all" } | null>(null);
   const attach = data.view.attach;
   const kpi = derived.summary_fixed.kpi;
   const current = viewing ? attach.find((a) => a.id === viewing.id) : null;
   const status = data.attach_status;
+
+  // 사유는 입력 즉시 화면에 반영하고, 입력이 멈추거나 칸을 벗어나면 저장한다
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const timers = useRef<Record<string, { t: ReturnType<typeof setTimeout>; save: () => void }>>({});
+  // id 별로 마지막으로 보낸 사유. 응답 전 다시 고친 값도 이것과 비교해야 저장을 건너뛰지 않는다
+  const sent = useRef<Record<string, string>>({});
+  const dropDraft = (id: string) =>
+    setDrafts((d) => {
+      const rest = { ...d };
+      delete rest[id];
+      return rest;
+    });
+  const flushReason = (id: string) => {
+    const p = timers.current[id];
+    if (!p) return;
+    clearTimeout(p.t);
+    delete timers.current[id];
+    p.save();
+  };
+  const typeReason = (id: string, text: string, saved: string) => {
+    setDrafts((d) => ({ ...d, [id]: text }));
+    const prev = timers.current[id];
+    if (prev) clearTimeout(prev.t);
+    const save = () => {
+      if (text === (sent.current[id] ?? saved)) return;
+      sent.current[id] = text;
+      void judge("attach", id, "dismiss", text || null).then(() => {
+        if (sent.current[id] !== text) return; // 그사이 더 고쳤으면 그 저장 결과를 따른다
+        delete sent.current[id];
+        // 입력이 멈춘 뒤에만 비운다. 성공이면 서버 값과 같고, 실패면 서버 값으로 되돌아간다
+        if (!timers.current[id]) dropDraft(id);
+      });
+    };
+    timers.current[id] = { t: setTimeout(() => flushReason(id), 600), save };
+  };
+  // 탭을 옮겨도 입력 중이던 사유를 잃지 않게 남은 저장을 보낸다
+  useEffect(() => {
+    const pending = timers.current;
+    return () => {
+      for (const id of Object.keys(pending)) {
+        clearTimeout(pending[id].t);
+        pending[id].save();
+      }
+    };
+  }, []);
 
   return (
     <>
@@ -239,18 +268,23 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
               </thead>
               <tbody>
                 {attach.map((a) => {
-                  const st = attachState(a, verdicts.attach);
+                  const saved = attachState(a, verdicts.attach);
+                  const draft = drafts[a.id];
+                  const st = saved.value === "dismiss" && draft !== undefined ? { ...saved, reason: draft } : saved;
                   const t = attText(st);
-                  const waiting = busy === `attach:${a.id}`;
+                  // 같은 버튼을 다시 누르면 미판정. 시스템 제안이 있는 건은 none 을 저장해야 제안이 되살아나지 않는다
+                  const press = (val: "confirm" | "dismiss" | "hold") => {
+                    flushReason(a.id);
+                    dropDraft(a.id);
+                    const next = st.value === val ? (a.suggested ? "none" : null) : val;
+                    void judge("attach", a.id, next, next === "dismiss" ? (saved.reason ?? null) : null);
+                  };
                   const jbtn = (val: "confirm" | "dismiss" | "hold", cls: string, label: string) => (
                     <button
                       className={`jbtn ${cls}`}
                       type="button"
                       aria-pressed={st.value === val}
-                      disabled={waiting}
-                      onClick={() =>
-                        judge("attach", a.id, verdicts.attach[a.id]?.value === val ? null : val, val === "dismiss" ? (st.reason ?? null) : null)
-                      }
+                      onClick={() => press(val)}
                     >
                       {label}
                     </button>
@@ -285,7 +319,15 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
                             {jbtn("dismiss", "d", "문제 없음")}
                             {jbtn("hold", "h", "보류")}
                           </div>
-                          <ReasonBox key={`${a.id}:${st.value}:${st.reason ?? ""}`} ctx={ctx} item={a} value={st} />
+                          <textarea
+                            rows={2}
+                            disabled={st.value !== "dismiss"}
+                            value={st.value === "dismiss" ? (st.reason ?? "") : ""}
+                            placeholder={st.value === "dismiss" ? "사유를 입력하세요 (예: 가림 확인, 다중 성명 나열, 동명이인 확인)" : "문제 없음 선택 시 사유 입력"}
+                            aria-label="위배 아님 사유"
+                            onChange={(e) => typeReason(a.id, e.target.value, saved.reason ?? "")}
+                            onBlur={() => flushReason(a.id)}
+                          />
                           <span className={`jtext ${t.cls}`}>{t.t}</span>
                         </div>
                       </td>
