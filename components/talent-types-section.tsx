@@ -67,10 +67,11 @@ function gridCols(n: number, printMode = false): string {
 /** 한 층에 여러 개가 놓이면 칸이 좁아지므로 오각형도 같이 줄인다 */
 function radarSize(n: number, printMode = false): { height: number; labelSize: number } {
   // 인쇄에서는 세트 도형을 작게 그려 한 장에 더 담는다
+  // 인쇄는 선정 인재상과 전체 34개가 한 장에 들어가야 해서 더 작게 그린다
   if (printMode) {
-    if (n <= 1) return { height: 200, labelSize: 11.5 };
-    if (n === 2 || n === 4) return { height: 190, labelSize: 11 };
-    return { height: 170, labelSize: 10.5 };
+    if (n <= 1) return { height: 150, labelSize: 10.5 };
+    if (n === 2 || n === 4) return { height: 140, labelSize: 10 };
+    return { height: 130, labelSize: 9.5 };
   }
   if (n <= 1) return { height: 320, labelSize: 13 };
   if (n === 2 || n === 4) return { height: 280, labelSize: 12.5 };
@@ -139,8 +140,8 @@ export default function TalentTypesSection({
     [evaluation, selectedNos],
   );
   const allShown = expanded || printMode;
-  // 인쇄에서는 34줄이 여러 장을 차지하므로 두 단으로 나누고 줄 간격을 줄인다
-  const listClass = printMode ? "grid grid-cols-2 gap-x-6" : "space-y-1";
+  // 인쇄에서는 34줄이 한 장에 들어가야 하므로 세 단으로 나누고 줄 간격을 줄인다
+  const listClass = printMode ? "grid grid-cols-3 gap-x-4" : "space-y-1";
 
   const openAxis = (axis: AxisResult, el: HTMLElement) => {
     triggerRef.current = el;
@@ -417,7 +418,7 @@ function SetBox({
   return (
     // 박스 전체를 묶으면 점수 줄까지 함께 다음 장으로 밀려 앞 장이 빈다.
     // 제목과 레이더만 한 덩어리로 묶어, 쪽 끝에 제목만 남고 레이더가 넘어가는 일을 막는다
-    <section className="rounded-lg border border-[var(--line)] bg-[var(--paper)] px-4 pt-3.5 pb-4">
+    <section className={`rounded-lg border border-[var(--line)] bg-[var(--paper)] ${printMode ? "px-3 pt-2 pb-2" : "px-4 pt-3.5 pb-4"}`}>
       <div className="print-figure">
         <div className="flex items-baseline justify-between gap-3 mb-2">
           <h4 className="truncate text-[15px] font-bold text-[var(--ink)]">{set.name}</h4>
@@ -513,13 +514,22 @@ function Block({
 }
 
 /** 점수 + 유효 문항 표기. 목록과 세트 박스가 같은 문장을 쓰도록 한곳에 둔다 */
-function ScoreText({ axis, hideValid = false }: { axis: AxisResult; hideValid?: boolean }) {
+function ScoreText({
+  axis,
+  hideValid = false,
+  small = false,
+}: {
+  axis: AxisResult;
+  hideValid?: boolean;
+  /** 인쇄용 축소 표시 */
+  small?: boolean;
+}) {
   return (
     <span className="shrink-0 text-right">
-      <span className="serif text-[15.5px] tabular-nums text-[var(--ink)]">
+      <span className={`serif ${small ? "text-[12px]" : "text-[15.5px]"} tabular-nums text-[var(--ink)]`}>
         {formatScore100(axis.score)}
         {axis.score !== null && (
-          <span className="ml-0.5 text-[12.5px] font-normal text-[var(--ink-soft)]">
+          <span className={`ml-0.5 ${small ? "text-[10px]" : "text-[12.5px]"} font-normal text-[var(--ink-soft)]`}>
             / {TALENT_SCORE_DISPLAY_MAX}
           </span>
         )}
@@ -562,26 +572,26 @@ function Row({
       type="button"
       onClick={(e) => onOpen(axis, e.currentTarget)}
       aria-label={`${axis.axis} 판정 근거 보기`}
-      className={`block w-full rounded px-1 ${dense ? "py-1" : "py-2"} text-left transition hover:bg-[var(--bg-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--secondary)]`}
+      className={`block w-full rounded px-1 ${dense ? "py-0.5" : "py-2"} text-left transition hover:bg-[var(--bg-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--secondary)]`}
     >
       <span className="min-w-0 block">
         {/* 이름과 점수를 왼쪽에 붙여 둔다. 양 끝으로 벌려 놓으면 34줄을 훑을 때
             시선이 줄마다 가로로 왕복해야 하고, 이름이 짧은 줄일수록 멀어진다 */}
-        <span className={`flex items-baseline gap-2.5 ${dense ? "mb-1" : "mb-1.5"}`}>
+        <span className={`flex items-baseline gap-2.5 ${dense ? "mb-0.5" : "mb-1.5"}`}>
           <span
-            className={`min-w-0 truncate ${dense ? "text-[13px]" : "text-[17px]"} leading-[1.5] ${
+            className={`min-w-0 truncate ${dense ? "text-[11.5px]" : "text-[17px]"} leading-[1.5] ${
               highlight ? "font-semibold text-[var(--ink)]" : "text-[var(--ink)]"
             }`}
           >
             {axis.axis}
           </span>
-          <ScoreText axis={axis} />
+          <ScoreText axis={axis} small={dense} />
         </span>
         {/* 판정 불가는 폭 0 막대로 그리면 0점처럼 보인다. 아예 다른 표시로 바꾼다 */}
         {axis.score === null ? (
-          <span className={`block ${dense ? "h-1.5" : "h-2"} w-full rounded-full border border-dashed border-[var(--line-strong)]`} />
+          <span className={`block ${dense ? "h-1" : "h-2"} w-full rounded-full border border-dashed border-[var(--line-strong)]`} />
         ) : (
-          <span className={`relative block ${dense ? "h-1.5" : "h-2"} w-full rounded-full bg-[var(--line)] overflow-hidden`}>
+          <span className={`relative block ${dense ? "h-1" : "h-2"} w-full rounded-full bg-[var(--line)] overflow-hidden`}>
             <span
               className="stepi-talent-grow block h-full rounded-full"
               style={{
@@ -623,12 +633,12 @@ function CompactRow({
       type="button"
       onClick={(e) => onOpen(axis, e.currentTarget)}
       aria-label={`${axis.axis} 판정 근거 보기`}
-      className="grid w-full grid-cols-[auto_1fr_auto] items-baseline gap-2 rounded px-1.5 py-1 text-left transition hover:bg-[var(--bg-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--secondary)]"
+      className={`grid w-full grid-cols-[auto_1fr_auto] items-baseline gap-2 rounded px-1.5 ${printMode ? "py-0" : "py-1"} text-left transition hover:bg-[var(--bg-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--secondary)]`}
     >
-      <span className="min-w-0 truncate text-[16px] text-[var(--ink)]">{axis.axis}</span>
+      <span className={`min-w-0 truncate ${printMode ? "text-[12px]" : "text-[16px]"} text-[var(--ink)]`}>{axis.axis}</span>
       {/* 안내선 — 이름과 점수가 멀어도 눈이 같은 줄을 따라간다 (목차 방식) */}
       <span className="translate-y-[-4px] border-b border-[var(--line-mid)]" />
-      <ScoreText axis={axis} hideValid={printMode} />
+      <ScoreText axis={axis} hideValid={printMode} small={printMode} />
     </button>
   );
 }

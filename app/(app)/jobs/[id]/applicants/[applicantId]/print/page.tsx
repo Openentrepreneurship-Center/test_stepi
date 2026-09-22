@@ -206,11 +206,13 @@ export default async function ApplicantPrintPage({
             <div className="print-figure">
               <TimelineBar education={sourceApplicant?.education} career={sourceApplicant?.career} />
             </div>
-            <TimelineSection
-              education={sourceApplicant?.education}
-              career={sourceApplicant?.career}
-              limit={PRINT_LIMIT.timelineRows}
-            />
+            <div className="print-timeline">
+              <TimelineSection
+                education={sourceApplicant?.education}
+                career={sourceApplicant?.career}
+                limit={PRINT_LIMIT.timelineRows}
+              />
+            </div>
           </Card>
         )}
 
@@ -261,7 +263,9 @@ export default async function ApplicantPrintPage({
           </EmptyRow>
         ) : deptFitItems.length > 0 ? (
           <Card title="직군 적합도">
-            <DeptFitList items={deptFitItems} computedAt={deptFit?.computed_at} />
+            <div className="print-dept">
+              <DeptFitList items={deptFitItems} computedAt={deptFit?.computed_at} />
+            </div>
           </Card>
         ) : (
           <EmptyRow title="직군 적합도">산출된 결과가 없습니다.</EmptyRow>
@@ -380,7 +384,9 @@ export default async function ApplicantPrintPage({
         )}
 
         {/* 인재상 유형 — 화면에서는 별도 탭. 인쇄에서는 34개를 처음부터 펼친다 */}
-        <TalentTypesSection jobId={id} applicantId={decodedAppId} printMode />
+        <div className="print-talent">
+          <TalentTypesSection jobId={id} applicantId={decodedAppId} printMode />
+        </div>
       </div>
     </div>
   );
