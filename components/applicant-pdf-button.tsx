@@ -35,11 +35,16 @@ export default function ApplicantPdfButton({
   const [busy, setBusy] = useState(false);
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedTitleRef = useRef<string | null>(null);
 
   const cleanup = () => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
+    }
+    if (savedTitleRef.current !== null) {
+      document.title = savedTitleRef.current;
+      savedTitleRef.current = null;
     }
     frameRef.current?.remove();
     frameRef.current = null;
@@ -69,6 +74,9 @@ export default function ApplicantPdfButton({
           clearTimeout(timerRef.current);
           timerRef.current = null;
         }
+        // iframe 안에서 인쇄해도 Chrome 은 바깥 창 제목을 파일명으로 쓴다
+        if (savedTitleRef.current === null) savedTitleRef.current = document.title;
+        document.title = applicantId;
       });
       // 대화상자가 닫히면(저장했든 취소했든) 정리한다
       win?.addEventListener("afterprint", cleanup);

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { api, type PaperDetail } from "@/lib/api";
@@ -16,6 +17,16 @@ import { cleanReason } from "@/lib/clean-reason";
 import { PRINT_LIMIT, fitList, fitText } from "@/lib/print-frame";
 
 export const dynamic = "force-dynamic";
+
+// 브라우저가 문서 제목을 PDF 파일명으로 쓴다. 일괄 다운로드와 같이 지원자 번호로 맞춘다
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ applicantId: string }>;
+}): Promise<Metadata> {
+  const { applicantId } = await params;
+  return { title: { absolute: decodeURIComponent(applicantId) } };
+}
 
 const aiUsageHead = aiUsageHeadline();
 
