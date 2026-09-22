@@ -13,6 +13,7 @@ import { MockBadge } from "@/components/mock-mark";
 import TalentTypesSection from "@/components/talent-types-section";
 import { aiUsageHeadline } from "@/lib/ai-usage";
 import { cleanReason } from "@/lib/clean-reason";
+import { PRINT_LIMIT, fitList, fitText } from "@/lib/print-frame";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,10 @@ const PRINT_RADAR_HEIGHT = 230;
  *
  * 지원자 상세 대시보드와 같은 카드·색·차트를 그대로 쓰되, 탭을 없애 한 장으로 펼치고
  * 버튼류(피드백·재계산·업로드)를 뺐다. 브라우저 인쇄로 저장하므로 화면과 결과가 같다.
+ * 항목마다 줄 수와 개수를 못박아(lib/print-frame.ts) 긴 글은 말줄임표로 자른다. 지원자마다
+ * 글 길이가 달라도 한 항목이 차지하는 자리는 같다. 섹션끼리는 빈틈 없이 이어 붙이고,
+ * 내용이 없는 섹션은 한 줄 안내로 접는다.
+ *
  * 아직 목업인 AI 사용 의심도와 인재상 유형도 함께 싣되, 화면과 같은 미개발 배지를 붙인다.
  */
 export default async function ApplicantPrintPage({
@@ -97,6 +102,16 @@ export default async function ApplicantPrintPage({
       ? "행정직 미산출"
       : "논문 미첨부";
 
+  const timelineTotal =
+    (sourceApplicant?.education?.length ?? 0) + (sourceApplicant?.career?.length ?? 0);
+  const paperList = fitList(papers, PRINT_LIMIT.papers);
+  const interviewList = fitList(applicant.interview_questions ?? [], PRINT_LIMIT.interviewQuestions);
+  // 근거를 미리 잘라 넘긴다. 목록 부품은 화면과 같이 쓰므로 건드리지 않는다
+  const deptFitItems = fitList(deptFit?.items ?? [], PRINT_LIMIT.deptFitItems).shown.map((d) => ({
+    ...d,
+    reason: d.reason ? fitText(cleanReason(d.reason), PRINT_LIMIT.deptFitReason) : d.reason,
+  }));
+
   const printedAt = new Date().toLocaleString("ko-KR", {
     year: "numeric",
     month: "2-digit",
@@ -161,18 +176,18 @@ export default async function ApplicantPrintPage({
         {/* 종합 요약 */}
         <Card title="종합 요약">
           {applicant.summary?.overall && (
-            <p className="serif text-[20px] leading-[1.55] tracking-[-0.005em] text-[var(--ink)]">
+            <p className="serif text-[20px] leading-[1.55] tracking-[-0.005em] text-[var(--ink)] line-clamp-2">
               {applicant.summary.overall}
             </p>
           )}
           {applicant.summary?.overall_lines && (
             <ul className="mt-6 space-y-3">
-              {applicant.summary.overall_lines.map((line, i) => (
+              {applicant.summary.overall_lines.slice(0, PRINT_LIMIT.summaryLines).map((line, i) => (
                 <li key={i} className="grid grid-cols-[auto_1fr] gap-3.5 items-baseline">
                   <span className="text-[13px] text-[var(--secondary-2)] tabular-nums">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="text-[15.5px] leading-[1.8] text-[var(--ink)]">{line}</span>
+                  <span className="text-[15.5px] leading-[1.8] text-[var(--ink)] line-clamp-2">{line}</span>
                 </li>
               ))}
             </ul>
@@ -180,12 +195,24 @@ export default async function ApplicantPrintPage({
         </Card>
 
         {/* 학력 · 이력 */}
-        <Card title="학력 · 이력" split>
-          <div className="print-figure">
-            <TimelineBar education={sourceApplicant?.education} career={sourceApplicant?.career} />
-          </div>
-          <TimelineSection education={sourceApplicant?.education} career={sourceApplicant?.career} />
-        </Card>
+        {timelineTotal === 0 ? (
+          <EmptyRow title="학력 · 이력">기입되지 않았습니다.</EmptyRow>
+        ) : (
+          <Card
+            title="학력 · 이력"
+            note={omitted(timelineTotal - PRINT_LIMIT.timelineRows, "건")}
+            split
+          >
+            <div className="print-figure">
+              <TimelineBar education={sourceApplicant?.education} career={sourceApplicant?.career} />
+            </div>
+            <TimelineSection
+              education={sourceApplicant?.education}
+              career={sourceApplicant?.career}
+              limit={PRINT_LIMIT.timelineRows}
+            />
+          </Card>
+        )}
 
         {/* 역량 진단 */}
         <div className="print-flow grid grid-cols-2 gap-5">
@@ -218,7 +245,7 @@ export default async function ApplicantPrintPage({
                   <div className="col-span-1 serif text-[24px] text-[var(--secondary-2)] tabular-nums">
                     {(v.score * 10).toFixed(0)}
                   </div>
-                  <p className="col-span-9 text-[14.5px] leading-[1.75] text-[var(--ink-muted)]">
+                  <p className="col-span-9 text-[14.5px] leading-[1.75] text-[var(--ink-muted)] line-clamp-3">
                     {cleanReason(v.reason)}
                   </p>
                 </div>
@@ -228,19 +255,17 @@ export default async function ApplicantPrintPage({
         )}
 
         {/* 직군 적합도 */}
-        <Card title="직군 적합도">
-          {deptFit?.skipped ? (
-            <p className="text-[13px] text-[var(--ink-muted)] italic">
-              {deptFit.skipped_reason ?? "행정직은 직군 적합도 산출 대상이 아닙니다."}
-            </p>
-          ) : deptFit && deptFit.items.length > 0 ? (
-            <DeptFitList items={deptFit.items} computedAt={deptFit.computed_at} />
-          ) : (
-            <p className="text-[13px] text-[var(--ink-muted)]">
-              아직 채점 결과가 없습니다. 자기소개서와 분석된 논문이 모두 준비되면 자동 산출됩니다.
-            </p>
-          )}
-        </Card>
+        {deptFit?.skipped ? (
+          <EmptyRow title="직군 적합도">
+            {deptFit.skipped_reason ?? "행정직은 직군 적합도 산출 대상이 아닙니다."}
+          </EmptyRow>
+        ) : deptFitItems.length > 0 ? (
+          <Card title="직군 적합도">
+            <DeptFitList items={deptFitItems} computedAt={deptFit?.computed_at} />
+          </Card>
+        ) : (
+          <EmptyRow title="직군 적합도">산출된 결과가 없습니다.</EmptyRow>
+        )}
 
         {/* AI 사용 의심도 근거 — 대시보드와 같은 자리(자기소개서 핵심 바로 위) */}
         <Card
@@ -279,22 +304,22 @@ export default async function ApplicantPrintPage({
                       <span className="inline-flex items-center justify-center shrink-0 h-[22px] px-2 rounded-md bg-[var(--p-50)] text-[var(--p-700)] text-[12px] font-bold tabular-nums">
                         Q{String(g.qNum).padStart(2, "0")}
                       </span>
-                      <p className="text-[14px] font-medium text-[var(--ink-muted)] leading-[1.5]">
+                      <p className="text-[14px] font-medium text-[var(--ink-muted)] leading-[1.5] line-clamp-1">
                         {g.question}
                       </p>
                     </div>
                     <div className="space-y-4 pl-3.5 border-l-2 border-[var(--line)]">
-                      {g.items.map((item) => (
+                      {g.items.slice(0, PRINT_LIMIT.essayItemsPerQuestion).map((item) => (
                         <div
                           key={`${item.question_id}-${item.item_index ?? 0}`}
                           className="print-row flex gap-3 items-start"
                         >
                           <span className="mt-[10px] h-1.5 w-1.5 rounded-full bg-[var(--secondary)] shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <h3 className="serif text-[18px] leading-[1.4] text-[var(--ink)]">
+                            <h3 className="serif text-[18px] leading-[1.4] text-[var(--ink)] line-clamp-1">
                               {item.title || item.question_id}
                             </h3>
-                            <p className="mt-1 text-[15.5px] leading-[1.75] text-[var(--ink)]">
+                            <p className="mt-1 text-[15.5px] leading-[1.75] text-[var(--ink)] line-clamp-2">
                               {item.content}
                             </p>
                           </div>
@@ -309,27 +334,28 @@ export default async function ApplicantPrintPage({
         )}
 
         {/* 추천 면접 질문 — 화면에서는 표시 설정에 따라 접히지만 인쇄물에는 항상 넣는다 */}
-        {applicant.interview_questions && applicant.interview_questions.length > 0 && (
+        {interviewList.shown.length > 0 && (
           <Card title="추천 면접 질문" split>
-            <div className="grid grid-cols-2 gap-x-8">
-              {applicant.interview_questions.map((q, idx) => (
+            {/* 두 열로 깔면 칸마다 높이가 달라 빈칸이 생긴다. 한 열로 깐다 */}
+            <div>
+              {interviewList.shown.map((q, idx) => (
                 <article
                   key={q.id}
-                  className="print-row grid grid-cols-[auto_1fr] gap-5 py-5 border-b border-[var(--line)] last:border-b-0"
+                  className="print-row grid grid-cols-[auto_1fr] gap-5 py-3.5 border-b border-[var(--line)] last:border-b-0"
                 >
                   <div className="serif text-[26px] leading-none text-[var(--ink-muted)] tabular-nums">
                     {String(idx + 1).padStart(2, "0")}
                   </div>
                   <div>
-                    <p className="text-[16px] leading-[1.6] text-[var(--ink)]">{q.question}</p>
+                    <p className="text-[16px] leading-[1.6] text-[var(--ink)] line-clamp-3">{q.question}</p>
                     {(q.intent || q.topic_tag) && (
-                      <div className="mt-3 text-[12.5px] text-[var(--ink-muted)] leading-[1.6] flex flex-wrap items-center gap-2">
+                      <div className="mt-1.5 text-[12.5px] text-[var(--ink-muted)] leading-[1.6] flex items-center gap-2">
                         {q.topic_tag && (
-                          <span className="inline-block px-2 py-0.5 rounded-full border border-[var(--line-strong)] text-[11px]">
+                          <span className="shrink-0 inline-block px-2 py-0.5 rounded-full border border-[var(--line-strong)] text-[11px]">
                             {q.topic_tag}
                           </span>
                         )}
-                        {q.intent && <span>{q.intent}</span>}
+                        {q.intent && <span className="line-clamp-1">{q.intent}</span>}
                       </div>
                     )}
                   </div>
@@ -340,10 +366,12 @@ export default async function ApplicantPrintPage({
         )}
 
         {/* 학술지 게재 이력 — 화면에서는 별도 탭 */}
-        {papers.length > 0 && (
-          <Card title="학술지 게재 이력" split>
+        {papers.length === 0 ? (
+          <EmptyRow title="학술지 게재 이력">기입되지 않았습니다.</EmptyRow>
+        ) : (
+          <Card title="학술지 게재 이력" note={omitted(paperList.hidden, "편")} split>
             <PapersPrintList
-              files={papers}
+              files={paperList.shown}
               details={paperDetails}
               jobId={id}
               applicantId={decodedAppId}
@@ -363,6 +391,7 @@ function Card({
   title,
   badge,
   desc,
+  note,
   split,
   figure,
   children,
@@ -371,6 +400,8 @@ function Card({
   /** 제목 옆 표식 */
   badge?: React.ReactNode;
   desc?: string;
+  /** 개수 상한에 걸려 빠진 것을 알리는 한 줄 */
+  note?: string;
   /** 길이가 지원자마다 달라지는 카드. 페이지를 넘겨 이어 쓴다 */
   split?: boolean;
   /** 제목과 도형만 있는 카드. 쪽 끝에 제목만 남지 않게 통째로 자르지 않는다 */
@@ -392,10 +423,28 @@ function Card({
             </p>
           )}
         </div>
+        {note && (
+          <span className="shrink-0 text-[12px] text-[var(--ink-muted)] whitespace-nowrap">{note}</span>
+        )}
       </div>
       {children}
     </section>
   );
+}
+
+/** 내용이 없는 섹션. 제목과 안내를 한 줄에 두고 접는다. 다음 섹션이 바로 이어진다 */
+function EmptyRow({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="panel print-block print-figure flex items-center gap-2.5">
+      <span className="mark" />
+      <h2 className="text-[18px] font-bold tracking-[-0.012em] text-[var(--ink)]">{title}</h2>
+      <p className="ml-3 text-[13px] text-[var(--ink-muted)] line-clamp-1">{children}</p>
+    </section>
+  );
+}
+
+function omitted(hidden: number, unit: string): string | undefined {
+  return hidden > 0 ? `외 ${hidden}${unit} 생략` : undefined;
 }
 
 function HeaderStat({

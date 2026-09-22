@@ -369,6 +369,19 @@ body {
 .notice.is-info { border-color: var(--line-strong); }
 .notice.is-info .notice-head { background: var(--ink-muted); }
 
+/* 인쇄용 학술지 목록. 카드 부품은 화면과 같이 쓰므로 여기서 글자와 여백만 줄인다 */
+.print-papers h3 { font-size: 14px; }
+.print-papers header { padding: 8px 14px; }
+.print-papers header > div > div:first-child { margin-bottom: 2px; }
+.print-papers header p,
+.print-papers header span { font-size: 11px; }
+.print-papers article > div { font-size: 12px; }
+.print-papers article > div:not(.grid) { padding: 10px 14px; }
+.print-papers .p-5 { padding: 12px 14px; }
+.print-papers .text-\[14px\] { font-size: 12.5px; }
+.print-papers .text-\[13px\] { font-size: 12px; }
+.print-papers .text-\[12px\] { font-size: 11px; }
+
 /* ===== 인쇄 (지원자 PDF 저장) =====
    화면과 같은 색·카드를 그대로 종이에 옮긴다. 브라우저 기본값이 배경색을 지우므로
    print-color-adjust 로 막고, 카드가 페이지 경계에서 잘리지 않게 붙여 둔다. */

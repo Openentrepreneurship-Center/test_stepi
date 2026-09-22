@@ -39,7 +39,7 @@ export default function TopBar() {
       <div className="flex items-center justify-between px-8 lg:px-14 h-16">
         <div className="flex items-center gap-10">
           <Link href="/" className="block leading-none">
-            <StepiLogo size={22} />
+            <StepiLogo size={40} />
             <div className="mt-1 text-[10px] tracking-[0.04em] text-[var(--ink-muted)]">
               AI 채용지원 시스템
             </div>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, Download, FileText, LayoutDashboard } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, type JobFailuresResponse } from "@/lib/api";
 import ApplicantDeleteButton from "@/components/applicant-delete-button";
 import ApplicantPdfButton from "@/components/applicant-pdf-button";
 import BulkPdfButton from "@/components/bulk-pdf-button";
@@ -24,6 +24,12 @@ export default async function JobDetailPage({
     status && (status.progress.done > 0 || status.status === "done" || status.status === "failed")
       ? await api.getResult(id).catch(() => null)
       : null;
+
+  // 첫 지원자 전에 크래시하거나 등록에 실패하면 failed_count 는 0 이지만 error 는 있다
+  const showFailure =
+    !!status &&
+    (status.progress.failed > 0 || status.status === "failed" || !!status.error);
+  const failures = showFailure ? await api.getFailures(id).catch(() => null) : null;
 
   // v2 dept-fit + 논문 분석 상태를 단일 배치 endpoint 로 한 번에 fetch (N+1 회피)
   const summary = await api.applicantsSummary(id).catch(() => []);
@@ -98,12 +104,22 @@ export default async function JobDetailPage({
         }
       />
 
-      {status.error && (
-        <div className="mt-8 border-l-2 border-[var(--bad)] pl-4 py-2">
-          <div className="text-[12px] text-[var(--bad)] font-medium mb-1">분석 실패</div>
-          <div className="text-[13px] font-mono text-[var(--ink-muted)] break-all">
-            {status.error}
+      {showFailure && (
+        <div className="mt-8 border-l-2 border-[var(--bad)] pl-4 py-2 flex items-start justify-between gap-4">
+          <div>
+            <div className="text-[15px] text-[var(--bad)] font-bold mb-1">
+              {status.status === "failed" ? "분석 실패" : "일부 지원자 분석 실패"}
+            </div>
+            <div className="text-[16px] text-[var(--ink-muted)]">
+              {failureSummaryLine(failures)}
+            </div>
           </div>
+          <Link
+            href={`/jobs/${id}/failures`}
+            className="shrink-0 text-[15px] font-medium text-[var(--secondary-2)] hover:underline underline-offset-4 whitespace-nowrap"
+          >
+            실패 원인 보기
+          </Link>
         </div>
       )}
 
@@ -225,6 +241,21 @@ export default async function JobDetailPage({
       )}
     </div>
   );
+}
+
+function failureSummaryLine(failures: JobFailuresResponse | null): string {
+  if (!failures) return "분석 중 오류가 발생했습니다.";
+  if (failures.job_cause) {
+    return `${failures.job_cause.title}. ${failures.job_cause.description}`;
+  }
+  if (failures.groups.length > 0) {
+    const top = failures.groups.reduce((a, b) => (b.count > a.count ? b : a));
+    return `실패 ${failures.failed_applicants}명, 가장 많은 원인은 ${top.title}입니다.`;
+  }
+  if (failures.legacy) {
+    return `상세 원인이 기록되지 않은 지원자 ${failures.legacy_count}명`;
+  }
+  return "분석 중 오류가 발생했습니다.";
 }
 
 function Stat({

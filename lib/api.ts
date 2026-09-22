@@ -47,6 +47,54 @@ export interface JobResultResponse {
   error?: string | null;
 }
 
+// ─── 실패 원인 보기 ────────────────────────────────────────────────────────
+
+export type FailureCauseCode =
+  | "enqueue_failed"
+  | "timeout"
+  | "gpu_oom"
+  | "gpu_unavailable"
+  | "model_output_unreadable"
+  | "input_unreadable"
+  | "unknown";
+
+export interface FailureCause {
+  code: FailureCauseCode;
+  title: string;
+  description: string;
+  guidance: string;
+  raw_summary?: string | null;
+}
+
+export interface JobFailureCause extends FailureCause {
+  unprocessed_count: number;
+}
+
+export interface FailedApplicant {
+  applicant_id: string;
+  job_field: string | null;
+  failed_at: string;
+  raw_summary: string | null;
+}
+
+export interface FailureGroup extends FailureCause {
+  count: number;
+  applicants: FailedApplicant[];
+}
+
+export interface JobFailuresResponse {
+  job_id: string;
+  status: JobStatus;
+  running: boolean;
+  total: number;
+  failed_applicants: number;
+  legacy: boolean;
+  legacy_count: number;
+  legacy_message: string | null;
+  job_cause: JobFailureCause | null;
+  groups: FailureGroup[];
+}
+
 export interface ApplicantResult {
   applicant_id: string;
   job_track: string;
@@ -296,6 +344,8 @@ export const api = {
     http<void>(`/analysis-jobs/${id}/permanent`, { method: "DELETE" }),
   getStatus: (id: string) => http<JobStatusResponse>(`/analysis-jobs/${id}`),
   getResult: (id: string) => http<JobResultResponse>(`/analysis-jobs/${id}/result`),
+  getFailures: (id: string) =>
+    http<JobFailuresResponse>(`/analysis-jobs/${encodeURIComponent(id)}/failures`),
   cancelJob: (id: string) =>
     http<{ job_id: string; status: string; created_at: string }>(
       `/analysis-jobs/${id}/cancel`,
@@ -545,6 +595,20 @@ export interface PrelimCounts {
   no_id_rows?: number;
   /** 읽지 못해 건너뛴 파일·시트 안내 */
   skipped?: string[];
+  /** 이번 실행에 쓴 기준 파일 이름. 직접 올렸으면 null */
+  base_files?: Record<PrelimBaseKind, string | null>;
+}
+export type PrelimBaseKind = "raw_xlsm" | "academic_xlsx";
+export interface PrelimBaseFile {
+  kind: PrelimBaseKind;
+  file_name: string;
+  uploaded_at: string;
+  /** 등록 때 읽어 둔 시트별 건수 (내부직원 수 등) */
+  summary: Record<string, number> | null;
+}
+export interface PrelimBaseResponse {
+  items: Record<PrelimBaseKind, PrelimBaseFile | null>;
+  labels: Record<PrelimBaseKind, string>;
 }
 export interface PrelimRunResponse {
   ticket: string;
@@ -557,6 +621,131 @@ export interface PrelimRunResponse {
   truncated_recusal: boolean;
   warnings?: string[];
 }
+// ---- 사전스크리닝 결과 화면(담당자 HTML v1). 계산은 서버 derive.py 한 곳, 화면은 받은 값을 그리기만 한다 ----
+export type PrelimStage = "서류" | "필기" | "면접";
+export type PrelimVerdictValue = "confirm" | "dismiss" | "hold";
+export interface PrelimEssayItem {
+  id: string; no: string; name: string; type: string; category: string;
+  q: number; item: string; itemName: string;
+  before: string; hit: string; after: string; why: string;
+}
+export interface PrelimAttachItem {
+  id: string; no: string; name: string; cat: string; file: string;
+  lang: string; match: string; hits: number[]; total: number; snip: string;
+  is_image?: boolean;
+  /** 매칭된 쪽의 발췌. 키는 쪽 번호 */
+  excerpts?: Record<string, string>;
+  /** 쪽 번호 → 검출 위치 상자 [x0, y0, x1, y1] (쪽 크기 대비 0~1 비율). 위치를 못 잡은 쪽은 없다 */
+  boxes?: Record<string, number[][]>;
+  in_filename?: boolean;
+  ocr_limited?: boolean;
+  suggested?: { value: PrelimVerdictValue; reason?: string | null } | null;
+}
+export interface PrelimInternalRow {
+  id: string; no: string; name: string; project: string;
+  from: string | null; to: string | null; kind: "내부참여" | "외부참여";
+  dept?: string | null; dfrom?: string | null; dto?: string | null;
+  pi: string | null; s: string | null; e: string | null; ap: string | null;
+  flag: "yes" | "no" | null;
+}
+export interface PrelimWorkRow {
+  id: string; no: string; name: string; dept: string;
+  from: string | null; to: string | null;
+  hd: string | null; up: string | null; within2y: boolean;
+}
+export interface PrelimDegreeRow {
+  id: string; no: string; name: string; deg: string; school: string; major: string;
+  prof: string; staff: string; staffDept: string; staffDeg: string;
+}
+export interface PrelimExternalRow {
+  id: string; no: string; name: string; org: string;
+  from: string | null; to: string | null;
+}
+export interface PrelimView {
+  version: number; legacy?: boolean; end: string | null; notice: string | null;
+  essay: PrelimEssayItem[]; attach: PrelimAttachItem[];
+  external: PrelimExternalRow[];
+  missing: { count: number; rows: number[] };
+  warnings: string[];
+}
+export interface PrelimStaffRow {
+  name: string; title: string; dept: string; reasons: string[]; nos: string[]; cnt: number;
+}
+export interface PrelimCommittee {
+  src: string[]; name: string; org: string; title: string; phone?: string; mail?: string;
+  reasons?: string[];
+}
+export interface PrelimOrgRow { org: string; people: number; count: number; within: number }
+export interface PrelimPersonRow {
+  no: string; name: string; essay: number; attach: number; internal: number; external: number;
+  essay_done: boolean; out: string | null;
+}
+export interface PrelimDerived {
+  end: string | null; win: string | null;
+  summary_fixed: {
+    people_matrix: PrelimPersonRow[];
+    kpi: {
+      essay_total: number; essay_people: number; essay_by_type: [string, number][];
+      attach_total: number; attach_done: number;
+      internal_total: number; external_total: number;
+      missing: { count: number; rows: number[] };
+    };
+    tab_counts: { essay: number; attach: number; inx: number; exx: number };
+    attach_confirmed: number;
+    progress: { done: number; total: number };
+    org_bars: [string, number][];
+    internal_staff: PrelimStaffRow[];
+    committee_list: PrelimCommittee[];
+    dropped_count: number;
+  };
+  inx: {
+    staff_rows: PrelimStaffRow[];
+    pending_count: number;
+    internal: PrelimInternalRow[]; work: PrelimWorkRow[]; degree: PrelimDegreeRow[];
+    degree_uploaded: boolean;
+  };
+  exx: Record<PrelimStage, {
+    org_rows: PrelimOrgRow[]; limited_org_rows: PrelimOrgRow[]; limited_org_count: number;
+    restricted_committee: PrelimCommittee[]; gone_orgs: string[];
+  }>;
+  exx_detail: (PrelimExternalRow & { within2y: boolean; out: string | null; first: boolean; span: number })[];
+  external_edu_count: number;
+  warnings: string[];
+}
+export interface PrelimVerdict { value: string; reason: string | null }
+export interface PrelimVerdicts {
+  essay: Record<string, PrelimVerdict>;
+  attach: Record<string, PrelimVerdict>;
+  out: Record<string, PrelimVerdict>;
+}
+export type PrelimUploadKind = "inx" | "work" | "degree" | "com";
+export interface PrelimResult extends PrelimRunResponse {
+  computed_at: string;
+  applicant_count: number;
+  notice: string | null;
+  deleted_at: string | null;
+  files_used: Record<string, string | null> | null;
+  attach_status: "none" | "uploading" | "queued" | "scanning" | "done" | "failed";
+  attach_done: number | null; attach_total: number | null;
+  attach_error?: string | null;
+  view: PrelimView;
+  verdicts: PrelimVerdicts;
+  uploads: Partial<Record<PrelimUploadKind, { file_name: string; uploaded_at: string | null }>>;
+  derived: PrelimDerived;
+}
+
+async function prelimJson<T>(res: Response, fallback: string): Promise<T> {
+  if (!res.ok) {
+    const text = await res.text();
+    let detail: unknown;
+    try {
+      detail = JSON.parse(text).detail;
+    } catch {}
+    throw new Error(typeof detail === "string" ? detail : `${fallback}: ${res.status}`);
+  }
+  return res.json() as Promise<T>;
+}
+
 export interface PrelimSummary {
   ticket: string;
   label: string | null;
@@ -564,6 +753,12 @@ export interface PrelimSummary {
   counts: PrelimCounts;
   applicant_count: number;
   computed_at: string;
+  notice?: string | null;
+  deleted_at?: string | null;
+  attach_status?: string;
+  /** view 를 저장하기 전의 옛 실행은 null */
+  view_counts?: { essay: number; attach: number; inx: number; exx: number } | null;
+  judged?: number;
 }
 
 export const prelim = {
@@ -583,8 +778,89 @@ export const prelim = {
     }
     return res.json() as Promise<PrelimRunResponse>;
   },
-  list: () => http<{ items: PrelimSummary[] }>(`/prelim/results`),
+  list: (opts?: { trashed?: boolean; limit?: number }) =>
+    http<{ items: PrelimSummary[] }>(
+      `/prelim/results?limit=${opts?.limit ?? 20}${opts?.trashed ? "&trashed=true" : ""}`,
+    ),
+  remove: (ticket: string, hard = false) =>
+    http<{ ticket: string }>(`/prelim/results/${encodeURIComponent(ticket)}${hard ? "?hard=1" : ""}`, { method: "DELETE" }),
+  restore: (ticket: string) =>
+    http<{ ticket: string }>(`/prelim/results/${encodeURIComponent(ticket)}/restore`, { method: "POST" }),
   get: (ticket: string) => http<PrelimRunResponse>(`/prelim/results/${ticket}`),
+  /** 기준 파일(내부위원 학력정보, 학력제척). 한 번 올리면 교체 전까지 매 검토에 같이 쓴다 */
+  base: {
+    get: () => http<PrelimBaseResponse>(`/prelim/base`),
+    async put(kind: PrelimBaseKind, file: File): Promise<PrelimBaseFile> {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`${API_BASE}/prelim/base/${kind}`, { method: "PUT", body: form });
+      if (!res.ok) {
+        const text = await res.text();
+        let detail: unknown;
+        try {
+          detail = JSON.parse(text).detail;
+        } catch {}
+        throw new Error(typeof detail === "string" ? detail : `기준 파일 등록 실패: ${res.status}`);
+      }
+      return res.json() as Promise<PrelimBaseFile>;
+    },
+  },
+  result: (ticket: string) => http<PrelimResult>(`/prelim/results/${encodeURIComponent(ticket)}`),
+  verdict: {
+    /** value 가 null 이면 판정 취소. 화면은 응답의 verdicts·derived 로만 갱신한다 */
+    async put(ticket: string, body: { kind: "essay" | "attach" | "out"; item_id: string; value: string | null; reason?: string | null }) {
+      const res = await fetch(`${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/verdicts`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      return prelimJson<{ verdicts: PrelimVerdicts; derived: PrelimDerived }>(res, "판정 저장 실패");
+    },
+  },
+  upload: {
+    async put(ticket: string, kind: PrelimUploadKind, file: File) {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/uploads/${kind}`, {
+        method: "PUT",
+        body: form,
+      });
+      return prelimJson<{ uploads: PrelimResult["uploads"]; derived: PrelimDerived }>(res, "파일 업로드 실패");
+    },
+  },
+  attach: {
+    status: () => http<{ enabled: boolean; max_bytes: number }>(`/prelim/attach/status`),
+    /** 크기·디스크 검사를 먼저 하고, 통과하면 zip 본문을 그대로 보낸다. 진행률 때문에 XHR 을 쓴다 */
+    async send(ticket: string, file: File, onProgress: (ratio: number) => void): Promise<void> {
+      const base = `${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/attach`;
+      const pre = await fetch(`${base}/prepare`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ size_bytes: file.size, file_name: file.name }),
+      });
+      await prelimJson<unknown>(pre, "첨부 실적 업로드 준비 실패");
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", base);
+        xhr.setRequestHeader("Content-Type", "application/zip");
+        xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) return resolve();
+          let detail: unknown;
+          try {
+            detail = JSON.parse(xhr.responseText).detail;
+          } catch {}
+          reject(new Error(typeof detail === "string" ? detail : `첨부 실적 업로드 실패: ${xhr.status}`));
+        };
+        xhr.onerror = () => reject(new Error("첨부 실적 업로드 중 연결이 끊겼습니다."));
+        xhr.send(file);
+      });
+    },
+  },
+  /** 표별 xlsx. stage 는 exx-com 에만 쓴다 */
+  exportKeyUrl: (ticket: string, key: string, stage?: PrelimStage) =>
+    `${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/export/${encodeURIComponent(key)}` +
+    (stage ? `?stage=${encodeURIComponent(stage)}` : ""),
   /** 제척사유 / 블라인드위배 / 요약 3시트 xlsx. 서버가 attachment 로 내려주므로 링크로 연다 */
   exportUrl: (ticket: string) =>
     `${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/export`,

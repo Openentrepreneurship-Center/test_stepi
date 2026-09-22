@@ -51,9 +51,9 @@ export default function PrelimMonitor({ initialTicket }: { initialTicket?: strin
     }
   }
 
-  // 결과는 주소에 담는다. 그래야 사이드바 메뉴로 /prelim 에 돌아왔을 때 첫 화면이 나온다
+  // 결과는 주소에 담는다. 그래야 사이드바 메뉴로 돌아왔을 때 첫 화면이 나온다
   function openTicket(t: string) {
-    router.push(`/prelim?ticket=${encodeURIComponent(t)}`);
+    router.push(`/prelim/legacy?ticket=${encodeURIComponent(t)}`);
   }
 
   return (

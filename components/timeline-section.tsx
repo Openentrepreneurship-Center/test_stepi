@@ -46,9 +46,12 @@ function rangeLabel(start?: string, end?: string): string {
 export default function TimelineSection({
   education,
   career,
+  limit,
 }: {
   education: EducationItem[] | null | undefined;
   career: CareerItem[] | null | undefined;
+  /** 최신순으로 이만큼만 그린다. 인쇄물처럼 높이가 정해진 자리에서 쓴다 */
+  limit?: number;
 }) {
   const entries: TimelineEntry[] = [
     ...(education || []).map((e) => ({
@@ -65,6 +68,8 @@ export default function TimelineSection({
   // 최신순 (역시간순)
   entries.sort((a, b) => (a.sortKey < b.sortKey ? 1 : -1));
 
+  const shown = limit != null ? entries.slice(0, limit) : entries;
+
   if (entries.length === 0) {
     return (
       <p className="text-[15px] text-[var(--ink-soft)] italic py-3">
@@ -77,9 +82,9 @@ export default function TimelineSection({
     <div className="relative pl-7">
       {/* 좌측 세로선 */}
       <div className="absolute left-2 top-1 bottom-1 w-px bg-[var(--line)]" />
-      {entries.map((entry, i) => {
+      {shown.map((entry, i) => {
         const Icon = entry.type === "edu" ? GraduationCap : Briefcase;
-        const isLast = i === entries.length - 1;
+        const isLast = i === shown.length - 1;
         return (
           <div key={i} className={`print-row relative ${isLast ? "" : "pb-5"}`}>
             <div className="absolute -left-[22px] top-[3px] w-4 h-4 rounded-full bg-[var(--bg)] border-2 border-[var(--ink-muted)] flex items-center justify-center">

@@ -86,15 +86,21 @@ export default function Sidebar() {
     },
     {
       key: "prelim",
-      label: "사전스크리닝검토",
+      label: "사전스크리닝 검토",
       icon: ShieldAlert,
       match: (p) => p.startsWith("/prelim"),
       children: [
         {
           href: "/prelim",
-          label: "지원자 적정성 검토",
+          label: "분석 현황",
           icon: ShieldAlert,
-          match: (p) => p.startsWith("/prelim"),
+          match: (p) => p.startsWith("/prelim") && !p.startsWith("/prelim/trash"),
+        },
+        {
+          href: "/prelim/trash",
+          label: "삭제 항목",
+          icon: Trash2,
+          match: (p) => p.startsWith("/prelim/trash"),
         },
       ],
     },
@@ -137,8 +143,8 @@ export default function Sidebar() {
       >
         {!collapsed && (
           <Link href="/" className="block min-w-0 flex-1" title="분석 현황">
-            {/* 접기 버튼을 뺀 남은 폭을 다 쓴다 (md 약 188px, lg 약 212px) */}
-            <StepiLogo size={44} className="h-auto w-full" />
+            {/* 세로형 CI. 높이를 정해 두고 폭은 비율대로 */}
+            <StepiLogo size={92} />
             <div className="mt-2.5 text-[12.5px] font-medium text-[var(--ink-muted)]">
               AI 채용지원 시스템
             </div>

@@ -41,10 +41,10 @@ export default function ApplicantDeleteButton({ jobId, applicantId }: Props) {
       disabled={busy}
       title="지원자 영구 삭제"
       aria-label="지원자 삭제"
-      className={`inline-flex items-center justify-center w-7 h-7 rounded-md transition ${
+      className={`inline-flex items-center justify-center w-7 h-7 rounded-[2px] border border-transparent transition ${
         busy
           ? "text-[var(--ink-soft)] cursor-not-allowed"
-          : "text-[var(--ink-muted)] hover:text-[var(--bad)] hover:bg-[var(--bad)]/8"
+          : "text-[var(--ink-muted)] hover:border-[var(--bad)] hover:bg-[var(--bad)] hover:text-white"
       }`}
     >
       <Trash2 size={14} strokeWidth={1.6} />

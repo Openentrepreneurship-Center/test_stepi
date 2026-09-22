@@ -14,7 +14,7 @@ export default function PapersPrintList({
   applicantId: string;
 }) {
   return (
-    <div className="space-y-10">
+    <div className="print-papers space-y-4">
       {files.map((f) => (
         <PaperCard
           key={f.file_id ?? `meta-${f.paper_id}`}
