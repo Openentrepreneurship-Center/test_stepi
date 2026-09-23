@@ -274,7 +274,7 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
           </div>
           <header style={{ borderTop: "1px solid var(--line)" }}>
             <h2>제척 외부위원</h2>
-            <span className="hint">{exCom.length ? `${exCom.length}명 · ${stage}전형 기준` : "채용섭외위원 목록 업로드 전"}</span>
+            <span className="hint">{exCom.length ? `${exCom.length}명 · ${stage}전형 기준` : "등록된 섭외 심사위원 없음"}</span>
           </header>
           {exCom.length ? (
             <div className="nolist">
@@ -289,7 +289,7 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
               ))}
             </div>
           ) : (
-            <div className="empty">제척(외부) 화면에서 채용섭외위원 목록을 업로드하면 제척 외부위원이 표시됩니다.</div>
+            <div className="empty">제척 기준 정보 화면에서 섭외 심사위원을 등록하면 제척 외부위원이 표시됩니다.</div>
           )}
           <header style={{ borderTop: "1px solid var(--line)" }}>
             <h2>내부 제척위원</h2>

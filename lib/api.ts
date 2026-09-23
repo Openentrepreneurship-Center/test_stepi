@@ -711,6 +711,8 @@ export interface PrelimDerived {
     org_bars: [string, number][];
     internal_staff: PrelimStaffRow[];
     committee_list: PrelimCommittee[];
+    /** 외부위원 목록 출처. upload = 올린 채용섭외위원 파일, reference = 제척 기준 정보의 섭외 심사위원 */
+    committee_source: "upload" | "reference" | null;
     dropped_count: number;
   };
   inx: {

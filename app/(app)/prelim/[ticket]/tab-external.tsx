@@ -25,6 +25,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
   const restricted = cur.restricted_committee;
   const com = derived.summary_fixed.committee_list;
   const uploaded = com.length > 0;
+  const source = derived.summary_fixed.committee_source;
   const dropped = derived.summary_fixed.dropped_count;
   const detail = derived.exx_detail;
   const kpi = derived.summary_fixed.kpi;
@@ -38,7 +39,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
           평가기준일 <span className="mono">{derived.end}</span> 기준 최근 2년(<span className="mono">{derived.win}</span> 이후) 재직 이력이 있으면 해당
           기관 소속 외부위원 섭외가 제한됩니다.
           <br />
-          채용섭외위원 목록을 업로드하면 제한 기관 소속 위원이 제척 외부위원으로 표시됩니다.
+          외부위원은 제척 기준 정보의 섭외 심사위원 목록에서 가져오고, 제한 기관 소속이면 표시합니다. 채용섭외위원 목록 파일을 올리면 그 파일을 대신 씁니다.
         </span>
       </div>
       {derived.external_edu_count > 0 && (
@@ -62,7 +63,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
         <div className="guide" style={{ background: "#fff", borderBottom: "1px solid var(--line)" }}>
           <span className="hint">
             총괄 · <b>{stage}전형</b> 기준 제척대상 기관 {cur.limited_org_count}개(2년 이내 재직 지원자가 있는 기관) · 제척 외부위원 {restricted.length}명.
-            직전 섭외된 위원은 아래 외부위원 목록표에 업로드한 채용섭외위원 목록에서 가져옵니다.
+            {source === "upload" ? "위원은 아래 외부위원 목록표에 올린 채용섭외위원 목록에서 가져옵니다." : "위원은 제척 기준 정보의 섭외 심사위원 목록에서 가져옵니다."}
             {dropped ? ` 현재 탈락 처리 ${dropped}명${cur.gone_orgs.length ? ` · 이 전형에서 빠진 기관: ${cur.gone_orgs.join(", ")}` : ""}` : ""}
           </span>
         </div>
@@ -131,7 +132,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
                   ) : (
                     <tr>
                       <td colSpan={4} className="no2">
-                        채용섭외위원 목록 업로드 전
+                        제척 기준 정보에 등록된 섭외 심사위원이 없습니다
                       </td>
                     </tr>
                   )}
@@ -146,14 +147,18 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
         <header>
           <h2>외부위원 목록표</h2>
           <div className="hdtools">
-            <span className="hint">{uploaded ? `업로드 위원 ${com.length}명 · 제척 ${restricted.length}명` : "채용섭외위원 목록 업로드 전"}</span>
+            <span className="hint">
+              {uploaded
+                ? `${source === "upload" ? "올린 파일" : "제척 기준 정보"} 위원 ${com.length}명 · 제척 ${restricted.length}명`
+                : "제척 기준 정보에 등록된 섭외 심사위원이 없습니다"}
+            </span>
             <UpBtn kind="com" label="채용섭외위원 목록 업로드" fileName={uploads.com?.file_name} busy={busy === "up:com"} onPick={upload} />
             <XBtn href={exportUrl("exx-com")} title="외부위원 목록 엑셀 다운로드" />
           </div>
         </header>
         <div className="guide" style={{ background: "#fff", borderBottom: "1px solid var(--line)" }}>
           <span className="hint upfmt">
-            업로드 형식 · <b>구분(직전공고 / 동일직군 최근공고) / 이름 / 소속회사 / 직급 / 전화번호 / 메일</b>. 직전공고 위원 명단과 동일 직군 공고 최근 위원 명단을 한 파일로 올리면 소속회사를 제척대상 기관명과 대조해 제척 외부위원을 표시합니다.
+            기본은 제척 기준 정보 화면의 섭외 심사위원 목록입니다. 다른 명단으로 보려면 <b>구분 / 이름 / 소속회사 / 직급 / 전화번호 / 메일</b> 열이 있는 채용섭외위원 목록을 올리면 이 검토에서는 그 파일을 씁니다.
           </span>
         </div>
         {uploaded ? (
@@ -188,7 +193,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
           </div>
         ) : (
           <div className="empty">
-            채용섭외위원 목록(직전공고 위원 명단 + 동일 직군 공고 최근 위원 명단)을 업로드하면 외부위원 목록표와 제척 외부위원이 산출됩니다.
+            제척 기준 정보 화면에서 섭외 심사위원을 등록하거나 채용섭외위원 목록을 올리면 외부위원 목록표와 제척 외부위원이 표시됩니다.
           </div>
         )}
       </div>
