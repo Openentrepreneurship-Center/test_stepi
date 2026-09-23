@@ -191,13 +191,16 @@ export default function UploadForm() {
                   <div className="name">
                     내부위원 학력정보 <span className="tag opt">선택</span>
                   </div>
-                  <div className="hint">.xlsm 파일</div>
-                  <SheetHint sheets={["원본", "내부제척", "외부제척"]} />
+                  <div className="hint">.xlsm 또는 .xlsx 파일</div>
+                  <SheetHint
+                    sheets={["원본", "내부제척", "외부제척"]}
+                    note="지원정보 파일(공고별 지원자 관리)도 원본으로 읽음"
+                  />
                   {baseHint("raw_xlsm")}
                 </div>
                 <DropBox
-                  accept=".xlsm"
-                  label="내부위원 학력정보 xlsm 파일 선택"
+                  accept=".xlsm,.xlsx"
+                  label="내부위원 학력정보 파일 선택"
                   file={files.origin}
                   onPick={pick("origin")}
                 />
