@@ -1,5 +1,5 @@
 import Image from "next/image";
-import ci from "@/public/stepi-ci.png";
+import ci from "@/public/stepi-ci-wide.png";
 import mark from "@/public/stepi-mark.png";
 
 interface Props {

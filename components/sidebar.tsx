@@ -153,9 +153,9 @@ export default function Sidebar() {
       >
         {!collapsed && (
           <Link href="/" className="block min-w-0 flex-1" title="분석 현황">
-            {/* 세로형 CI. 높이를 정해 두고 폭은 비율대로 */}
-            <StepiLogo size={80} />
-            <div className="mt-1 text-[12.5px] font-medium text-[var(--ink-muted)]">
+            {/* 접기 버튼을 뺀 남은 폭을 다 쓴다 (md 약 188px, lg 약 212px) */}
+            <StepiLogo size={44} className="h-auto w-full" />
+            <div className="mt-2.5 text-[12.5px] font-medium text-[var(--ink-muted)]">
               AI 채용지원 시스템
             </div>
           </Link>
