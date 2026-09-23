@@ -178,6 +178,17 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
   const timers = useRef<Record<string, { t: ReturnType<typeof setTimeout>; save: () => void }>>({});
   // id 별로 마지막으로 보낸 사유. 응답 전 다시 고친 값도 이것과 비교해야 저장을 건너뛰지 않는다
   const sent = useRef<Record<string, string>>({});
+  // 사유 저장 상태 표시. 입력 중 → 저장 중 → 저장됨(시각) 또는 실패
+  const [saveState, setSaveState] = useState<
+    Record<string, { s: "typing" | "saving" | "saved" | "error"; at?: string }>
+  >({});
+  const markSave = (id: string, s: "typing" | "saving" | "saved" | "error" | null) =>
+    setSaveState((m) => {
+      const next = { ...m };
+      if (s === null) delete next[id];
+      else next[id] = { s, at: s === "saved" ? new Date().toTimeString().slice(0, 5) : undefined };
+      return next;
+    });
   const dropDraft = (id: string) =>
     setDrafts((d) => {
       const rest = { ...d };
@@ -193,14 +204,21 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
   };
   const typeReason = (id: string, text: string, saved: string) => {
     setDrafts((d) => ({ ...d, [id]: text }));
+    markSave(id, "typing");
     const prev = timers.current[id];
     if (prev) clearTimeout(prev.t);
     const save = () => {
-      if (text === (sent.current[id] ?? saved)) return;
+      if (text === (sent.current[id] ?? saved)) {
+        // 고쳤다가 원래대로 돌아왔으면 저장할 것이 없다
+        if (sent.current[id] === undefined) markSave(id, null);
+        return;
+      }
       sent.current[id] = text;
-      void judge("attach", id, "dismiss", text || null).then(() => {
+      markSave(id, "saving");
+      void judge("attach", id, "dismiss", text || null).then((ok) => {
         if (sent.current[id] !== text) return; // 그사이 더 고쳤으면 그 저장 결과를 따른다
         delete sent.current[id];
+        if (!timers.current[id]) markSave(id, ok ? "saved" : "error");
         // 입력이 멈춘 뒤에만 비운다. 성공이면 서버 값과 같고, 실패면 서버 값으로 되돌아간다
         if (!timers.current[id]) dropDraft(id);
       });
@@ -328,6 +346,17 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
                             onChange={(e) => typeReason(a.id, e.target.value, saved.reason ?? "")}
                             onBlur={() => flushReason(a.id)}
                           />
+                          {st.value === "dismiss" && saveState[a.id] && (
+                            <span className={`jsave ${saveState[a.id].s}`} role="status">
+                              {saveState[a.id].s === "typing"
+                                ? "입력 중…"
+                                : saveState[a.id].s === "saving"
+                                  ? "저장 중…"
+                                  : saveState[a.id].s === "saved"
+                                    ? `✓ 저장됨 ${saveState[a.id].at}`
+                                    : "저장하지 못해 이전 사유로 되돌렸습니다. 다시 입력해 주세요."}
+                            </span>
+                          )}
                           <span className={`jtext ${t.cls}`}>{t.t}</span>
                         </div>
                       </td>

@@ -12,6 +12,7 @@ import {
   ChevronsRight,
   Activity,
   ShieldAlert,
+  Database,
   SlidersHorizontal,
   LogOut,
   type LucideIcon,
@@ -94,7 +95,16 @@ export default function Sidebar() {
           href: "/prelim",
           label: "분석 현황",
           icon: ShieldAlert,
-          match: (p) => p.startsWith("/prelim") && !p.startsWith("/prelim/trash"),
+          match: (p) =>
+            p.startsWith("/prelim") &&
+            !p.startsWith("/prelim/trash") &&
+            !p.startsWith("/prelim/reference"),
+        },
+        {
+          href: "/prelim/reference",
+          label: "제척 기준 정보",
+          icon: Database,
+          match: (p) => p.startsWith("/prelim/reference"),
         },
         {
           href: "/prelim/trash",

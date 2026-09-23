@@ -52,8 +52,8 @@ const ALL_KEYS = [
 const FILE_LABELS: [string, string][] = [
   ["apply_xlsx", "자기소개서"],
   ["attach", "첨부 실적"],
-  ["raw_xlsm", "내부위원 학력정보"],
-  ["academic_xlsx", "학력제척"],
+  ["raw_xlsm", "지원정보"],
+  ["reference", "제척 기준 정보"],
 ];
 
 /** 경고문을 문장 단위로 나눈다. 괄호 안이나 파일 이름 안의 마침표는 문장 끝으로 보지 않는다 */
@@ -306,10 +306,9 @@ export default function ResultView({ ticket }: { ticket: string }) {
   }
 
   const counts = derived.summary_fixed.tab_counts as Record<string, number>;
-  const baseUsed = (data.files_used?.base ?? {}) as Record<string, string | null>;
   const files = FILE_LABELS.filter(([k]) =>
     k === "attach" ? data.attach_status !== "none" : !!data.files_used?.[k],
-  ).map(([k, label]) => (baseUsed[k] ? `${label}(기준 자료)` : label));
+  ).map(([, label]) => label);
   const warnings = [...(data.counts.skipped ?? []), ...derived.warnings];
   const ctx: Ctx = {
     ticket,

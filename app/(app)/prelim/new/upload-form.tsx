@@ -1,15 +1,23 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/page-header";
-import { prelim, type PrelimBaseResponse } from "@/lib/api";
+import { prelim, type PrelimRefSummary } from "@/lib/api";
 import "../prelim.css";
 
-type Slot = "essay" | "attach" | "origin" | "edu";
+type Slot = "essay" | "attach" | "origin";
 
 const EMPTY_TEXT = "파일을 여기로 끌어다 놓으세요";
+
+// 암호를 건 xlsx·xlsm 은 zip 이 아니라 OLE 문서(D0 CF 11 E0)로 저장된다
+async function isLockedExcel(f: File): Promise<boolean> {
+  if (!/\.xls[xm]$/i.test(f.name)) return false;
+  const b = new Uint8Array(await f.slice(0, 4).arrayBuffer());
+  return b[0] === 0xd0 && b[1] === 0xcf && b[2] === 0x11 && b[3] === 0xe0;
+}
 
 function DropBox({
   accept,
@@ -22,7 +30,7 @@ function DropBox({
   accept: string;
   label: string;
   file: File | null;
-  onPick: (f: File | null) => void;
+  onPick: (f: File | null) => Promise<boolean>;
   disabled?: boolean;
   required?: boolean;
 }) {
@@ -45,7 +53,11 @@ function DropBox({
         required={required}
         disabled={disabled}
         aria-label={label}
-        onChange={(e) => onPick(e.target.files?.[0] ?? null)}
+        onChange={async (e) => {
+          const input = e.currentTarget;
+          // 거절한 파일은 입력칸에서도 비워 같은 파일을 다시 골라도 반응하게 한다
+          if (!(await onPick(input.files?.[0] ?? null))) input.value = "";
+        }}
       />
       <span className="btn tertiary">{file ? "변경" : "파일 선택"}</span>
     </div>
@@ -58,46 +70,38 @@ export default function UploadForm() {
     essay: null,
     attach: null,
     origin: null,
-    edu: null,
   });
-  const [pw, setPw] = useState("2216");
-  const [showPw, setShowPw] = useState(false);
   const [evalDate, setEvalDate] = useState("");
   const [saveName, setSaveName] = useState("");
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
-  const [base, setBase] = useState<PrelimBaseResponse | null>(null);
+  const [ref, setRef] = useState<PrelimRefSummary | null>(null);
 
-  // 등록된 기준 자료. 안 올린 칸은 이걸로 채워진다는 안내용
+  // 내부위원·섭외 심사위원·연구기관은 제척 기준 정보 탭에서 읽는다는 안내용 건수
   useEffect(() => {
     let alive = true;
-    prelim.base
-      .get()
-      .then((r) => alive && setBase(r))
+    prelim.reference
+      .summary()
+      .then((r) => alive && setRef(r))
       .catch(() => {});
     return () => {
       alive = false;
     };
   }, []);
-  const baseHint = (kind: "raw_xlsm" | "academic_xlsx") => {
-    const f = base?.items[kind];
-    return f ? (
-      <div className="hint sheets basehint">
-        <div>비우면 기준 파일 사용</div>
-        <div className="one">{f.file_name}</div>
-        <div className="one note">{f.uploaded_at.slice(0, 10)} 등록</div>
-      </div>
-    ) : base ? (
-      <div className="hint sheets basehint" style={{ color: "var(--red-text)" }}>
-        <div>등록된 기준 파일이 없습니다</div>
-        <div className="one bad">올리지 않으면 이 검사는 빠집니다</div>
-      </div>
-    ) : null;
-  };
 
-  const pick = (slot: Slot) => (f: File | null) =>
+  const pick = (slot: Slot, label?: string) => async (f: File | null) => {
+    if (f && label && (await isLockedExcel(f))) {
+      setFiles((prev) => ({ ...prev, [slot]: null }));
+      window.alert(
+        `${label} 파일에 암호가 걸려 있어 올릴 수 없습니다.\n` +
+          "엑셀에서 암호를 지운 뒤(파일 > 정보 > 통합 문서 보호 > 암호 설정) 다시 올려 주세요.",
+      );
+      return false;
+    }
     setFiles((prev) => ({ ...prev, [slot]: f }));
+    return true;
+  };
   const ready = !!files.essay;
 
   async function submit(e: React.FormEvent) {
@@ -109,8 +113,6 @@ export default function UploadForm() {
       const form = new FormData();
       form.append("apply_xlsx", files.essay);
       if (files.origin) form.append("raw_xlsm", files.origin);
-      if (files.edu) form.append("academic_xlsx", files.edu);
-      if (files.edu && pw.trim()) form.append("academic_password", pw.trim());
       if (evalDate) form.append("eval_date", evalDate);
       if (saveName.trim()) form.append("label", saveName.trim());
       const res = await prelim.run(form);
@@ -148,7 +150,7 @@ export default function UploadForm() {
             <section className="stack">
               <div className="sec-head">
                 <h2>1. 검토 파일</h2>
-                <span className="hint">필수 1개 · 선택 3개</span>
+                <span className="hint">필수 1개 · 선택 2개</span>
               </div>
 
               <div className="file-row">
@@ -163,7 +165,7 @@ export default function UploadForm() {
                   accept=".xlsx"
                   label="자기소개서 xlsx 파일 선택"
                   file={files.essay}
-                  onPick={pick("essay")}
+                  onPick={pick("essay", "자기소개서")}
                   required
                 />
               </div>
@@ -189,64 +191,41 @@ export default function UploadForm() {
               <div className="file-row">
                 <div>
                   <div className="name">
-                    내부위원 학력정보 <span className="tag opt">선택</span>
+                    지원정보 <span className="tag opt">선택</span>
                   </div>
-                  <div className="hint">.xlsm 또는 .xlsx 파일</div>
-                  <SheetHint
-                    sheets={["원본", "내부제척", "외부제척"]}
-                    note="지원정보 파일(공고별 지원자 관리)도 원본으로 읽음"
-                  />
-                  {baseHint("raw_xlsm")}
+                  <div className="hint">.xlsx 또는 .xlsm 파일</div>
+                  <div className="hint">지원자 학력·경력을 읽습니다. 없으면 제척 검토가 빠집니다</div>
+                  <SheetHint sheets={["공고별 지원자 관리"]} note="마이다스인 지원정보 내보내기, 원본 시트도 읽음" />
                 </div>
                 <DropBox
-                  accept=".xlsm,.xlsx"
-                  label="내부위원 학력정보 파일 선택"
+                  accept=".xlsx,.xlsm"
+                  label="지원정보 파일 선택"
                   file={files.origin}
-                  onPick={pick("origin")}
+                  onPick={pick("origin", "지원정보")}
                 />
               </div>
 
               <div className="file-row">
                 <div>
                   <div className="name">
-                    학력제척 <span className="tag opt">선택</span>
+                    제척 기준 정보 <span className="tag opt">자동</span>
                   </div>
-                  <div className="hint">암호화된 .xlsx 파일</div>
-                  <SheetHint sheets={["학력제척"]} note="학력제척_백데이터1 은 있으면 사용" />
-                  {baseHint("academic_xlsx")}
+                  <div className="hint">파일을 올리지 않아도 됩니다</div>
                 </div>
-                <DropBox
-                  accept=".xlsx"
-                  label="학력제척 xlsx 파일 선택"
-                  file={files.edu}
-                  onPick={pick("edu")}
-                />
-                <div className="field pw">
-                  <label htmlFor="prelim-pw">파일 열기 암호</label>
-                  <div className="pw-box">
-                    <input
-                      className="input"
-                      id="prelim-pw"
-                      type={showPw ? "text" : "password"}
-                      autoComplete="new-password"
-                      data-1p-ignore
-                      data-lpignore="true"
-                      placeholder="2216"
-                      value={pw}
-                      onChange={(e) => setPw(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      aria-pressed={showPw}
-                      onClick={() => setShowPw((v) => !v)}
-                    >
-                      {showPw ? "숨김" : "표시"}
-                    </button>
-                  </div>
-                  <div className="hint">
-                    <div>학력제척 파일을 여는 데만 사용합니다.</div>
-                    <div>기본값 2216, 파일 암호가 다르면 고쳐 주세요.</div>
-                  </div>
+                <div className="refbox">
+                  <span>
+                    제척 기준 정보에서 불러옵니다
+                    {ref && (
+                      <>
+                        {" "}
+                        · 내부위원 <b>{ref.staff.count}명</b> · 섭외 심사위원 <b>{ref.reviewers.count}명</b> · 연구기관{" "}
+                        <b>{ref.orgs.count}곳</b>
+                      </>
+                    )}
+                  </span>
+                  <Link href="/prelim/reference" className="btn link">
+                    제척 기준 정보 보기 →
+                  </Link>
                 </div>
               </div>
             </section>

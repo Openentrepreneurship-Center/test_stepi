@@ -620,21 +620,11 @@ export interface PrelimCounts {
   no_id_rows?: number;
   /** 읽지 못해 건너뛴 파일·시트 안내 */
   skipped?: string[];
-  /** 이번 실행에 쓴 기준 파일 이름. 직접 올렸으면 null */
-  base_files?: Record<PrelimBaseKind, string | null>;
 }
-export type PrelimBaseKind = "raw_xlsm" | "academic_xlsx";
-export interface PrelimBaseFile {
-  kind: PrelimBaseKind;
-  file_name: string;
-  uploaded_at: string;
-  /** 등록 때 읽어 둔 시트별 건수 (내부직원 수 등) */
-  summary: Record<string, number> | null;
-}
-export interface PrelimBaseResponse {
-  items: Record<PrelimBaseKind, PrelimBaseFile | null>;
-  labels: Record<PrelimBaseKind, string>;
-}
+/** 제척 기준 정보 탭의 표 세 가지 */
+export type PrelimRefKind = "staff" | "orgs" | "reviewers";
+export type PrelimRefRow = { id: number } & Record<string, string | number | null>;
+export type PrelimRefSummary = Record<PrelimRefKind, { count: number; updated_at: string | null }>;
 export interface PrelimRunResponse {
   ticket: string;
   label: string | null;
@@ -749,7 +739,11 @@ export interface PrelimResult extends PrelimRunResponse {
   applicant_count: number;
   notice: string | null;
   deleted_at: string | null;
-  files_used: Record<string, string | null> | null;
+  /** reference 는 제척 기준 정보 건수·수정일 (9/23 이후 검토) */
+  files_used: Record<
+    string,
+    string | null | { staff: number; orgs: number; reviewers?: number; updated_at: string | null }
+  > | null;
   attach_status: "none" | "uploading" | "queued" | "scanning" | "done" | "failed";
   attach_done: number | null; attach_total: number | null;
   attach_error?: string | null;
@@ -793,7 +787,7 @@ export const prelim = {
       body: form,
     });
     if (!res.ok) {
-      // 서버가 detail 에 담아 보낸 한글 안내(예: 학력제척 파일 암호)는 그대로 보여 준다
+      // 서버가 detail 에 담아 보낸 한글 안내(예: 암호 걸린 엑셀)는 그대로 보여 준다
       const text = await res.text();
       let detail: unknown;
       try {
@@ -812,23 +806,33 @@ export const prelim = {
   restore: (ticket: string) =>
     http<{ ticket: string }>(`/prelim/results/${encodeURIComponent(ticket)}/restore`, { method: "POST" }),
   get: (ticket: string) => http<PrelimRunResponse>(`/prelim/results/${ticket}`),
-  /** 기준 파일(내부위원 학력정보, 학력제척). 한 번 올리면 교체 전까지 매 검토에 같이 쓴다 */
-  base: {
-    get: () => http<PrelimBaseResponse>(`/prelim/base`),
-    async put(kind: PrelimBaseKind, file: File): Promise<PrelimBaseFile> {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await fetch(`${API_BASE}/prelim/base/${kind}`, { method: "PUT", body: form });
-      if (!res.ok) {
-        const text = await res.text();
-        let detail: unknown;
-        try {
-          detail = JSON.parse(text).detail;
-        } catch {}
-        throw new Error(typeof detail === "string" ? detail : `기준 파일 등록 실패: ${res.status}`);
-      }
-      return res.json() as Promise<PrelimBaseFile>;
+  /** 제척 기준 정보(내부위원 학력정보, 섭외 심사위원 목록, 연구기관 목록). 검토 실행 때 서버가 이 표를 읽는다 */
+  reference: {
+    summary: () => http<PrelimRefSummary>(`/prelim/reference/summary`),
+    list: (kind: PrelimRefKind) => http<{ items: PrelimRefRow[] }>(`/prelim/reference/${kind}`),
+    async create(kind: PrelimRefKind, body: Record<string, string | null>): Promise<PrelimRefRow> {
+      const res = await fetch(`${API_BASE}/prelim/reference/${kind}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: timeoutSignal(30_000),
+      });
+      return prelimJson<PrelimRefRow>(res, "추가하지 못했습니다");
     },
+    async update(kind: PrelimRefKind, id: number, body: Record<string, string | null>): Promise<PrelimRefRow> {
+      const res = await fetch(`${API_BASE}/prelim/reference/${kind}/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: timeoutSignal(30_000),
+      });
+      return prelimJson<PrelimRefRow>(res, "저장하지 못했습니다");
+    },
+    async remove(kind: PrelimRefKind, id: number): Promise<void> {
+      const res = await fetch(`${API_BASE}/prelim/reference/${kind}/${id}`, { method: "DELETE" });
+      await prelimJson(res, "삭제하지 못했습니다");
+    },
+    exportUrl: () => `${API_BASE}/prelim/reference/export.xlsx`,
   },
   result: (ticket: string) => http<PrelimResult>(`/prelim/results/${encodeURIComponent(ticket)}`),
   verdict: {

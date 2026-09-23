@@ -26,9 +26,9 @@ export default function EssayTab({ ctx }: { ctx: Ctx }) {
     );
     return (
       <div className="dec">
-        {btn("confirm", "primary")}
-        {btn("dismiss", "")}
-        {btn("hold", "quiet")}
+        {btn("confirm", "c")}
+        {btn("dismiss", "d")}
+        {btn("hold", "h")}
         <span className="now">
           {c ? (
             <>
