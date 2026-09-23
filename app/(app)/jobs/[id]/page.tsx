@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, Download, FileText, LayoutDashboard } from "lucide-react";
-import { api, type JobFailuresResponse } from "@/lib/api";
+import { api, failedLabel, type JobFailuresResponse } from "@/lib/api";
 import ApplicantDeleteButton from "@/components/applicant-delete-button";
 import ApplicantPdfButton from "@/components/applicant-pdf-button";
 import BulkPdfButton from "@/components/bulk-pdf-button";
@@ -81,7 +81,7 @@ export default async function JobDetailPage({
                   <span className="text-[var(--ink-muted)] font-normal"> / {status.progress.total}</span>
                 </span>
               }
-              sub={status.progress.failed > 0 ? `실패 ${status.progress.failed}` : undefined}
+              sub={failedLabel(status.progress) ?? undefined}
             />
             <Stat
               label="개시"

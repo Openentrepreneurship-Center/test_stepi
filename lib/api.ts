@@ -32,7 +32,17 @@ export type JobStatus = "pending" | "running" | "done" | "failed" | "cancelled";
 export interface JobProgress {
   total: number;
   done: number;
+  /** 오류 횟수 누적. 같은 지원자가 재시도에서 또 실패하면 여러 번 센다 */
   failed: number;
+  /** 실패한 지원자 수 */
+  failed_applicants: number;
+}
+
+/** "실패 2명" 또는 오류가 더 많으면 "실패 2명, 오류 3번" */
+export function failedLabel(p: JobProgress, withAttempts = true): string | null {
+  const people = p.failed_applicants > 0 ? p.failed_applicants : p.failed;
+  if (people <= 0) return null;
+  return withAttempts && p.failed > people ? `실패 ${people}명, 오류 ${p.failed}번` : `실패 ${people}명`;
 }
 
 export interface JobStatusResponse {
@@ -74,11 +84,20 @@ export interface JobFailureCause extends FailureCause {
   unprocessed_count: number;
 }
 
+export interface FailureAttempt {
+  failed_at: string;
+  cause_code: FailureCauseCode;
+  title: string;
+  raw_summary: string | null;
+}
+
 export interface FailedApplicant {
   applicant_id: string;
   job_field: string | null;
   failed_at: string;
   raw_summary: string | null;
+  attempt_count: number;
+  attempts: FailureAttempt[];
 }
 
 export interface FailureGroup extends FailureCause {
@@ -92,6 +111,8 @@ export interface JobFailuresResponse {
   running: boolean;
   total: number;
   failed_applicants: number;
+  /** 오류 횟수 누적 */
+  failed_attempts: number;
   legacy: boolean;
   legacy_count: number;
   legacy_message: string | null;

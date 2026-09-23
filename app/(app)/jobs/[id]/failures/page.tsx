@@ -21,7 +21,11 @@ export default async function FailuresPage({ params }: { params: Promise<{ id: s
     );
   }
 
-  const { running, total, failed_applicants, legacy, legacy_count, job_cause, groups } = failures;
+  const { running, total, failed_applicants, failed_attempts, legacy, legacy_count, job_cause, groups } = failures;
+  const headline =
+    failed_attempts > failed_applicants
+      ? `실패 ${failed_applicants}명, 오류 ${failed_attempts}번 (전체 ${total}명 중)`
+      : `실패 ${failed_applicants}명 (전체 ${total}명 중)`;
   const isEmpty = failed_applicants === 0 && !job_cause;
 
   return (
@@ -32,7 +36,7 @@ export default async function FailuresPage({ params }: { params: Promise<{ id: s
         back={{ href: `/jobs/${id}`, label: "분석 보고" }}
         eyebrow="지원자 분석"
         title="실패 원인"
-        description={`실패 ${failed_applicants}명 (전체 ${total}명 중)`}
+        description={headline}
       />
 
       {running && (
@@ -104,9 +108,10 @@ function FailureGroupPanel({ group }: { group: FailureGroup }) {
 
       <div className="mt-4 border-t border-[var(--line)] pt-3">
         <div className="grid grid-cols-12 gap-4 px-1 pb-2 text-[14px] font-semibold tracking-wide text-[var(--ink-muted)]">
-          <div className="col-span-4">지원자 ID</div>
-          <div className="col-span-4">지원분야</div>
-          <div className="col-span-4">실패 시각</div>
+          <div className="col-span-3">지원자 ID</div>
+          <div className="col-span-3">지원분야</div>
+          <div className="col-span-4">마지막 실패 시각</div>
+          <div className="col-span-2 text-right">오류 횟수</div>
         </div>
         {group.applicants.map((a) => (
           <ApplicantRow key={a.applicant_id} applicant={a} />
@@ -129,20 +134,41 @@ function FailureGroupPanel({ group }: { group: FailureGroup }) {
   );
 }
 
+const timeText = (iso: string) =>
+  new Date(iso).toLocaleString("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
 function ApplicantRow({ applicant }: { applicant: FailedApplicant }) {
+  const repeated = applicant.attempt_count > 1;
   return (
-    <div className="grid grid-cols-12 gap-4 px-1 py-2 border-b border-[var(--line)] last:border-b-0 text-[13.5px]">
-      <div className="col-span-4 text-[var(--ink)]">{applicant.applicant_id}</div>
-      <div className="col-span-4 text-[var(--ink-muted)]">{applicant.job_field ?? "없음"}</div>
-      <div className="col-span-4 tabular-nums text-[var(--ink-muted)]">
-        {new Date(applicant.failed_at).toLocaleString("ko-KR", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
+    <div className="px-1 py-2 border-b border-[var(--line)] last:border-b-0 text-[13.5px]">
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-3 text-[var(--ink)]">{applicant.applicant_id}</div>
+        <div className="col-span-3 text-[var(--ink-muted)]">{applicant.job_field ?? "없음"}</div>
+        <div className="col-span-4 tabular-nums text-[var(--ink-muted)]">{timeText(applicant.failed_at)}</div>
+        <div className={`col-span-2 text-right tabular-nums ${repeated ? "text-[var(--bad)]" : "text-[var(--ink-muted)]"}`}>
+          {applicant.attempt_count}번
+        </div>
       </div>
+      {repeated && (
+        <details className="mt-1.5">
+          <summary className="text-[13px] text-[var(--secondary-2)] cursor-pointer">오류 이력 보기</summary>
+          <div className="mt-1.5 flex flex-col gap-1">
+            {applicant.attempts.map((a, i) => (
+              <div key={`${a.failed_at}-${i}`} className="flex gap-3 text-[13px] text-[var(--ink-muted)]">
+                <span className="tabular-nums">{timeText(a.failed_at)}</span>
+                <span className="text-[var(--ink)]">{a.title}</span>
+                {a.raw_summary && <span className="font-mono break-all">{a.raw_summary}</span>}
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
     </div>
   );
 }

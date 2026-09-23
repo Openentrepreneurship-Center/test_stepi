@@ -3,7 +3,7 @@ import { LayoutDashboard } from "lucide-react";
 import JobStatusBadge from "@/components/job-status-badge";
 import JobRowDeleteButton from "@/components/job-row-delete-button";
 import PageHeader from "@/components/page-header";
-import { api } from "@/lib/api";
+import { api, failedLabel } from "@/lib/api";
 import JobAutoRefresh from "./jobs/[id]/auto-refresh";
 
 export const dynamic = "force-dynamic";
@@ -116,9 +116,9 @@ export default async function DashboardPage() {
                       {j.progress.done}
                       <span className="text-[var(--ink-muted)] font-normal"> / {j.progress.total}</span>
                     </span>
-                    {j.progress.failed > 0 && (
+                    {failedLabel(j.progress, false) && (
                       <div className="text-[12.5px] text-[var(--bad)] mt-0.5">
-                        실패 {j.progress.failed}
+                        {failedLabel(j.progress, false)}
                       </div>
                     )}
                   </div>
