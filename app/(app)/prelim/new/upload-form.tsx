@@ -83,12 +83,15 @@ export default function UploadForm() {
   const baseHint = (kind: "raw_xlsm" | "academic_xlsx") => {
     const f = base?.items[kind];
     return f ? (
-      <div className="hint basehint">
-        비우면 등록된 기준 파일 사용: <b>{f.file_name}</b> ({f.uploaded_at.slice(0, 10)} 등록)
+      <div className="hint sheets basehint">
+        <div>비우면 기준 파일 사용</div>
+        <div className="one">{f.file_name}</div>
+        <div className="one note">{f.uploaded_at.slice(0, 10)} 등록</div>
       </div>
     ) : base ? (
-      <div className="hint basehint" style={{ color: "var(--red-text)" }}>
-        등록된 기준 파일이 없습니다. 올리지 않으면 이 검사는 빠집니다
+      <div className="hint sheets basehint" style={{ color: "var(--red-text)" }}>
+        <div>등록된 기준 파일이 없습니다</div>
+        <div className="one bad">올리지 않으면 이 검사는 빠집니다</div>
       </div>
     ) : null;
   };
@@ -154,9 +157,7 @@ export default function UploadForm() {
                     자기소개서 <span className="tag req">필수</span>
                   </div>
                   <div className="hint">.xlsx 파일</div>
-                  <div className="hint">
-                    읽는 시트: <b>지원자 관리(서술형)</b>, <b>블라인드 점검</b>
-                  </div>
+                  <SheetHint sheets={["지원자 관리(서술형)", "블라인드 점검"]} />
                 </div>
                 <DropBox
                   accept=".xlsx"
@@ -191,9 +192,7 @@ export default function UploadForm() {
                     내부위원 학력정보 <span className="tag opt">선택</span>
                   </div>
                   <div className="hint">.xlsm 파일</div>
-                  <div className="hint">
-                    읽는 시트: <b>원본</b>, <b>내부제척</b>, <b>외부제척</b>
-                  </div>
+                  <SheetHint sheets={["원본", "내부제척", "외부제척"]} />
                   {baseHint("raw_xlsm")}
                 </div>
                 <DropBox
@@ -210,9 +209,7 @@ export default function UploadForm() {
                     학력제척 <span className="tag opt">선택</span>
                   </div>
                   <div className="hint">암호화된 .xlsx 파일</div>
-                  <div className="hint">
-                    읽는 시트: <b>학력제척</b> (학력제척_백데이터1 은 있으면 사용)
-                  </div>
+                  <SheetHint sheets={["학력제척"]} note="학력제척_백데이터1 은 있으면 사용" />
                   {baseHint("academic_xlsx")}
                 </div>
                 <DropBox
@@ -243,9 +240,10 @@ export default function UploadForm() {
                       {showPw ? "숨김" : "표시"}
                     </button>
                   </div>
-                  <span className="hint">
-                    학력제척 파일을 올릴 때만 씁니다. 기본값 2216, 파일 암호가 다르면 고쳐 주세요.
-                  </span>
+                  <div className="hint">
+                    <div>학력제척 파일을 여는 데만 사용합니다.</div>
+                    <div>기본값 2216, 파일 암호가 다르면 고쳐 주세요.</div>
+                  </div>
                 </div>
               </div>
             </section>
@@ -333,6 +331,21 @@ export default function UploadForm() {
           </aside>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** 파일 칸의 "읽는 시트" 안내. 이름은 한 줄에 하나씩 */
+function SheetHint({ sheets, note }: { sheets: string[]; note?: string }) {
+  return (
+    <div className="hint sheets">
+      <div>읽는 시트</div>
+      {sheets.map((name) => (
+        <div key={name} className="one">
+          {name}
+        </div>
+      ))}
+      {note && <div className="one note">({note})</div>}
     </div>
   );
 }

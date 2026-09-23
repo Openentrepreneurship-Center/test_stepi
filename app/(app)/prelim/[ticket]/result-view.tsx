@@ -56,22 +56,28 @@ const FILE_LABELS: [string, string][] = [
   ["academic_xlsx", "학력제척"],
 ];
 
-/** 경고문을 문장 단위로 나눈다. 괄호 안의 마침표는 문장 끝으로 보지 않는다 */
+/** 경고문을 문장 단위로 나눈다. 괄호 안이나 파일 이름 안의 마침표는 문장 끝으로 보지 않는다 */
 function splitSentences(text: string): string[] {
   const out: string[] = [];
   let buf = "";
   let depth = 0;
-  for (const ch of text) {
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
     buf += ch;
     if (ch === "(") depth++;
     else if (ch === ")") depth = Math.max(0, depth - 1);
-    else if (ch === "." && depth === 0) {
+    else if (ch === "." && depth === 0 && !/\S/.test(text[i + 1] ?? "")) {
       out.push(buf.trim());
       buf = "";
     }
   }
   if (buf.trim()) out.push(buf.trim());
   return out.length ? out : [text];
+}
+
+/** 경고문의 **굵게** 표시를 반영한다 */
+function withBold(text: string) {
+  return text.split(/\*\*(.+?)\*\*/g).map((part, i) => (i % 2 ? <strong key={i}>{part}</strong> : part));
 }
 
 export interface Ctx {
@@ -395,10 +401,10 @@ export default function ResultView({ ticket }: { ticket: string }) {
               const [first, ...rest] = splitSentences(w);
               return (
                 <div key={i} className="warn">
-                  <div>{first}</div>
+                  <div>{withBold(first)}</div>
                   {rest.map((t, j) => (
                     <div key={j} className="cont">
-                      {t}
+                      {withBold(t)}
                     </div>
                   ))}
                 </div>

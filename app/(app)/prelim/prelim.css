@@ -18,6 +18,10 @@
 .prelim .hint { font-size: 13.5px; color: var(--muted); }
 .prelim .hint b { font-weight: 600; color: var(--ink); }
 .prelim .hint.upfmt { font-size: 15px; line-height: 1.6; }
+.prelim .hint.sheets { line-height: 1.55; font-weight: 600; color: var(--ink); }
+.prelim .hint.sheets .one { padding-left: 9px; font-weight: 400; color: var(--navy); }
+.prelim .hint.sheets .one.note { color: var(--muted); }
+.prelim .hint.sheets .one.bad { color: inherit; }
 .prelim .mono { font-family: var(--mono); }
 .prelim .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 0 20px; border: 1px solid var(--ink); background: var(--canvas); text-decoration: none; color: var(--ink); }
 .prelim .btn:hover { background: var(--surface); color: var(--ink); }
@@ -297,4 +301,5 @@
 .prelim tr.gfocus.gf-last td { --fb: 3px; }
 .prelim tr.gfocus td:first-child { --fl: 3px; }
 .prelim tr.gfocus td.gf-span { --ft: 3px; --fb: 3px; --fr: 3px; }
+.prelim .basehint { margin-top: 6px; }
 .prelim .basehint b { color: var(--ink); }
