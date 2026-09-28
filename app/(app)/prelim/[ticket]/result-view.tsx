@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/page-header";
+import { Bar } from "@/components/page-skeleton";
 import {
   prelim,
   type PrelimDerived,
@@ -297,9 +298,26 @@ export default function ResultView({ ticket }: { ticket: string }) {
   if (!data || !derived || !verdicts) {
     return (
       <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
-        {head()}
-        <div className="prelim result">
-          <div className="empty">검토 결과를 불러오는 중입니다.</div>
+        {head(<Bar className="h-5 w-[min(520px,80%)]" />)}
+        <div className="prelim result mt-8" role="status" aria-live="polite">
+          <span className="sr-only">검토 결과를 불러오는 중입니다</span>
+          <div className="tabs" aria-hidden="true">
+            {TABS.map(([k, label], i) => (
+              <button key={k} type="button" role="tab" disabled tabIndex={-1} aria-selected={i === 0}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="animate-pulse grid gap-4" aria-hidden="true">
+            <Bar className="h-5 w-40" />
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center gap-6 py-3 border-b border-[var(--line)]">
+                <Bar className="h-4 w-32" />
+                <Bar className="h-4 flex-1 max-w-[460px]" />
+                <Bar className="h-4 w-16 ml-auto" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

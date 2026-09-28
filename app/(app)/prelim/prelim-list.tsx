@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { ShieldAlert, Trash2, Undo2 } from "lucide-react";
 import PageHeader from "@/components/page-header";
+import { SkeletonTable } from "@/components/page-skeleton";
 import { prelim, type PrelimSummary } from "@/lib/api";
 
 // 지원자 분석의 분석 현황·삭제 항목과 같은 틀을 쓴다
@@ -95,9 +96,7 @@ export default function PrelimList({ trashed }: { trashed: boolean }) {
             <p className="text-[13.5px] text-[var(--ink-muted)]">잠시 후 다시 시도해주세요.</p>
           </div>
         ) : items === null ? (
-          <div className="panel py-16 text-center">
-            <p className="text-[14px] text-[var(--ink-muted)]">목록을 불러오는 중입니다.</p>
-          </div>
+          <SkeletonTable />
         ) : items.length === 0 ? (
           trashed ? (
             <div className="panel py-16 text-center">

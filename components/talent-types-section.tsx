@@ -14,6 +14,7 @@ import {
 import RadarCard from "@/components/radar-card";
 import TalentEvidenceDrawer from "@/components/talent-evidence-drawer";
 import { MockBadge } from "@/components/mock-mark";
+import { Bar } from "@/components/page-skeleton";
 
 /**
  * 인재상 유형 도달도 - 미팅 자료의 1안과 2안을 한 화면에 위아래로 쌓는다.
@@ -169,7 +170,7 @@ export default function TalentTypesSection({
       {/* ── 1안 : 선정 인재상 ── */}
       <Block
         title="선정 인재상"
-        count={`${sets.length}세트`}
+        count={status === "loading" ? "" : `${sets.length}세트`}
         badge={<MockBadge />}
         desc={
           <>
@@ -180,34 +181,47 @@ export default function TalentTypesSection({
       >
         {/* 못 불러온 상태에서 기본 세트를 아무 말 없이 그리면, 담당자가 고른 적 없는
             인재상을 이 분석의 선정 결과로 읽게 된다. 무엇을 보고 있는지 먼저 밝힌다. */}
-        {status !== "ready" && (
-          <p
-            className={`mb-4 text-[14px] leading-[1.6] ${
-              status === "error" ? "text-[var(--bad)]" : "text-[var(--ink-muted)]"
-            }`}
-          >
-            {status === "error"
-              ? "선정 인재상을 불러오지 못했습니다. 아래는 저장된 값이 아니라 기본 예시입니다. 왼쪽 메뉴에서 다시 시도해 주세요."
-              : "선정 인재상을 불러오는 중입니다. 아래는 잠시 보여주는 기본 예시입니다."}
-          </p>
+        {/* 불러오는 동안 기본 예시를 그리면 담당자가 고른 적 없는 인재상이 잠깐 선정 결과처럼 보인다 */}
+        {status === "loading" ? (
+          <div role="status" aria-live="polite">
+            <span className="sr-only">선정 인재상을 불러오는 중입니다</span>
+            <div className={`animate-pulse grid gap-5 ${gridCols(2, printMode)}`} aria-hidden="true">
+              {[0, 1].map((i) => (
+                <div key={i} className="rounded-lg border border-[var(--line)] bg-[var(--paper)] px-4 pt-3.5 pb-4">
+                  <Bar className="h-4 w-24" />
+                  <Bar className="mt-4 h-[240px] w-full" />
+                  <Bar className="mt-4 h-3.5 w-3/4" />
+                  <Bar className="mt-2 h-3.5 w-1/2" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <>
+            {status === "error" && (
+              <p className="mb-4 text-[14px] leading-[1.6] text-[var(--bad)]">
+                선정 인재상을 불러오지 못했습니다. 아래는 저장된 값이 아니라 기본 예시입니다. 왼쪽 메뉴에서 다시 시도해 주세요.
+              </p>
+            )}
+            <div
+              className={`grid ${printMode ? "gap-3" : "gap-5"} ${gridCols(sets.length, printMode)} ${
+                status === "ready" ? "" : "opacity-55"
+              }`}
+            >
+              {sets.map((set, i) => (
+                <SetBox
+                  key={set.id}
+                  set={set}
+                  index={i}
+                  total={sets.length}
+                  axisByNo={axisByNo}
+                  onOpen={openAxis}
+                  printMode={printMode}
+                />
+              ))}
+            </div>
+          </>
         )}
-        <div
-          className={`grid ${printMode ? "gap-3" : "gap-5"} ${gridCols(sets.length, printMode)} ${
-            status === "ready" ? "" : "opacity-55"
-          }`}
-        >
-          {sets.map((set, i) => (
-            <SetBox
-              key={set.id}
-              set={set}
-              index={i}
-              total={sets.length}
-              axisByNo={axisByNo}
-              onOpen={openAxis}
-              printMode={printMode}
-            />
-          ))}
-        </div>
       </Block>
 
       {/* ── 2안 : 전체 목록 ── */}

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Database, Plus, X } from "lucide-react";
 import PageHeader from "@/components/page-header";
+import { Bar } from "@/components/page-skeleton";
 import { prelim, type PrelimRefKind, type PrelimRefRow } from "@/lib/api";
 import "../prelim.css";
 
@@ -279,7 +280,18 @@ export default function ReferenceView() {
         {failed ? (
           <div className="empty">제척 기준 정보를 불러오지 못했습니다. 잠시 뒤 새로고침해 주세요.</div>
         ) : !list ? (
-          <div className="empty">불러오는 중입니다.</div>
+          <div role="status" aria-live="polite">
+            <span className="sr-only">불러오는 중입니다</span>
+            <div className="animate-pulse" aria-hidden="true">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-6 py-4 border-b border-[var(--line)]">
+                  <Bar className="h-4 w-20" />
+                  <Bar className="h-4 w-14" />
+                  <Bar className="h-4 flex-1 max-w-[520px]" />
+                </div>
+              ))}
+            </div>
+          </div>
         ) : tab === "staff" ? (
           <StaffList
             rows={list}
