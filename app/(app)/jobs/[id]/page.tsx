@@ -49,7 +49,7 @@ export default async function JobDetailPage({
   if (!status) {
     return (
       <div className="px-8 lg:px-12 py-9 max-w-3xl mx-auto">
-        <PageHeader back={{ href: "/", label: "분석 목록" }} eyebrow="지원자 분석" title="분석 보고" />
+        <PageHeader back={{ href: "/jobs", label: "분석 목록" }} eyebrow="지원자 분석" title="분석 보고" />
         <div className="mt-10 panel text-center py-16">
           <h2 className="text-[22px] font-bold mb-2">작업을 찾을 수 없습니다.</h2>
           <p className="text-[14px] text-[var(--ink-muted)] font-mono">{id}</p>
@@ -66,7 +66,7 @@ export default async function JobDetailPage({
       {isRunning && <JobAutoRefresh />}
 
       <PageHeader
-        back={{ href: "/", label: "분석 목록" }}
+        back={{ href: "/jobs", label: "분석 목록" }}
         eyebrow="지원자 분석"
         icon={LayoutDashboard}
         title="분석 보고"

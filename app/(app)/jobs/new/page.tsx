@@ -120,7 +120,7 @@ export default function NewJobPage() {
   return (
     <div className="px-8 lg:px-12 py-9 max-w-3xl mx-auto fade-up">
       <PageHeader
-        back={{ href: "/", label: "분석 목록" }}
+        back={{ href: "/jobs", label: "분석 목록" }}
         eyebrow="지원자 분석"
         icon={FilePlus2}
         title="신규 분석 생성"

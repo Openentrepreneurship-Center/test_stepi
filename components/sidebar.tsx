@@ -57,34 +57,8 @@ export default function Sidebar() {
     if (hydrated) localStorage.setItem(STORAGE_KEY, collapsed ? "1" : "0");
   }, [collapsed, hydrated]);
 
-  // 세 개의 동급 기능. 「지원자 분석」과 「사전스크리닝검토」는 하위 탭을 가진다.
+  // 세 개의 동급 기능. 「사전스크리닝검토」와 「지원자 분석」은 하위 탭을 가진다.
   const features: Feature[] = [
-    {
-      key: "analysis",
-      label: "지원자 분석",
-      icon: LayoutDashboard,
-      match: (p) => p === "/" || p.startsWith("/jobs") || p.startsWith("/trash"),
-      children: [
-        {
-          href: "/",
-          label: "분석 현황",
-          icon: LayoutDashboard,
-          match: (p) => p === "/" || (p.startsWith("/jobs") && p !== "/jobs/new"),
-        },
-        {
-          href: "/jobs/new",
-          label: "신규 분석 생성",
-          icon: FilePlus2,
-          match: (p) => p === "/jobs/new",
-        },
-        {
-          href: "/trash",
-          label: "삭제 항목",
-          icon: Trash2,
-          match: (p) => p.startsWith("/trash"),
-        },
-      ],
-    },
     {
       key: "prelim",
       label: "사전스크리닝 검토",
@@ -111,6 +85,32 @@ export default function Sidebar() {
           label: "삭제 항목",
           icon: Trash2,
           match: (p) => p.startsWith("/prelim/trash"),
+        },
+      ],
+    },
+    {
+      key: "analysis",
+      label: "지원자 분석",
+      icon: LayoutDashboard,
+      match: (p) => p.startsWith("/jobs") || p.startsWith("/trash"),
+      children: [
+        {
+          href: "/jobs",
+          label: "분석 현황",
+          icon: LayoutDashboard,
+          match: (p) => p.startsWith("/jobs") && p !== "/jobs/new",
+        },
+        {
+          href: "/jobs/new",
+          label: "신규 분석 생성",
+          icon: FilePlus2,
+          match: (p) => p === "/jobs/new",
+        },
+        {
+          href: "/trash",
+          label: "삭제 항목",
+          icon: Trash2,
+          match: (p) => p.startsWith("/trash"),
         },
       ],
     },
@@ -152,7 +152,7 @@ export default function Sidebar() {
         className={`${collapsed ? "px-2 pt-4 pb-4 flex flex-col items-center gap-3" : "px-4 lg:px-5 pt-5 pb-5 flex items-start justify-between gap-2"} border-b border-[var(--line-strong)]`}
       >
         {!collapsed && (
-          <Link href="/" className="block min-w-0 flex-1" title="분석 현황">
+          <Link href="/prelim" className="block min-w-0 flex-1" title="사전스크리닝 검토">
             {/* 접기 버튼을 뺀 남은 폭을 다 쓴다 (md 약 188px, lg 약 212px) */}
             <StepiLogo size={44} className="h-auto w-full" />
             <div className="mt-2.5 text-[12.5px] font-medium text-[var(--ink-muted)]">
@@ -161,7 +161,7 @@ export default function Sidebar() {
           </Link>
         )}
         {collapsed && (
-          <Link href="/" title="분석 현황">
+          <Link href="/prelim" title="사전스크리닝 검토">
             <StepiLogo size={28} variant="mark" />
           </Link>
         )}

@@ -53,7 +53,7 @@ export default function JobControlButtons({
     startTransition(async () => {
       try {
         await api.softDeleteJob(jobId);
-        router.replace("/");
+        router.replace("/jobs");
       } catch (e) {
         setErr(e instanceof Error ? e.message : "삭제 실패");
       }
