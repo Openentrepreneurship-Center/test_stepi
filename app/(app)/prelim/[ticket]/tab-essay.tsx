@@ -57,6 +57,7 @@ export default function EssayTab({ ctx }: { ctx: Ctx }) {
               {t} ({n})
             </span>
           ))}
+        <span className="hint">한 표현이 여러 유형에 걸리면 유형마다 셉니다.</span>
         <span className="hint" style={{ marginLeft: "auto" }}>
           노란색으로 표시된 구절이 위배로 판단된 부분입니다
         </span>
@@ -107,7 +108,7 @@ export default function EssayTab({ ctx }: { ctx: Ctx }) {
       <div className="bcards">
         {people.map((p) => {
           const mine = essay.filter((b) => b.no === p.no);
-          const types = mine.map((b) => b.type).filter((t, i, a) => a.indexOf(t) === i);
+          const types = mine.flatMap((b) => b.types ?? [b.type]).filter((t, i, a) => a.indexOf(t) === i);
           return (
             <article className={`bcard ${p.essay_done ? "done" : ""} ${focusNo === p.no ? "focus" : ""}`} data-no={p.no} key={p.no}>
               <div className="b-side">
@@ -139,7 +140,7 @@ export default function EssayTab({ ctx }: { ctx: Ctx }) {
                     </blockquote>
                     <div className="reason">
                       <span>위배 사유</span>
-                      <p>{b.why}</p>
+                      <p style={{ whiteSpace: "pre-line" }}>{b.why}</p>
                     </div>
                     {decButtons(b.id)}
                   </div>

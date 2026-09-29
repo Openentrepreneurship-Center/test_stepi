@@ -643,6 +643,9 @@ export interface PrelimEssayItem {
   id: string; no: string; name: string; type: string; category: string;
   q: number; item: string; itemName: string;
   before: string; hit: string; after: string; why: string;
+  /** 같은 자리에서 여러 유형으로 걸려 합친 적발의 유형 목록(type 은 " · " 로 이은 글자) */
+  types?: string[];
+  merged_ids?: string[];
 }
 export interface PrelimAttachItem {
   id: string; no: string; name: string; cat: string; file: string;

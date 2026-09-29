@@ -103,6 +103,7 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
                 </span>
               ))}
           </div>
+          <div className="hint">한 표현이 여러 유형에 걸리면 유형마다 셉니다.</div>
           <button className="cta" type="button" onClick={() => go("essay")}>
             위배 구절 →
           </button>

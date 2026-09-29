@@ -89,7 +89,7 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
                       <td>
                         <mark>{b.hit}</mark>
                       </td>
-                      <td>{b.why}</td>
+                      <td style={{ whiteSpace: "pre-line" }}>{b.why}</td>
                       <td className={d ? "" : "no2"}>{d ? BLABEL[d] : "미판정"}</td>
                     </tr>
                   );
