@@ -311,7 +311,7 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
             </div>
           ) : (
             <div className="empty">
-              제척(내부) 화면에서 연구 목록·인사기록·후보위원 학력 파일을 업로드하면 내부 제척위원이 표시됩니다.
+              제척(내부) 화면에서 연구 목록·인사기록 파일을 업로드하면 내부 제척위원이 표시됩니다.
             </div>
           )}
           <div className="note">

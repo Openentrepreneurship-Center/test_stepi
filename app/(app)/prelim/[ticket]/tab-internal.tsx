@@ -20,7 +20,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
           평가기준일 <span className="mono">{derived.end}</span> 기준 최근 2년(<span className="mono">{derived.win}</span> 이후) 종료된 내부 과제의
           연구책임자, 근무부서의 소속(상위)부서장, 학위별 학교·학과·지도교수가 모두 일치하는 동일학력 내부직원, 지원자의 지도교수인 내부직원을 평가에서 제척합니다.
           <br />
-          확인 항목은 아래 각 표의 파일 업로드로 채워집니다.
+          참여과제·근무부서 확인 항목은 아래 연구 목록·인사기록 파일 업로드로 채워집니다. 동일학력·지도교수는 제척 기준 정보와 대조한 결과입니다.
         </span>
       </div>
 
@@ -77,7 +77,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
               ) : (
                 <tr>
                   <td colSpan={5} className="no2">
-                    제척 내부위원이 없습니다. 연구 목록·인사기록·후보위원 학력 파일을 업로드하면 산출됩니다.
+                    제척 내부위원이 없습니다. 연구 목록·인사기록 파일을 업로드하면 산출됩니다.
                   </td>
                 </tr>
               )}
@@ -252,14 +252,13 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
           <h2>학위별 동일학력</h2>
           <div className="hdtools">
             <span className="hint">3개 항목 모두 일치 {degree.length}건</span>
-            <UpBtn kind="degree" label="후보위원 학력 정보 업로드" fileName={uploads.degree?.file_name} busy={busy === "up:degree"} onPick={upload} />
             <XBtn href={exportUrl("degree")} title="전체 엑셀 다운로드" />
             <XBtn href={exportUrl("degree-v")} cap="제척" title="제척위원 엑셀 다운로드" />
           </div>
         </header>
         <div className="guide" style={{ background: "#fff", borderBottom: "1px solid var(--line)" }}>
           <span className="hint upfmt">
-            업로드 형식 · <b>이름 / 학사(학교·전공·지도교수) / 석사(학교·전공·지도교수) / 박사(학교·전공·지도교수)</b>. 업로드하면 학위별 완전 일치자만 산출됩니다.
+            제척 기준 정보 화면의 <b>내부위원 학력정보</b>와 대조합니다. 학위별 학교·전공·지도교수가 모두 일치하는 경우만 산출됩니다.
           </span>
         </div>
         <div className="tblwrap">
@@ -308,8 +307,8 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
             <tfoot>
               <tr>
                 <td colSpan={10}>
-                  같은 학위 구분 안에서 학교·학과(전공)·지도교수 3개가 모두 일치하는 경우만 추출합니다. 후보위원 학력 정보 파일을 업로드하면 실제 일치자로
-                  교체되어 위 전체 목록에 반영됩니다.
+                  같은 학위 구분 안에서 학교·학과(전공)·지도교수 3개가 모두 일치하는 경우만 추출합니다. 검토를 실행할 때의 제척 기준 정보와 대조한 결과이며
+                  위 전체 목록에 반영됩니다.
                 </td>
               </tr>
             </tfoot>

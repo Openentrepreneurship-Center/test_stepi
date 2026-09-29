@@ -723,8 +723,8 @@ export interface PrelimDerived {
     org_bars: [string, number][];
     internal_staff: PrelimStaffRow[];
     committee_list: PrelimCommittee[];
-    /** 외부위원 목록 출처. upload = 올린 채용섭외위원 파일, reference = 제척 기준 정보의 섭외 심사위원 */
-    committee_source: "upload" | "reference" | null;
+    /** 외부위원 목록 출처. reference = 제척 기준 정보의 섭외 심사위원, 없으면 null */
+    committee_source: "reference" | null;
     dropped_count: number;
   };
   inx: {
@@ -733,7 +733,6 @@ export interface PrelimDerived {
     pending_count: number;
     internal: PrelimInternalRow[]; work: PrelimWorkRow[]; degree: PrelimDegreeRow[];
     advisor?: PrelimAdvisorRow[];
-    degree_uploaded: boolean;
   };
   exx: Record<PrelimStage, {
     org_rows: PrelimOrgRow[]; limited_org_rows: PrelimOrgRow[]; limited_org_count: number;
@@ -750,7 +749,7 @@ export interface PrelimVerdicts {
   attach: Record<string, PrelimVerdict>;
   out: Record<string, PrelimVerdict>;
 }
-export type PrelimUploadKind = "inx" | "work" | "degree" | "com";
+export type PrelimUploadKind = "inx" | "work";
 export interface PrelimResult extends PrelimRunResponse {
   computed_at: string;
   applicant_count: number;
