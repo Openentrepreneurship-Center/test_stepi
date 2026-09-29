@@ -77,6 +77,7 @@ export default function UploadForm() {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [ref, setRef] = useState<PrelimRefSummary | null>(null);
+  const [attachMaxGb, setAttachMaxGb] = useState<number | null>(null);
 
   // 내부위원·섭외 심사위원·연구기관은 제척 기준 정보 탭에서 읽는다는 안내용 건수
   useEffect(() => {
@@ -84,6 +85,11 @@ export default function UploadForm() {
     prelim.reference
       .summary()
       .then((r) => alive && setRef(r))
+      .catch(() => {});
+    // 첨부 상한은 서버 설정값(ATTACH_MAX_GB)을 그대로 보여 준다
+    prelim.attach
+      .status()
+      .then((s) => alive && setAttachMaxGb(Math.round(s.max_bytes / 1024 ** 3)))
       .catch(() => {});
     return () => {
       alive = false;
@@ -160,6 +166,13 @@ export default function UploadForm() {
                   </div>
                   <div className="hint">.xlsx 파일</div>
                   <div className="hint">채용 사이트에서 받은 자기소개서 파일. 시트 이름은 상관없습니다</div>
+                  <a
+                    className="tpl-link"
+                    href="/templates/prelim-essay-template.xlsx"
+                    download="자기소개서_업로드_양식.xlsx"
+                  >
+                    양식 내려받기
+                  </a>
                 </div>
                 <DropBox
                   accept=".xlsx"
@@ -176,9 +189,18 @@ export default function UploadForm() {
                     첨부 실적 <span className="tag opt">선택</span>
                   </div>
                   <div className="hint">.zip 파일 (pdf·docx·이미지)</div>
-                  <div className="hint">
-                    첨부 실적은 5GB 까지 올릴 수 있습니다
-                  </div>
+                  {attachMaxGb !== null && (
+                    <div className="hint">
+                      첨부 실적은 {attachMaxGb}GB 까지 올릴 수 있습니다
+                    </div>
+                  )}
+                  <a
+                    className="tpl-link"
+                    href="/templates/prelim-attach-example.zip"
+                    download="첨부실적_예시.zip"
+                  >
+                    예시 zip 내려받기
+                  </a>
                 </div>
                 <DropBox
                   accept=".zip"
@@ -239,6 +261,8 @@ export default function UploadForm() {
                     className="input"
                     id="prelim-evaldate"
                     type="date"
+                    min="2000-01-01"
+                    max="2099-12-31" // 없으면 크롬이 연도를 6자리까지 받는다. 범위는 백엔드와 같게
                     value={evalDate}
                     onChange={(e) => setEvalDate(e.target.value)}
                   />

@@ -31,6 +31,7 @@
 .prelim .btn.tertiary { border-color: var(--navy); color: var(--navy); }
 .prelim .btn.quiet { border-color: var(--line-strong); }
 .prelim .btn.sm { min-height: 40px; padding: 0 14px; font-size: 14.5px; }
+.prelim .tpl-link { display: inline-block; margin-top: 6px; font-size: 13.5px; font-weight: 600; color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
 .prelim .btn.link { min-height: 44px; border: 0; padding: 0 12px; color: var(--navy); background: transparent; }
 .prelim .tag { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; font-size: 13.5px; font-weight: 400; border-radius: 0; white-space: nowrap; }
 .prelim .tag.req { background: var(--navy); color: #fff; }
@@ -42,6 +43,10 @@
 .prelim .field label { font-size: 13.5px; color: var(--muted); }
 .prelim .input { width: 100%; height: 48px; padding: 0 16px; font-size: 17.5px; background: var(--surface); border: 0; border-bottom: 1px solid var(--line-strong); }
 .prelim .input:focus { outline: 2px solid var(--navy); outline-offset: -2px; }
+/* 크롬 날짜 칸이 입력 중인 연·월·일에 칠하는 파란 배경을 끈다. 크롬 151 은 이 칸에 :focus 를 걸 수 없어 칸 하나만 다르게 칠할 수 없고, 칸 전체의 남색 테두리가 위치 표시를 맡는다 */
+.prelim input[type=date]::-webkit-datetime-edit-year-field,
+.prelim input[type=date]::-webkit-datetime-edit-month-field,
+.prelim input[type=date]::-webkit-datetime-edit-day-field { background-color: transparent; color: var(--ink); }
 .prelim .upload-cols { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 32px; align-items: start; }
 .prelim .stack { display: grid; gap: 16px; }
 .prelim .sec-head { display: flex; justify-content: space-between; align-items: baseline; }
