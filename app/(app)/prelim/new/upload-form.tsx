@@ -159,7 +159,7 @@ export default function UploadForm() {
                     자기소개서 <span className="tag req">필수</span>
                   </div>
                   <div className="hint">.xlsx 파일</div>
-                  <SheetHint sheets={["지원자 관리(서술형)", "블라인드 점검"]} />
+                  <div className="hint">채용 사이트에서 받은 자기소개서 파일. 시트 이름은 상관없습니다</div>
                 </div>
                 <DropBox
                   accept=".xlsx"
