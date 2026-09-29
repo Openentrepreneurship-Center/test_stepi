@@ -217,7 +217,13 @@ export default function UploadForm() {
                   </div>
                   <div className="hint">.xlsx 또는 .xlsm 파일</div>
                   <div className="hint">지원자 학력·경력을 읽습니다. 없으면 제척 검토가 빠집니다</div>
-                  <SheetHint sheets={["공고별 지원자 관리"]} note="마이다스인 지원정보 내보내기, 원본 시트도 읽음" />
+                  <a
+                    className="tpl-link"
+                    href="/templates/prelim-info-template.xlsx"
+                    download="지원정보_업로드_양식.xlsx"
+                  >
+                    양식 내려받기
+                  </a>
                 </div>
                 <DropBox
                   accept=".xlsx,.xlsm"
@@ -337,21 +343,6 @@ export default function UploadForm() {
           </aside>
         </div>
       </div>
-    </div>
-  );
-}
-
-/** 파일 칸의 "읽는 시트" 안내. 이름은 한 줄에 하나씩 */
-function SheetHint({ sheets, note }: { sheets: string[]; note?: string }) {
-  return (
-    <div className="hint sheets">
-      <div>읽는 시트</div>
-      {sheets.map((name) => (
-        <div key={name} className="one">
-          {name}
-        </div>
-      ))}
-      {note && <div className="one note">({note})</div>}
     </div>
   );
 }
