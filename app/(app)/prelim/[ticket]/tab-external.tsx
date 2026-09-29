@@ -14,6 +14,13 @@ function ComTag({ c }: { c: PrelimCommittee }) {
           {s}
         </span>
       ))}
+      {(c.reasons ?? [])
+        .filter((r) => r.startsWith("지원자 지도교수"))
+        .map((r) => (
+          <span className="pill srcpill src-prev" key={r}>
+            {r}
+          </span>
+        ))}
     </span>
   );
 }
@@ -28,8 +35,8 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
   const source = derived.summary_fixed.committee_source;
   const dropped = derived.summary_fixed.dropped_count;
   const detail = derived.exx_detail;
-  const kpi = derived.summary_fixed.kpi;
   const peopleCount = detail.filter((f) => f.first).length;
+  const advisor = derived.exx_advisor ?? [];
 
   return (
     <>
@@ -40,6 +47,8 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
           기관 소속 외부위원 섭외가 제한됩니다.
           <br />
           외부위원은 제척 기준 정보의 섭외 심사위원 목록에서 가져오고, 제한 기관 소속이면 표시합니다. 채용섭외위원 목록 파일을 올리면 그 파일을 대신 씁니다.
+          <br />
+          지원자의 지도교수가 섭외 심사위원 목록에 있으면 그 지원자를 제척으로 표시합니다.
         </span>
       </div>
       {derived.external_edu_count > 0 && (
@@ -145,6 +154,52 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
 
       <div className="panel">
         <header>
+          <h2>지원자 지도교수가 섭외 위원</h2>
+          <div className="hdtools">
+            <span className="hint">제척 {advisor.length}건</span>
+          </div>
+        </header>
+        <div className="tblwrap">
+          <table className="dtable">
+            <thead>
+              <tr>
+                <th style={{ width: 88 }}>수험번호</th>
+                <th style={{ width: 76 }}>성명</th>
+                <th style={{ width: 120 }}>지원자 지도교수</th>
+                <th>일치 항목</th>
+              </tr>
+            </thead>
+            <tbody>
+              {advisor.length ? (
+                advisor.map((a) => (
+                  <tr key={a.id} data-no={a.no} className={focusNo === a.no ? "focus" : undefined}>
+                    <td className="mono">{a.no}</td>
+                    <td className="nm">{a.name}</td>
+                    <td className="nm yes2">{a.advisor}</td>
+                    <td>지도교수 성명이 제척 기준 정보의 섭외 심사위원과 같음</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="no2">
+                    지도교수가 섭외 심사위원 목록에 있는 지원자가 없습니다.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colSpan={4}>
+                  검토를 실행할 때의 섭외 심사위원 목록과 비교한 결과입니다. 동명이인일 수 있으니 소속을 확인해 주세요.
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div className="panel">
+        <header>
           <h2>외부위원 목록표</h2>
           <div className="hdtools">
             <span className="hint">
@@ -203,7 +258,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
           <h2>지원자별 상세 내역</h2>
           <div className="hdtools">
             <span className="hint">
-              {kpi.external_total}건 · 지원자 {peopleCount}명
+              {detail.length}건 · 지원자 {peopleCount}명
             </span>
             <XBtn href={exportUrl("exx")} title="전체 엑셀 다운로드" />
             <XBtn href={exportUrl("exx-v")} cap="제척" title="2년 이내 해당자 엑셀 다운로드" />

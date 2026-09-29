@@ -672,6 +672,10 @@ export interface PrelimDegreeRow {
   id: string; no: string; name: string; deg: string; school: string; major: string;
   prof: string; staff: string; staffDept: string; staffDeg: string;
 }
+/** 지원자 지도교수가 내부위원(제척(내부)) 또는 직전 채용 섭외 위원(제척(외부))인 경우 */
+export interface PrelimAdvisorRow {
+  id: string; no: string; name: string; advisor: string; rule: "내부위원" | "직전 채용 위원";
+}
 export interface PrelimExternalRow {
   id: string; no: string; name: string; org: string;
   from: string | null; to: string | null;
@@ -680,8 +684,16 @@ export interface PrelimView {
   version: number; legacy?: boolean; end: string | null; notice: string | null;
   essay: PrelimEssayItem[]; attach: PrelimAttachItem[];
   external: PrelimExternalRow[];
+  /** 학력 기관이 제척 기관인 경우(기간 없음) */
+  external_edu?: { no: string; name: string; org: string; school: string }[];
   missing: { count: number; rows: number[] };
   warnings: string[];
+}
+/** 제척(내부) 항목. win = 제척 해당(2년 이내 또는 동일학력·지도교수) */
+export interface PrelimInxItem {
+  id: string; no: string; kind: string; basis: string;
+  from: string | null; to: string | null; pending: boolean;
+  targets: { label: string; reason: string }[]; win: boolean;
 }
 export interface PrelimStaffRow {
   name: string; title: string; dept: string; reasons: string[]; nos: string[]; cnt: number;
@@ -717,8 +729,10 @@ export interface PrelimDerived {
   };
   inx: {
     staff_rows: PrelimStaffRow[];
+    items?: PrelimInxItem[];
     pending_count: number;
     internal: PrelimInternalRow[]; work: PrelimWorkRow[]; degree: PrelimDegreeRow[];
+    advisor?: PrelimAdvisorRow[];
     degree_uploaded: boolean;
   };
   exx: Record<PrelimStage, {
@@ -726,6 +740,7 @@ export interface PrelimDerived {
     restricted_committee: PrelimCommittee[]; gone_orgs: string[];
   }>;
   exx_detail: (PrelimExternalRow & { within2y: boolean; out: string | null; first: boolean; span: number })[];
+  exx_advisor?: PrelimAdvisorRow[];
   external_edu_count: number;
   warnings: string[];
 }

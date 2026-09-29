@@ -27,6 +27,15 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
   const attach = data.view.attach.filter((a) => a.no === no);
   const internal = derived.inx.internal.filter((f) => f.no === no);
   const external = derived.exx_detail.filter((f) => f.no === no);
+  const inxHits = (derived.inx.items ?? []).filter((it) => it.no === no && it.win);
+  const exOther = [
+    ...(derived.exx_advisor ?? [])
+      .filter((a) => a.no === no)
+      .map((a) => ({ id: a.id, kind: "지도교수가 섭외 위원", text: a.advisor })),
+    ...(data.view.external_edu ?? [])
+      .filter((e) => e.no === no)
+      .map((e, i) => ({ id: `edu:${i}`, kind: "학력 기관", text: `${e.school} (${e.org})` })),
+  ];
   const current = viewing ? attach.find((a) => a.id === viewing.id) : null;
 
   return (
@@ -52,7 +61,7 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
             제척(내부)<b>{p.internal}건</b>
           </div>
           <div>
-            제척(외부) 2년 이내<b>{p.external}건</b>
+            제척(외부)<b>{p.external}건</b>
           </div>
         </div>
       </div>
@@ -145,6 +154,30 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
       </Sec>
 
       <Sec title="제척(내부)">
+        {inxHits.length > 0 && (
+          <div className="tblwrap">
+            <table className="dtable">
+              <thead>
+                <tr>
+                  <th style={{ width: 150 }}>제척 구분</th>
+                  <th>근거</th>
+                  <th style={{ width: 200 }}>제척 내부위원</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inxHits.map((it) => (
+                  <tr key={it.id}>
+                    <td>{it.kind}</td>
+                    <td>{it.basis}</td>
+                    <td className="nm">
+                      {it.targets.length ? it.targets.map((t) => t.label).join(", ") : <span className="no2">파일 업로드 후 확인</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
         {internal.length ? (
           <div className="tblwrap">
             <table className="dtable">
@@ -176,12 +209,32 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
               </tbody>
             </table>
           </div>
-        ) : (
+        ) : inxHits.length ? null : (
           <None />
         )}
       </Sec>
 
       <Sec title="제척(외부)">
+        {exOther.length > 0 && (
+          <div className="tblwrap">
+            <table className="dtable">
+              <thead>
+                <tr>
+                  <th style={{ width: 150 }}>제척 구분</th>
+                  <th>내용</th>
+                </tr>
+              </thead>
+              <tbody>
+                {exOther.map((x) => (
+                  <tr key={x.id}>
+                    <td>{x.kind}</td>
+                    <td className="nm">{x.text}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
         {external.length ? (
           <div className="tblwrap">
             <table className="dtable">
@@ -211,7 +264,7 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
               </tbody>
             </table>
           </div>
-        ) : (
+        ) : exOther.length ? null : (
           <None />
         )}
       </Sec>
