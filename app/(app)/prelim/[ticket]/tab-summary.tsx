@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { XBtn } from "./parts";
 import type { Ctx, TabKey } from "./result-view";
 
 const CELL_TITLE: Record<string, string> = {
@@ -11,7 +12,7 @@ const CELL_TITLE: Record<string, string> = {
 };
 
 export default function SummaryTab({ ctx }: { ctx: Ctx }) {
-  const { derived, stage, go } = ctx;
+  const { derived, stage, go, exportUrl } = ctx;
   const s = derived.summary_fixed;
   const { kpi, progress } = s;
   const C = 2 * Math.PI * 34;
@@ -197,7 +198,10 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
         <div className="panel">
           <header id="matrix">
             <h2>사전스크리닝 검토 해당 지원자</h2>
-            <span className="hint">지원자를 누르면 개인별 화면, 숫자를 누르면 해당 검토 화면으로 이동합니다</span>
+            <div className="hdtools">
+              <span className="hint">지원자를 누르면 개인별 화면, 숫자를 누르면 해당 검토 화면으로 이동합니다</span>
+              <XBtn href={exportUrl("summary")} title="전체 엑셀 다운로드" />
+            </div>
           </header>
           <div className="tblwrap">
             <table className="matrix">
