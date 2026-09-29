@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { prelim, type PrelimRefSummary } from "@/lib/api";
@@ -11,6 +11,22 @@ import "../prelim.css";
 type Slot = "essay" | "attach" | "origin";
 
 const EMPTY_TEXT = "파일을 여기로 끌어다 놓으세요";
+
+// 평가기준일 범위는 백엔드와 같게
+const EVAL_MIN = "2000-01-01";
+const EVAL_MAX = "2099-12-31";
+
+/** 평가기준일 글자를 YYYY-MM-DD 로. 20260930, 2026.9.30, 2026-09-30, 2026/09/30 을 받고 없는 날짜·범위 밖은 null */
+function toIsoDate(text: string): string | null {
+  const t = text.trim();
+  const m = t.match(/^(\d{4})(\d{2})(\d{2})$/) ?? t.match(/^(\d{4})\s*[.\-/]\s*(\d{1,2})\s*[.\-/]\s*(\d{1,2})\s*\.?$/);
+  if (!m) return null;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null;
+  const iso = dt.toISOString().slice(0, 10);
+  return iso >= EVAL_MIN && iso <= EVAL_MAX ? iso : null;
+}
 
 // 암호를 건 xlsx·xlsm 은 zip 이 아니라 OLE 문서(D0 CF 11 E0)로 저장된다
 async function isLockedExcel(f: File): Promise<boolean> {
@@ -72,6 +88,7 @@ export default function UploadForm() {
     origin: null,
   });
   const [evalDate, setEvalDate] = useState("");
+  const pickerRef = useRef<HTMLInputElement>(null);
   const [saveName, setSaveName] = useState("");
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,18 +125,20 @@ export default function UploadForm() {
     setFiles((prev) => ({ ...prev, [slot]: f }));
     return true;
   };
-  const ready = !!files.essay;
+  const evalIso = toIsoDate(evalDate);
+  const evalBad = evalDate.trim() !== "" && evalIso === null;
+  const ready = !!files.essay && !evalBad;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!files.essay || running) return;
+    if (!files.essay || running || evalBad) return;
     setRunning(true);
     setError(null);
     try {
       const form = new FormData();
       form.append("apply_xlsx", files.essay);
       if (files.origin) form.append("raw_xlsm", files.origin);
-      if (evalDate) form.append("eval_date", evalDate);
+      if (evalIso) form.append("eval_date", evalIso);
       if (saveName.trim()) form.append("label", saveName.trim());
       const res = await prelim.run(form);
       if (files.attach) {
@@ -168,8 +187,8 @@ export default function UploadForm() {
                   <div className="hint">채용 사이트에서 받은 자기소개서 파일. 시트 이름은 상관없습니다</div>
                   <a
                     className="tpl-link"
-                    href="/templates/prelim-essay-template.xlsx"
-                    download="자기소개서_업로드_양식.xlsx"
+                    href="/templates/자기소개서 양식.xlsx"
+                    download="자기소개서 양식.xlsx"
                   >
                     양식 내려받기
                   </a>
@@ -196,8 +215,8 @@ export default function UploadForm() {
                   )}
                   <a
                     className="tpl-link"
-                    href="/templates/prelim-attach-example.zip"
-                    download="첨부실적_예시.zip"
+                    href="/templates/첨부 실적 예시.zip"
+                    download="첨부 실적 예시.zip"
                   >
                     예시 zip 내려받기
                   </a>
@@ -219,8 +238,8 @@ export default function UploadForm() {
                   <div className="hint">지원자 학력·경력을 읽습니다. 없으면 제척 검토가 빠집니다</div>
                   <a
                     className="tpl-link"
-                    href="/templates/prelim-info-template.xlsx"
-                    download="지원정보_업로드_양식.xlsx"
+                    href="/templates/지원정보 양식.xlsx"
+                    download="지원정보 양식.xlsx"
                   >
                     양식 내려받기
                   </a>
@@ -263,17 +282,46 @@ export default function UploadForm() {
               <div className="two">
                 <div className="field">
                   <label htmlFor="prelim-evaldate">평가기준일</label>
-                  <input
-                    className="input"
-                    id="prelim-evaldate"
-                    type="date"
-                    min="2000-01-01"
-                    max="2099-12-31" // 없으면 크롬이 연도를 6자리까지 받는다. 범위는 백엔드와 같게
-                    value={evalDate}
-                    onChange={(e) => setEvalDate(e.target.value)}
-                  />
-                  <span className="hint">
-                    비워 두면 오늘 날짜를 기준으로 검토합니다.
+                  <div style={{ position: "relative", display: "flex", gap: 8 }}>
+                    <input
+                      className="input"
+                      id="prelim-evaldate"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="예: 2026-09-30"
+                      value={evalDate}
+                      onChange={(e) => setEvalDate(e.target.value)}
+                      onBlur={() => evalIso && setEvalDate(evalIso)}
+                      aria-invalid={evalBad}
+                    />
+                    <button
+                      type="button"
+                      className="btn tertiary"
+                      onClick={() => {
+                        const p = pickerRef.current;
+                        if (!p) return;
+                        p.value = evalIso ?? "";
+                        p.showPicker?.();
+                      }}
+                    >
+                      달력
+                    </button>
+                    {/* 달력 버튼이 여는 날짜 선택 창. 칸 자체는 글자 칸이라 지우고 고치기 쉽다 */}
+                    <input
+                      ref={pickerRef}
+                      type="date"
+                      min={EVAL_MIN}
+                      max={EVAL_MAX}
+                      tabIndex={-1}
+                      aria-hidden
+                      style={{ position: "absolute", right: 0, bottom: 0, width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+                      onChange={(e) => setEvalDate(e.target.value)}
+                    />
+                  </div>
+                  <span className="hint" style={evalBad ? { color: "var(--red-text)" } : undefined}>
+                    {evalBad
+                      ? "날짜를 2026-09-30 처럼 써 주세요. 2000년부터 2099년까지 됩니다."
+                      : "비워 두면 오늘 날짜를 기준으로 검토합니다."}
                   </span>
                 </div>
                 <div className="field">
