@@ -100,6 +100,9 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
           <div className="hdtools">
             <span className="hint">시스템 추출 {internal.length}건</span>
             <UpBtn kind="inx" label="연구 목록 파일 업로드" fileName={uploads.inx?.file_name} busy={busy === "up:inx"} onPick={upload} />
+            <a className="tpl-link" style={{ marginTop: 0 }} href="/templates/prelim-inx-template.xlsx" download="연구목록_업로드_양식.xlsx">
+              양식 내려받기
+            </a>
             <XBtn href={exportUrl("inx")} title="전체 엑셀 다운로드" />
             <XBtn href={exportUrl("inx-v")} cap="제척" title="제척위원 엑셀 다운로드" />
           </div>
@@ -180,6 +183,9 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
               {STEPI} 근무 이력 {work.length}건
             </span>
             <UpBtn kind="work" label="인사기록 파일 업로드" fileName={uploads.work?.file_name} busy={busy === "up:work"} onPick={upload} />
+            <a className="tpl-link" style={{ marginTop: 0 }} href="/templates/prelim-work-template.xlsx" download="인사기록_업로드_양식.xlsx">
+              양식 내려받기
+            </a>
             <XBtn href={exportUrl("work")} title="전체 엑셀 다운로드" />
             <XBtn href={exportUrl("work-v")} cap="제척" title="제척위원 엑셀 다운로드" />
           </div>
