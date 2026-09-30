@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Database, Plus, X } from "lucide-react";
+import { Database, Download, Plus, X } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { Bar } from "@/components/page-skeleton";
 import { prelim, type PrelimRefKind, type PrelimRefRow } from "@/lib/api";
@@ -84,6 +84,10 @@ const TABS: { kind: PrelimRefKind; label: string; unit: string; desc: string; ad
 
 type Drawer = { kind: "staff" | "reviewers"; id: number | "new"; values: Record<string, string>; dirty: boolean };
 
+const JOBS = ["연구직", "전문연구직", "행정직"];
+const STAGES = ["서류", "필기", "면접"];
+const FOLD = 6;
+
 const str = (v: unknown) => (v === null || v === undefined ? "" : String(v));
 const matches = (r: PrelimRefRow, q: string) =>
   !q ||
@@ -102,6 +106,7 @@ export default function ReferenceView() {
   const [error, setError] = useState<string | null>(null);
   const [drawerError, setDrawerError] = useState<string | null>(null);
   const [grade, setGrade] = useState<string | null>(null);
+  const [jobs, setJobs] = useState<string[]>([]);
 
   const spec = TABS.find((t) => t.kind === tab)!;
 
@@ -149,6 +154,7 @@ export default function ReferenceView() {
     setError(null);
     setQuery("");
     setGrade(null);
+    setJobs([]);
     setTab(kind);
   }
 
@@ -220,7 +226,7 @@ export default function ReferenceView() {
         aside={
           <div className="prelim">
             <a className="btn sm quiet" href={prelim.reference.exportUrl()} download>
-              엑셀 내려받기
+              <Download size={16} aria-hidden="true" /> 엑셀 내려받기
             </a>
           </div>
         }
@@ -245,12 +251,7 @@ export default function ReferenceView() {
 
         <p className="ref-desc">{spec.desc}</p>
         <div className="ref-bar">
-          {tab === "staff" && list ? (
-            <GradeChips rows={list} grade={grade} onGrade={setGrade} />
-          ) : (
-            <span />
-          )}
-          <div className="ref-actions">
+          <div className="ref-filters">
             <input
               className="ref-search"
               type="search"
@@ -259,16 +260,33 @@ export default function ReferenceView() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
-            {spec.add && (
-              <button
-                type="button"
-                className="btn sm primary"
-                onClick={() => openDrawer(tab as "staff" | "reviewers", null)}
-              >
-                <Plus size={16} aria-hidden="true" /> {spec.add}
-              </button>
+            {tab === "staff" && list && <GradeChips rows={list} grade={grade} onGrade={setGrade} />}
+            {tab === "reviewers" && !!list?.length && (
+              <div className="ref-jobs" role="group" aria-label="직군으로 공고 필터">
+                <span>직군</span>
+                {JOBS.map((j) => (
+                  <button
+                    key={j}
+                    type="button"
+                    aria-pressed={jobs.includes(j)}
+                    onClick={() => setJobs((cur) => (cur.includes(j) ? cur.filter((x) => x !== j) : [...cur, j]))}
+                  >
+                    <i aria-hidden="true" />
+                    {j}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
+          {spec.add && (
+            <button
+              type="button"
+              className="btn sm primary"
+              onClick={() => openDrawer(tab as "staff" | "reviewers", null)}
+            >
+              <Plus size={16} aria-hidden="true" /> {spec.add}
+            </button>
+          )}
         </div>
 
         {error && (
@@ -312,6 +330,7 @@ export default function ReferenceView() {
           <ReviewerGroups
             rows={list}
             query={q}
+            jobs={jobs}
             savedId={savedId}
             openId={drawer?.kind === "reviewers" ? drawer.id : null}
             onOpen={(r, preset) => openDrawer("reviewers", r, preset)}
@@ -503,19 +522,46 @@ function StaffList({
   );
 }
 
+const splitJobs = (v: unknown) =>
+  str(v)
+    .split(/[\/,·]/)
+    .map((j) => j.trim())
+    .filter(Boolean);
+
+/** 채용 머리에 적는 전형별 진행 날짜. 서류 → 필기 → 면접 순서 */
+function stageDates(rows: PrelimRefRow[]) {
+  const by = new Map<string, string[]>();
+  for (const r of rows) {
+    const st = str(r.stage);
+    const d = str(r.held_on);
+    if (!st || !d) continue;
+    const cur = by.get(st) ?? [];
+    if (!cur.includes(d)) by.set(st, [...cur, d]);
+  }
+  const order = [...STAGES.filter((st) => by.has(st)), ...[...by.keys()].filter((st) => !STAGES.includes(st))];
+  return order.map((st) => `${st} ${by.get(st)!.join(", ")}`).join(" · ");
+}
+
 function ReviewerGroups({
   rows,
   query,
+  jobs,
   savedId,
   openId,
   onOpen,
 }: {
   rows: PrelimRefRow[];
   query: string;
+  jobs: string[];
   savedId: number | null;
   openId: number | "new" | null;
   onOpen: (r: PrelimRefRow | null, preset?: Record<string, string>) => void;
 }) {
+  const [open, setOpen] = useState<string[]>([]);
+  const groupOf = (r: PrelimRefRow) => str(r.recruitment) || "채용명 없음";
+  // 방금 저장한 위원이 접힌 자리에 들어가면 안 보이므로 그 채용은 펼쳐 둔다
+  const saved = rows.find((r) => r.id === savedId);
+  if (saved && !open.includes(groupOf(saved))) setOpen([...open, groupOf(saved)]);
   if (!rows.length)
     return (
       <div className="ref-emptycard">
@@ -530,63 +576,65 @@ function ReviewerGroups({
         </button>
       </div>
     );
-  const shown = rows.filter((r) => matches(r, query));
   const groups = new Map<string, PrelimRefRow[]>();
-  for (const r of shown) {
-    const k = str(r.recruitment) || "채용명 없음";
+  for (const r of rows) {
+    const k = groupOf(r);
     groups.set(k, [...(groups.get(k) ?? []), r]);
   }
-  if (!groups.size) return <div className="ref-none box">검색 결과가 없습니다.</div>;
+  const cards = [...groups.entries()].flatMap(([name, group]) => {
+    // 채용 안에서는 전형 순서대로(날짜 오름차순)
+    const all = [...group].sort((a, b) => str(a.held_on).localeCompare(str(b.held_on)));
+    const jobList = [...new Set(all.flatMap((r) => splitJobs(r.job_group)))];
+    if (jobs.length && !jobList.some((j) => jobs.includes(j))) return [];
+    const members = all.filter((r) => matches(r, query));
+    if (query && !members.length) return [];
+    const pick = (key: string) => str(all.find((r) => r[key])?.[key]);
+    return [{ name, all, jobList, members, jobGroup: pick("job_group"), employment: pick("employment") }];
+  });
+  if (!cards.length) return <div className="ref-none box">검색 결과가 없습니다.</div>;
   return (
     <div className="ref-groups">
-      {[...groups.entries()].map(([name, group]) => {
-        // 채용 안에서는 전형 순서대로(날짜 오름차순)
-        const members = [...group].sort((a, b) => str(a.held_on).localeCompare(str(b.held_on)));
-        const first = members[0];
+      {cards.map(({ name, all, jobList, members, jobGroup, employment }) => {
+        const dates = stageDates(all);
+        const folded = !open.includes(name) && members.length > FOLD;
         return (
           <section key={name} className="ref-group">
             <header>
-              <div>
-                <h3>{name}</h3>
-                <span className="ref-tags">
-                  {first.job_group ? <em>{str(first.job_group)}</em> : null}
-                  {first.employment ? <em>{str(first.employment)}</em> : null}
-                  <span>위원 {members.length}명</span>
-                </span>
-              </div>
+              <h3>
+                {name}
+                {jobList.map((j) => (
+                  <em key={j} className="job">
+                    {j}
+                  </em>
+                ))}
+                {employment ? <em className="emp">{employment}</em> : null}
+                {dates ? <span>{dates}</span> : null}
+              </h3>
               <button
                 type="button"
                 className="btn sm link"
                 onClick={() =>
                   onOpen(null, {
-                    recruitment: str(first.recruitment),
-                    job_group: str(first.job_group),
-                    employment: str(first.employment),
+                    recruitment: str(all[0].recruitment),
+                    job_group: jobGroup,
+                    employment,
                   })
                 }
               >
                 <Plus size={15} aria-hidden="true" /> 이 채용에 위원 추가
               </button>
             </header>
-            {members.map((r) => (
+            {(folded ? members.slice(0, FOLD) : members).map((r) => (
               <button
                 key={r.id}
                 type="button"
                 className={`ref-row rv${openId === r.id ? " open" : ""}`}
                 onClick={() => onOpen(r)}
               >
-                <span className="stage">
-                  {str(r.stage) || "전형 미정"}
-                  <small>{str(r.held_on)}</small>
-                </span>
-                <b>{str(r.name)}</b>
-                <span>
-                  {str(r.org)}
-                  {r.title ? <small>{str(r.title)}</small> : null}
-                </span>
-                <span className="contact">
-                  {str(r.phone)}
-                  {r.mail ? <small>{str(r.mail)}</small> : null}
+                <span className="stage">{str(r.stage) || "전형 미정"}</span>
+                <span className="name">
+                  <b>{str(r.name)}</b>
+                  {r.org || r.title ? <small>{[r.org, r.title].filter(Boolean).map(str).join(" · ")}</small> : null}
                 </span>
                 <span className="go">
                   {savedId === r.id ? (
@@ -599,6 +647,21 @@ function ReviewerGroups({
                 </span>
               </button>
             ))}
+            {folded && (
+              <div className="ref-more">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    // 버튼이 사라지므로 새로 보이는 첫 줄로 포커스를 옮긴다
+                    const card = e.currentTarget.closest("section");
+                    setOpen((o) => [...o, name]);
+                    requestAnimationFrame(() => card?.querySelectorAll<HTMLElement>(".ref-row")[FOLD]?.focus());
+                  }}
+                >
+                  전체 {members.length}명 보기 →
+                </button>
+              </div>
+            )}
           </section>
         );
       })}
