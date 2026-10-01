@@ -625,6 +625,49 @@ export interface PrelimCounts {
 export type PrelimRefKind = "staff" | "orgs" | "reviewers";
 export type PrelimRefRow = { id: number } & Record<string, string | number | null>;
 export type PrelimRefSummary = Record<PrelimRefKind, { count: number; updated_at: string | null }>;
+/** 제척 기준 정보 엑셀 올리기 미리보기. 충돌 key 는 "kind:id" */
+export interface PrelimRefImportSheet {
+  kind: PrelimRefKind;
+  label: string;
+  found: boolean;
+  total: number;
+  add: number;
+  update: number;
+  delete: number;
+  conflict: number;
+  bulk_delete: boolean;
+  added: { row: number; name: string; same_name: boolean }[];
+  updated: { id: number; row: number; name: string; changes: { label: string; db: string; excel: string }[] }[];
+  deleted_names: string[];
+  conflicts: {
+    key: string;
+    id: number;
+    row: number | null;
+    type: "update" | "delete";
+    name: string;
+    cols: { label: string; db: string; excel: string }[];
+  }[];
+  skipped: { row: number; name: string; reason: string }[];
+  notes: string[];
+}
+export interface PrelimRefImportPreview {
+  token: string;
+  file_name: string;
+  form: string | null;
+  download_id: string | null;
+  downloaded_at: string | null;
+  delete_enabled: boolean;
+  /** 이 내려받기 파일로 이미 한 번 추가를 반영함(관리번호 빈 줄이 다시 추가될 수 있음) */
+  already_applied: boolean;
+  no_change: boolean;
+  sheets: PrelimRefImportSheet[];
+}
+export interface PrelimRefImportApplied {
+  file_name: string;
+  add: number;
+  update: number;
+  delete: number;
+}
 export interface PrelimRunResponse {
   ticket: string;
   label: string | null;
@@ -768,7 +811,8 @@ export interface PrelimResult extends PrelimRunResponse {
   attach_error?: string | null;
   view: PrelimView;
   verdicts: PrelimVerdicts;
-  uploads: Partial<Record<PrelimUploadKind, { file_name: string; uploaded_at: string | null }>>;
+  /** warnings: 올린 파일에서 빠진 열·빈 칸 알림. 9/30 이전 업로드에는 없음 */
+  uploads: Partial<Record<PrelimUploadKind, { file_name: string; uploaded_at: string | null; warnings?: string[] }>>;
   derived: PrelimDerived;
 }
 
@@ -794,6 +838,8 @@ export interface PrelimSummary {
   notice?: string | null;
   deleted_at?: string | null;
   attach_status?: string;
+  attach_done?: number | null;
+  attach_total?: number | null;
   /** view 를 저장하기 전의 옛 실행은 null */
   view_counts?: { essay: number; attach: number; inx: number; exx: number } | null;
   judged?: number;
@@ -851,7 +897,31 @@ export const prelim = {
       const res = await fetch(`${API_BASE}/prelim/reference/${kind}/${id}`, { method: "DELETE" });
       await prelimJson(res, "삭제하지 못했습니다");
     },
-    exportUrl: () => `${API_BASE}/prelim/reference/export.xlsx`,
+    /** empty 면 줄 없는 빈 양식 */
+    exportUrl: (empty = false) => `${API_BASE}/prelim/reference/export.xlsx${empty ? "?empty=1" : ""}`,
+    async importPreview(file: File): Promise<PrelimRefImportPreview> {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`${API_BASE}/prelim/reference/import/preview`, {
+        method: "POST",
+        body: fd,
+        signal: timeoutSignal(120_000),
+      });
+      return prelimJson<PrelimRefImportPreview>(res, "엑셀을 읽지 못했습니다");
+    },
+    async importApply(body: {
+      token: string;
+      choices: Record<string, "db" | "excel">;
+      confirm_bulk_delete: boolean;
+    }): Promise<PrelimRefImportApplied> {
+      const res = await fetch(`${API_BASE}/prelim/reference/import/apply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: timeoutSignal(120_000),
+      });
+      return prelimJson<PrelimRefImportApplied>(res, "반영하지 못했습니다");
+    },
   },
   result: (ticket: string) => http<PrelimResult>(`/prelim/results/${encodeURIComponent(ticket)}`),
   verdict: {

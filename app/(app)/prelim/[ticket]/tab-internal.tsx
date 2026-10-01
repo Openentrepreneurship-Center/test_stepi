@@ -6,6 +6,21 @@ import type { Ctx } from "./result-view";
 const REASON_CLS: Record<string, string> = { 연구책임자: "r-pi", 소속부서장: "r-hd", 동일학력: "r-dg", 지도교수: "r-dg" };
 const STEPI = "과학기술정책연구원";
 
+/** 올린 연구 목록·인사기록 파일에서 빠진 열·빈 칸 알림. 열 이름의 **굵게** 를 반영한다 */
+function UpWarn({ list }: { list?: string[] }) {
+  if (!list?.length) return null;
+  return (
+    <div
+      role="note"
+      style={{ background: "var(--warn-bg)", color: "var(--warn-text)", borderBottom: "1px solid var(--line)", padding: "12px 24px", fontSize: 14.5, lineHeight: 1.6 }}
+    >
+      {list.map((w, i) => (
+        <div key={i}>{w.split(/\*\*(.+?)\*\*/g).map((p, j) => (j % 2 ? <strong key={j}>{p}</strong> : p))}</div>
+      ))}
+    </div>
+  );
+}
+
 export default function InternalTab({ ctx }: { ctx: Ctx }) {
   const { derived, uploads, busy, upload, focusNo, exportUrl } = ctx;
   const { staff_rows: rows, pending_count: pendingCnt, internal, work, degree } = derived.inx;
@@ -107,6 +122,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
             <XBtn href={exportUrl("inx-v")} cap="제척" title="제척위원 엑셀 다운로드" />
           </div>
         </header>
+        <UpWarn list={uploads.inx?.warnings} />
         <div className="guide" style={{ background: "#fff", borderBottom: "1px solid var(--line)" }}>
           <span className="hint upfmt">
             업로드 형식 · <b>순번 / 과제명 / 연구책임자 / 연구시작일 / 연구종료일</b>. 업로드하면 과제명 매칭으로 내부 확인 항목이 자동으로 채워집니다.
@@ -190,6 +206,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
             <XBtn href={exportUrl("work-v")} cap="제척" title="제척위원 엑셀 다운로드" />
           </div>
         </header>
+        <UpWarn list={uploads.work?.warnings} />
         <div className="guide" style={{ background: "#fff", borderBottom: "1px solid var(--line)" }}>
           <span className="hint upfmt">
             업로드 형식 · <b>이름 / 직위명 / 소속부서명 / 근무시작일 / 근무종료일</b>. 업로드하면 부서명 매칭으로 부서장·상위부서장이 자동으로 채워집니다.

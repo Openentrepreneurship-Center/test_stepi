@@ -21,6 +21,7 @@ import EssayTab from "./tab-essay";
 import AttachTab from "./tab-attach";
 import InternalTab from "./tab-internal";
 import ExternalTab from "./tab-external";
+import NotUploaded, { notUploadedKind } from "./not-uploaded";
 import PersonView from "./person-view";
 
 export type TabKey = "summary" | "essay" | "attach" | "inx" | "exx" | "person";
@@ -324,6 +325,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
   }
 
   const counts = derived.summary_fixed.tab_counts as Record<string, number>;
+  const missing = notUploadedKind(data, tab);
   const files = FILE_LABELS.filter(([k]) =>
     k === "attach" ? data.attach_status !== "none" : !!data.files_used?.[k],
   ).map(([, label]) => label);
@@ -363,24 +365,49 @@ export default function ResultView({ ticket }: { ticket: string }) {
   );
   const actions = (
     <div className="flex items-center gap-2">
-      <div className="relative">
-        <button
-          className="btn-ghost"
-          type="button"
-          onClick={downloadAll}
-          disabled={downloading}
-        >
-          전체 엑셀 다운로드
-        </button>
-        <span className="absolute right-0 top-full mt-1 whitespace-nowrap text-[12px] text-[var(--ink-muted)]">
-          여러 파일 다운로드를 허용해 주세요
-        </span>
-      </div>
+      {!scanning && (
+        <div className="relative">
+          <button
+            className="btn-ghost"
+            type="button"
+            onClick={downloadAll}
+            disabled={downloading}
+          >
+            전체 엑셀 다운로드
+          </button>
+          <span className="absolute right-0 top-full mt-1 whitespace-nowrap text-[12px] text-[var(--ink-muted)]">
+            여러 파일 다운로드를 허용해 주세요
+          </span>
+        </div>
+      )}
       <Link href="/prelim/new" className="btn-primary">
         + 새 검토 시작
       </Link>
     </div>
   );
+
+  // 첨부 검사가 끝나기 전에는 탭 대신 대기 화면. 결과는 끝난 뒤 한 번에 보여 준다
+  if (scanning) {
+    const done = data.attach_done ?? 0;
+    const total = data.attach_total ?? 0;
+    return (
+      <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
+        {head(meta, actions)}
+        <div className="prelim result mt-8">
+          <div className="wait" role="status" aria-live="polite">
+            <h2>첨부 실적을 검사하고 있습니다</h2>
+            <div className="wait-bar" aria-hidden="true">
+              <i style={{ width: `${total ? Math.round((done / total) * 100) : 0}%` }} />
+            </div>
+            <p className="wait-n">
+              {total ? `${done} / ${total}개` : data.attach_status === "scanning" ? "검토 중" : "대기"}
+            </p>
+            <p>검사가 끝나면 결과를 한 번에 볼 수 있습니다</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
@@ -432,10 +459,16 @@ export default function ResultView({ ticket }: { ticket: string }) {
 
         <div ref={paneRef} style={{ display: "grid", gap: 24 }}>
           {tab === "summary" && <SummaryTab ctx={ctx} />}
-          {tab === "essay" && <EssayTab ctx={ctx} />}
-          {tab === "attach" && <AttachTab ctx={ctx} />}
-          {tab === "inx" && <InternalTab ctx={ctx} />}
-          {tab === "exx" && <ExternalTab ctx={ctx} />}
+          {missing ? (
+            <NotUploaded kind={missing} />
+          ) : (
+            <>
+              {tab === "essay" && <EssayTab ctx={ctx} />}
+              {tab === "attach" && <AttachTab ctx={ctx} />}
+              {tab === "inx" && <InternalTab ctx={ctx} />}
+              {tab === "exx" && <ExternalTab ctx={ctx} />}
+            </>
+          )}
           {tab === "person" && <PersonView ctx={ctx} no={person ?? ""} />}
         </div>
       </div>
