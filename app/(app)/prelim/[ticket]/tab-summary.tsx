@@ -298,7 +298,13 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
           )}
           <header style={{ borderTop: "1px solid var(--line)" }}>
             <h2>내부 제척위원</h2>
-            <span className="hint">{inStaff.length ? `${inStaff.length}명` : "확인 자료 업로드 전"}</span>
+            <span className="hint">
+              {inStaff.length
+                ? `${inStaff.length}명`
+                : ctx.data.files_used && !ctx.data.files_used.raw_xlsm
+                  ? "해당 없음"
+                  : "확인 자료 업로드 전"}
+            </span>
           </header>
           {inStaff.length ? (
             <div className="nolist">
@@ -316,7 +322,9 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
             </div>
           ) : (
             <div className="empty">
-              제척(내부) 화면에서 연구 목록·인사기록 파일을 업로드하면 내부 제척위원이 표시됩니다.
+              {ctx.data.files_used && !ctx.data.files_used.raw_xlsm
+                ? "지원정보 파일을 올리지 않아 제척 검토를 하지 못했습니다."
+                : "제척(내부) 화면에서 연구 목록·인사기록 파일을 업로드하면 내부 제척위원이 표시됩니다."}
             </div>
           )}
           <div className="note">
