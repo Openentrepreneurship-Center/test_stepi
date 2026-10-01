@@ -41,14 +41,12 @@ function DropBox({
   file,
   onPick,
   disabled,
-  required,
 }: {
   accept: string;
   label: string;
   file: File | null;
   onPick: (f: File | null) => Promise<boolean>;
   disabled?: boolean;
-  required?: boolean;
 }) {
   const [over, setOver] = useState(false);
   const cls = ["drop", over && "over", file && "filled"]
@@ -66,7 +64,6 @@ function DropBox({
       <input
         type="file"
         accept={accept}
-        required={required}
         disabled={disabled}
         aria-label={label}
         onChange={async (e) => {
@@ -127,17 +124,19 @@ export default function UploadForm() {
   };
   const evalIso = toIsoDate(evalDate);
   const evalBad = evalDate.trim() !== "" && evalIso === null;
-  const ready = !!files.essay && !evalBad;
+  const ready = !!(files.essay || files.attach || files.origin) && !evalBad;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!files.essay || running || evalBad) return;
+    if (!ready || running) return;
     setRunning(true);
     setError(null);
     try {
       const form = new FormData();
-      form.append("apply_xlsx", files.essay);
+      if (files.essay) form.append("apply_xlsx", files.essay);
       if (files.origin) form.append("raw_xlsm", files.origin);
+      // zip 은 검토를 만든 뒤 따로 올린다. 첨부만 올려도 검토를 만들 수 있게 알린다
+      if (files.attach) form.append("has_attach", "true");
       if (evalIso) form.append("eval_date", evalIso);
       if (saveName.trim()) form.append("label", saveName.trim());
       const res = await prelim.run(form);
@@ -146,7 +145,7 @@ export default function UploadForm() {
         try {
           await prelim.attach.send(res.ticket, files.attach, setProgress);
         } catch (err) {
-          // 자기소개서 검토는 이미 끝났다. 결과 화면은 열어 주고 첨부 실패만 알린다
+          // 검토는 이미 만들어졌다. 결과 화면은 열어 주고 첨부 실패만 알린다(첨부 탭에도 실패 안내가 남는다)
           window.alert(
             `첨부 실적은 올리지 못했습니다. ${err instanceof Error ? err.message : String(err)}`,
           );
@@ -175,14 +174,11 @@ export default function UploadForm() {
             <section className="stack">
               <div className="sec-head">
                 <h2>1. 검토 파일</h2>
-                <span className="hint">필수 1개 · 선택 2개</span>
               </div>
 
               <div className="file-row">
                 <div>
-                  <div className="name">
-                    자기소개서 <span className="tag req">필수</span>
-                  </div>
+                  <div className="name">자기소개서</div>
                   <div className="hint">.xlsx 파일</div>
                   <div className="hint">채용 사이트에서 받은 자기소개서 파일. 시트 이름은 상관없습니다</div>
                   <a
@@ -198,15 +194,33 @@ export default function UploadForm() {
                   label="자기소개서 xlsx 파일 선택"
                   file={files.essay}
                   onPick={pick("essay", "자기소개서")}
-                  required
                 />
               </div>
 
               <div className="file-row">
                 <div>
-                  <div className="name">
-                    첨부 실적 <span className="tag opt">선택</span>
-                  </div>
+                  <div className="name">지원정보</div>
+                  <div className="hint">.xlsx 또는 .xlsm 파일</div>
+                  <div className="hint">지원자 학력·경력을 읽습니다. 없으면 제척 검토가 빠집니다</div>
+                  <a
+                    className="tpl-link"
+                    href="/templates/지원정보 양식.xlsx"
+                    download="지원정보 양식.xlsx"
+                  >
+                    양식 내려받기
+                  </a>
+                </div>
+                <DropBox
+                  accept=".xlsx,.xlsm"
+                  label="지원정보 파일 선택"
+                  file={files.origin}
+                  onPick={pick("origin", "지원정보")}
+                />
+              </div>
+
+              <div className="file-row">
+                <div>
+                  <div className="name">첨부 실적</div>
                   <div className="hint">.zip 파일 (pdf·docx·이미지)</div>
                   {attachMaxGb !== null && (
                     <div className="hint">
@@ -226,29 +240,6 @@ export default function UploadForm() {
                   label="첨부 실적 zip 파일 선택"
                   file={files.attach}
                   onPick={pick("attach")}
-                />
-              </div>
-
-              <div className="file-row">
-                <div>
-                  <div className="name">
-                    지원정보 <span className="tag opt">선택</span>
-                  </div>
-                  <div className="hint">.xlsx 또는 .xlsm 파일</div>
-                  <div className="hint">지원자 학력·경력을 읽습니다. 없으면 제척 검토가 빠집니다</div>
-                  <a
-                    className="tpl-link"
-                    href="/templates/지원정보 양식.xlsx"
-                    download="지원정보 양식.xlsx"
-                  >
-                    양식 내려받기
-                  </a>
-                </div>
-                <DropBox
-                  accept=".xlsx,.xlsm"
-                  label="지원정보 파일 선택"
-                  file={files.origin}
-                  onPick={pick("origin", "지원정보")}
                 />
               </div>
 
@@ -359,8 +350,8 @@ export default function UploadForm() {
               >
                 {error ??
                   (ready
-                    ? "필수 파일이 준비되었습니다. 선택 파일 없이도 검토할 수 있습니다."
-                    : "자기소개서 파일을 올리면 검토를 실행할 수 있습니다.")}
+                    ? "검토할 파일이 준비되었습니다."
+                    : "자기소개서·지원정보·첨부 실적 중 하나를 올리면 검토를 실행할 수 있습니다.")}
               </span>
             </div>
           </form>
@@ -375,16 +366,16 @@ export default function UploadForm() {
               </p>
             </div>
             <div>
-              <b>첨부 실적 내 위배</b>
+              <b>제척(내부·외부)</b>
               <p>
-                제출한 실적 파일의 본문·파일명에 지원자 성명이 남아 있는지
+                평가기준일 기준 최근 2년 내 내부 과제 참여·외부기관 재직 경력을
                 확인합니다.
               </p>
             </div>
             <div>
-              <b>제척(내부·외부)</b>
+              <b>첨부 실적 내 위배</b>
               <p>
-                평가기준일 기준 최근 2년 내 내부 과제 참여·외부기관 재직 경력을
+                제출한 실적 파일의 본문·파일명에 지원자 성명이 남아 있는지
                 확인합니다.
               </p>
             </div>
