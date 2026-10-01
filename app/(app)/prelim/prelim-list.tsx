@@ -8,11 +8,37 @@ import { SkeletonTable } from "@/components/page-skeleton";
 import { prelim, type PrelimSummary } from "@/lib/api";
 
 // 지원자 분석의 분석 현황·삭제 항목과 같은 틀을 쓴다
+// 상태 열을 넣으면서 숫자 칸과 간격을 줄여 공고명 칸이 전보다 좁아지지 않게 한다
 const ROW_GRID =
-  "grid grid-cols-[minmax(0,1fr)_90px_90px_110px_40px] xl:grid-cols-[minmax(0,1fr)_100px_80px_90px_90px_80px_80px_90px_110px_40px] items-center gap-5";
+  "grid grid-cols-[minmax(0,1fr)_100px_56px_72px_84px_40px] xl:grid-cols-[minmax(0,1fr)_100px_84px_56px_64px_56px_60px_60px_72px_84px_40px] items-center gap-3";
 const TRASH_GRID = "grid grid-cols-12 items-center gap-4";
 const WIDE_ONLY = "hidden xl:block";
 const CELL = "text-right text-[13.5px] text-[var(--ink-muted)] tabular-nums";
+const ACTIVE = ["uploading", "queued", "scanning"];
+
+// 지원자 분석 상태 배지(components/job-status-badge.tsx)와 같은 모양·색
+const TONE = {
+  pending: "border-[var(--line-mid)] bg-white text-[var(--ink-muted)]",
+  running: "border-[var(--secondary)] bg-[var(--secondary)] text-white",
+  done: "border-[var(--primary)] bg-[var(--primary)] text-white",
+  failed: "border-[var(--bad)] bg-[var(--bad)] text-white",
+};
+
+function StatusBadge({ r }: { r: PrelimSummary }) {
+  const [tone, label] =
+    r.attach_status === "uploading" || r.attach_status === "queued"
+      ? [TONE.pending, "대기"]
+      : r.attach_status === "scanning"
+        ? [TONE.running, r.attach_total ? `검토 중 ${r.attach_done ?? 0}/${r.attach_total}` : "검토 중"]
+        : r.attach_status === "failed"
+          ? [TONE.failed, "실패"]
+          : [TONE.done, "완료"];
+  return (
+    <span className={`inline-flex items-center rounded-[2px] border px-2.5 py-1 text-[12.5px] font-semibold whitespace-nowrap tabular-nums ${tone}`}>
+      {label}
+    </span>
+  );
+}
 
 function formatTime(value?: string | null) {
   if (!value) return "-";
@@ -41,6 +67,14 @@ export default function PrelimList({ trashed }: { trashed: boolean }) {
     void load();
   }, [load]);
 
+  // 첨부 검사 중인 검토가 있으면 5초마다 다시 읽는다
+  const active = !trashed && !!items?.some((r) => ACTIVE.includes(r.attach_status ?? ""));
+  useEffect(() => {
+    if (!active) return;
+    const t = setInterval(() => void load(), 5000);
+    return () => clearInterval(t);
+  }, [active, load]);
+
   async function act(ticket: string, fn: () => Promise<unknown>) {
     setBusy(ticket);
     try {
@@ -54,6 +88,8 @@ export default function PrelimList({ trashed }: { trashed: boolean }) {
   }
 
   const name = (r: PrelimSummary) => r.notice || r.label || "이름 없는 검토";
+  // 첨부만 올린 검토는 지원자 목록이 없어 0명
+  const people = (r: PrelimSummary) => (r.applicant_count ? `${r.applicant_count}명` : "-");
 
   return (
     <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
@@ -127,7 +163,7 @@ export default function PrelimList({ trashed }: { trashed: boolean }) {
                   <div className="mt-0.5 font-mono text-[13px] text-[var(--ink-soft)]">{r.ticket}</div>
                 </div>
                 <div className="col-span-2 text-[15px] tabular-nums text-[var(--ink-muted)]">{r.eval_date || "-"}</div>
-                <div className="col-span-2 text-right text-[15px] tabular-nums text-[var(--ink-muted)]">{r.applicant_count}명</div>
+                <div className="col-span-2 text-right text-[15px] tabular-nums text-[var(--ink-muted)]">{people(r)}</div>
                 <div className="col-span-3 flex items-center justify-end gap-3">
                   <span className="text-[13px] text-[var(--ink-soft)] tabular-nums">
                     {r.deleted_at
@@ -169,6 +205,7 @@ export default function PrelimList({ trashed }: { trashed: boolean }) {
           <div className="bg-[var(--paper)] border border-[var(--line-strong)] rounded-xl overflow-hidden">
             <div className={`${ROW_GRID} px-4 py-3 bg-[var(--bg-2)] border-b border-[var(--line-strong)] text-[12.5px] font-semibold tracking-wide text-[var(--ink-muted)]`}>
               <div>검토 공고명</div>
+              <div>상태</div>
               <div className={`${WIDE_ONLY} text-right`}>평가기준일</div>
               <div className="text-right">지원자 수</div>
               <div className={`${WIDE_ONLY} text-right`}>자소서 위배</div>
@@ -196,8 +233,11 @@ export default function PrelimList({ trashed }: { trashed: boolean }) {
                       <div className="mt-0.5 text-[13px] text-[var(--ink-soft)] truncate">{r.label}</div>
                     )}
                   </div>
+                  <div>
+                    <StatusBadge r={r} />
+                  </div>
                   <div className={`${WIDE_ONLY} ${CELL}`}>{r.eval_date || "-"}</div>
-                  <div className={CELL}>{r.applicant_count}명</div>
+                  <div className={CELL}>{people(r)}</div>
                   <div className={`${WIDE_ONLY} ${CELL}`}>{vc ? n(vc.essay) : `${r.counts.blind_total}건`}</div>
                   <div className={`${WIDE_ONLY} ${CELL}`}>{n(vc?.attach)}</div>
                   <div className={`${WIDE_ONLY} ${CELL}`}>{n(vc?.inx)}</div>
