@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ShieldAlert } from "lucide-react";
+import { CalendarDays, ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { prelim, type PrelimRefSummary } from "@/lib/api";
 import "../prelim.css";
@@ -124,6 +124,9 @@ export default function UploadForm() {
   };
   const evalIso = toIsoDate(evalDate);
   const evalBad = evalDate.trim() !== "" && evalIso === null;
+  // 치는 도중에는 빨간 안내를 숨긴다
+  const [evalTyping, setEvalTyping] = useState(false);
+  const evalShowBad = evalBad && !evalTyping;
   const ready = !!(files.essay || files.attach || files.origin) && !evalBad;
 
   async function submit(e: React.FormEvent) {
@@ -273,7 +276,7 @@ export default function UploadForm() {
               <div className="two">
                 <div className="field">
                   <label htmlFor="prelim-evaldate">평가기준일</label>
-                  <div style={{ position: "relative", display: "flex", gap: 8 }}>
+                  <div className="datebox">
                     <input
                       className="input"
                       id="prelim-evaldate"
@@ -282,12 +285,18 @@ export default function UploadForm() {
                       placeholder="예: 2026-09-30"
                       value={evalDate}
                       onChange={(e) => setEvalDate(e.target.value)}
-                      onBlur={() => evalIso && setEvalDate(evalIso)}
-                      aria-invalid={evalBad}
+                      onFocus={() => setEvalTyping(true)}
+                      onBlur={() => {
+                        setEvalTyping(false);
+                        if (evalIso) setEvalDate(evalIso);
+                      }}
+                      aria-invalid={evalShowBad}
                     />
                     <button
                       type="button"
-                      className="btn tertiary"
+                      className="cal"
+                      aria-label="달력"
+                      title="달력"
                       onClick={() => {
                         const p = pickerRef.current;
                         if (!p) return;
@@ -295,7 +304,7 @@ export default function UploadForm() {
                         p.showPicker?.();
                       }}
                     >
-                      달력
+                      <CalendarDays size={20} aria-hidden />
                     </button>
                     {/* 달력 버튼이 여는 날짜 선택 창. 칸 자체는 글자 칸이라 지우고 고치기 쉽다 */}
                     <input
@@ -305,12 +314,12 @@ export default function UploadForm() {
                       max={EVAL_MAX}
                       tabIndex={-1}
                       aria-hidden
-                      style={{ position: "absolute", right: 0, bottom: 0, width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+                      className="picker"
                       onChange={(e) => setEvalDate(e.target.value)}
                     />
                   </div>
-                  <span className="hint" style={evalBad ? { color: "var(--red-text)" } : undefined}>
-                    {evalBad
+                  <span className="hint" style={evalShowBad ? { color: "var(--red-text)" } : undefined}>
+                    {evalShowBad
                       ? "날짜를 2026-09-30 처럼 써 주세요. 2000년부터 2099년까지 됩니다."
                       : "비워 두면 오늘 날짜를 기준으로 검토합니다."}
                   </span>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { CircleCheck, Database, Download, Plus, Upload, X } from "lucide-react";
+import { CalendarDays, CircleCheck, Database, Download, Plus, Upload, X } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { Bar } from "@/components/page-skeleton";
 import {
@@ -59,7 +59,7 @@ const REVIEWER_FORM: Section[] = [
       { key: "recruitment", label: "채용명 (예: 2025년 9차)", wide: true },
       { key: "job_group", label: "직군" },
       { key: "employment", label: "고용형태", max: 40 },
-      { key: "stage", label: "전형 (서류·필기·면접)", max: 40 },
+      { key: "stage", label: "전형 (서류·필기·면접)", type: "choice", options: ["서류", "필기", "면접"] },
       { key: "held_on", label: "일자", type: "date" },
     ],
   },
@@ -128,6 +128,18 @@ const matches = (r: PrelimRefRow, q: string) =>
     ([k, v]) => !["id", "created_at", "updated_at"].includes(k) && str(v).toLowerCase().includes(q),
   );
 const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
+
+const DATE_ERROR = "일자는 2025-10-20 형식으로 입력해 주세요.";
+/** 일자 글자를 YYYY-MM-DD 로. 20251020, 2025.10.20, 2025-10-20, 2025/10/20 을 받고 없는 날짜는 null (평가기준일 칸과 같은 규칙) */
+function toIsoDate(text: string): string | null {
+  const t = text.trim();
+  const m = t.match(/^(\d{4})(\d{2})(\d{2})$/) ?? t.match(/^(\d{4})\s*[.\-/]\s*(\d{1,2})\s*[.\-/]\s*(\d{1,2})\s*\.?$/);
+  if (!m) return null;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const dt = new Date(Date.UTC(y, mo - 1, d));
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null;
+  return dt.toISOString().slice(0, 10);
+}
 
 const splitJobs = (v: unknown) =>
   str(v)
@@ -238,11 +250,16 @@ export default function ReferenceView() {
       setDrawerError(`${missing.label}은(는) 비워 둘 수 없습니다.`);
       return;
     }
+    const dateKeys = new Set(FORMS[drawer.kind].flatMap((s) => s.fields).filter((f) => f.type === "date").map((f) => f.key));
+    if ([...dateKeys].some((k) => drawer.values[k]?.trim() && !toIsoDate(drawer.values[k]))) {
+      setDrawerError(DATE_ERROR);
+      return;
+    }
     setSaving(true);
     setDrawerError(null);
     try {
       const body = Object.fromEntries(
-        Object.entries(drawer.values).map(([k, v]) => [k, v.trim() || null]),
+        Object.entries(drawer.values).map(([k, v]) => [k, (dateKeys.has(k) ? toIsoDate(v) : null) ?? (v.trim() || null)]),
       );
       const saved =
         drawer.id === "new"
@@ -508,12 +525,13 @@ export default function ReferenceView() {
                                 </div>
                               </div>
                             );
+                          if (f.type === "date") return <DateField key={f.key} title={title} value={value} onChange={set} />;
                           return (
                             <label key={f.key} className={f.wide ? "wide" : undefined}>
                               {title}
                               <input
                                 className="input"
-                                type={f.type === "date" ? "date" : "text"}
+                                type="text"
                                 maxLength={f.max ?? 120}
                                 value={value}
                                 autoFocus={f === FORMS[drawer.kind].flatMap((x) => x.fields).find((x) => x.type !== "choice")}
@@ -817,6 +835,59 @@ function stageDates(rows: PrelimRefRow[]) {
   }
   const order = [...STAGES.filter((st) => by.has(st)), ...[...by.keys()].filter((st) => !STAGES.includes(st))];
   return order.map((st) => `${st} ${by.get(st)!.join(", ")}`).join(" · ");
+}
+
+/** 일자 칸. 크롬 날짜 칸은 숫자가 오른쪽에서 밀려 들어와(0002 → 2005) 글자 칸으로 받고, 달력 버튼은 숨긴 날짜 칸을 연다 */
+function DateField({ title, value, onChange }: { title: ReactNode; value: string; onChange: (v: string) => void }) {
+  const pickerRef = useRef<HTMLInputElement>(null);
+  const [typing, setTyping] = useState(false);
+  const iso = toIsoDate(value);
+  const bad = value.trim() !== "" && iso === null;
+  return (
+    <label>
+      {title}
+      <div className="datebox">
+        <input
+          className="input"
+          type="text"
+          inputMode="numeric"
+          placeholder="예: 2025-10-20"
+          maxLength={20}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setTyping(true)}
+          onBlur={() => {
+            setTyping(false);
+            if (iso && iso !== value) onChange(iso);
+          }}
+          aria-invalid={bad && !typing}
+        />
+        <button
+          type="button"
+          className="cal"
+          aria-label="달력"
+          title="달력"
+          onClick={() => {
+            const p = pickerRef.current;
+            if (!p) return;
+            p.value = iso ?? "";
+            p.showPicker?.();
+          }}
+        >
+          <CalendarDays size={18} aria-hidden />
+        </button>
+        <input
+          ref={pickerRef}
+          type="date"
+          tabIndex={-1}
+          aria-hidden
+          className="picker"
+          onChange={(e) => e.target.value && onChange(e.target.value)}
+        />
+      </div>
+      {bad && !typing && <span className="bad">{DATE_ERROR}</span>}
+    </label>
+  );
 }
 
 function OriginTag({ origin }: { origin: unknown }) {

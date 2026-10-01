@@ -451,6 +451,15 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .ref-fields .choice > span { font-size: 13.5px; color: var(--muted); }
 .prelim .ref-fields .choice em { font-style: normal; color: var(--red-text); font-size: 12.5px; }
 .prelim .ref-fields .choice .seg2 button { min-width: 72px; height: 42px; }
+.prelim .ref-fields .choice .seg2:has(> button:nth-child(3)) button { min-width: 64px; }
+/* 일자 글자 칸 + 달력 버튼. 버튼은 칸 높이에 맞춘 네모, 숨긴 날짜 칸이 달력을 연다 */
+.prelim .datebox { position: relative; display: flex; gap: 6px; }
+.prelim .datebox .input { flex: 1; min-width: 0; }
+.prelim .datebox .cal { flex: none; width: 48px; height: 48px; display: grid; place-items: center; background: #fff; border: 1px solid var(--line-strong); color: var(--ink); }
+.prelim .datebox .cal:hover { background: var(--surface); }
+.prelim .ref-fields .datebox .cal { width: 42px; height: 42px; }
+.prelim .datebox .picker { position: absolute; right: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.prelim .ref-fields label > span.bad { color: var(--red-text); }
 .prelim .vw-box.imp { width: min(880px, 100%); }
 .prelim .imp .vw-body { background: #fff; }
 .prelim .imp-same { padding: 14px 16px; background: var(--surface); font-weight: 600; }
