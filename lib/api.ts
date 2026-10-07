@@ -752,6 +752,19 @@ export interface PrelimOrgRow { org: string; people: number; count: number; with
 export interface PrelimPersonRow {
   no: string; name: string; essay: number; attach: number; internal: number; external: number;
   essay_done: boolean; out: string | null;
+  penalty?: boolean;
+}
+/** 블라인드 최종 결과 한 줄. st 빈 글자는 미판정 */
+export interface PrelimFinalRow {
+  id: string; no: string; kind: "자기소개서" | "첨부 실적"; cat: string; word: string;
+  file: string | null; where: string; st: "confirm" | "hold" | "dismiss" | ""; reason: string | null;
+}
+export interface PrelimFinal {
+  rows: PrelimFinalRow[];
+  penalty: { no: string; count: number }[];
+  pending: number;
+  /** 탈락 처리로 표에서 뺀 지원자 수 */
+  dropped: number;
 }
 export interface PrelimDerived {
   end: string | null; win: string | null;
@@ -762,8 +775,9 @@ export interface PrelimDerived {
       attach_total: number; attach_done: number;
       internal_total: number; external_total: number;
       missing: { count: number; rows: number[] };
+      penalty_people?: number;
     };
-    tab_counts: { essay: number; attach: number; inx: number; exx: number };
+    tab_counts: { essay: number; attach: number; inx: number; exx: number; final?: number };
     attach_confirmed: number;
     progress: { done: number; total: number };
     org_bars: [string, number][];
@@ -780,6 +794,8 @@ export interface PrelimDerived {
     internal: PrelimInternalRow[]; work: PrelimWorkRow[]; degree: PrelimDegreeRow[];
     advisor?: PrelimAdvisorRow[];
   };
+  /** api 재시작 전 응답에는 없다 */
+  final?: PrelimFinal;
   exx: Record<PrelimStage, {
     org_rows: PrelimOrgRow[]; limited_org_rows: PrelimOrgRow[]; limited_org_count: number;
     restricted_committee: PrelimCommittee[]; gone_orgs: string[];

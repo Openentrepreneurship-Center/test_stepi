@@ -21,10 +21,11 @@ import EssayTab from "./tab-essay";
 import AttachTab from "./tab-attach";
 import InternalTab from "./tab-internal";
 import ExternalTab from "./tab-external";
+import FinalTab from "./tab-final";
 import NotUploaded, { notUploadedKind } from "./not-uploaded";
 import PersonView from "./person-view";
 
-export type TabKey = "summary" | "essay" | "attach" | "inx" | "exx" | "person";
+export type TabKey = "summary" | "essay" | "attach" | "inx" | "exx" | "final" | "person";
 
 const TABS: [Exclude<TabKey, "person">, string][] = [
   ["summary", "요약"],
@@ -32,14 +33,16 @@ const TABS: [Exclude<TabKey, "person">, string][] = [
   ["attach", "첨부 실적 내 위배"],
   ["inx", "제척(내부)"],
   ["exx", "제척(외부)"],
+  ["final", "블라인드 최종 결과"],
 ];
 const BADGE_CLS: Record<string, string> = {
   essay: "navy",
   attach: "navy",
   inx: "red",
   exx: "red",
+  final: "red",
 };
-// 전체 엑셀은 담당자 HTML 과 같은 순서로 9개를 따로 내려받는다
+// 전체 엑셀은 담당자 HTML 과 같은 순서로 10개를 따로 내려받는다
 const ALL_KEYS = [
   "essay",
   "attach",
@@ -50,6 +53,7 @@ const ALL_KEYS = [
   "exx-org",
   "exx-com",
   "exx",
+  "final",
 ];
 const FILE_LABELS: [string, string][] = [
   ["apply_xlsx", "자기소개서"],
@@ -260,7 +264,8 @@ export default function ResultView({ ticket }: { ticket: string }) {
 
   async function downloadAll() {
     setDownloading(true);
-    for (const key of ALL_KEYS) {
+    // api 재시작 전 응답에는 최종 결과가 없다
+    for (const key of ALL_KEYS.filter((k) => k !== "final" || derived?.final)) {
       const a = document.createElement("a");
       a.href = exportUrl(key);
       a.download = "";
@@ -325,6 +330,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
   }
 
   const counts = derived.summary_fixed.tab_counts as Record<string, number>;
+  const tabs = derived.final ? TABS : TABS.filter(([k]) => k !== "final");
   const missing = notUploadedKind(data, tab);
   const files = FILE_LABELS.filter(([k]) =>
     k === "attach" ? data.attach_status !== "none" : !!data.files_used?.[k],
@@ -414,7 +420,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
       {head(meta, actions)}
       <div className="prelim result mt-8">
         <div className="tabs" role="tablist">
-          {TABS.map(([k, label]) => (
+          {tabs.map(([k, label]) => (
             <button
               key={k}
               type="button"
@@ -458,7 +464,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
         )}
 
         <div ref={paneRef} style={{ display: "grid", gap: 24 }}>
-          {tab === "summary" && <SummaryTab ctx={ctx} />}
+          {(tab === "summary" || (tab === "final" && !derived.final)) && <SummaryTab ctx={ctx} />}
           {missing ? (
             <NotUploaded kind={missing} />
           ) : (
@@ -467,6 +473,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
               {tab === "attach" && <AttachTab ctx={ctx} />}
               {tab === "inx" && <InternalTab ctx={ctx} />}
               {tab === "exx" && <ExternalTab ctx={ctx} />}
+              {tab === "final" && derived.final && <FinalTab ctx={ctx} final={derived.final} />}
             </>
           )}
           {tab === "person" && <PersonView ctx={ctx} no={person ?? ""} />}

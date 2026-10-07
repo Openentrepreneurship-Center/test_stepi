@@ -90,6 +90,7 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .pring .t { font-size: 14.5px; color: #d6d4ee; }
 .prelim .pring .t b { display: block; font-size: 24px; font-weight: 300; color: #fff; }
 .prelim .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.prelim .kpis.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .prelim .kpi { border: 1px solid var(--line); border-top: 4px solid var(--ink); padding: 20px 22px; display: grid; gap: 14px; align-content: start; background: #fff; }
 .prelim .kpi.blind { border-top-color: var(--navy); }
 .prelim .kpi.att { border-top-color: var(--navy-hover); }
@@ -281,13 +282,13 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim tr.dropped td { background: #fafafa; color: var(--muted); }
 .prelim tr.dropped td.nm, .prelim tr.dropped td.mono { text-decoration: line-through; }
 @media (max-width: 1280px) {
-  .prelim .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .prelim .kpis, .prelim .kpis.five { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 1100px) {
   .prelim .upload-cols, .prelim .sum-cols { grid-template-columns: 1fr; }
 }
 @media (max-width: 820px) {
-  .prelim .kpis, .prelim .two, .prelim .bcard { grid-template-columns: 1fr; }
+  .prelim .kpis, .prelim .kpis.five, .prelim .two, .prelim .bcard { grid-template-columns: 1fr; }
   .prelim .file-row { grid-template-columns: 1fr; }
   .prelim .tabs button { padding: 0 12px; font-size: 15.5px; }
 }
@@ -495,3 +496,13 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .wait-bar i { display: block; height: 100%; background: var(--navy); transition: width .4s; }
 .prelim .wait p { margin: 0; font-size: 15px; color: var(--muted); }
 .prelim .wait .wait-n { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* 블라인드 최종 결과 */
+.prelim .dtable .sub { display: block; margin-top: 4px; font-size: 13px; font-weight: 400; color: var(--muted); }
+.prelim .penline { padding: 14px 24px; border-top: 1px solid var(--line); background: #fff5f5; font-size: 14.5px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.prelim .penline b { color: var(--red-text); }
+.prelim .penline .chip { border-color: #f1c0c3; }
+.prelim .penline .rest { margin-left: auto; }
+.prelim .kpi.pen { border-top-color: var(--orange); text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.prelim .kpi.pen:hover { background: var(--surface); }
+.prelim .kpi.pen .ico { background: var(--orange); }

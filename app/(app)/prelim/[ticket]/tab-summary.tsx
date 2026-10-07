@@ -21,6 +21,9 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
   const exCom = derived.exx[stage].restricted_committee;
   const inStaff = s.internal_staff;
   const restMissing = kpi.missing.count - kpi.missing.rows.length;
+  // api 재시작 전 응답에는 감점 값이 없다
+  const hasPen = !!derived.final;
+  const pen = hasPen ? (kpi.penalty_people ?? 0) : null;
 
   const cell = (n: number, cls: string, no: string, tab: Exclude<TabKey, "person" | "summary">) =>
     n ? (
@@ -79,7 +82,7 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
         </div>
       </section>
 
-      <section className="kpis">
+      <section className={`kpis${pen != null ? " five" : ""}`}>
         <div className="kpi blind">
           <div className="k-top">
             <span className="ico">
@@ -193,6 +196,24 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
             파일 재업로드 →
           </Link>
         </div>
+
+        {pen != null && (
+          <button className="kpi pen" type="button" title="블라인드 최종 결과로 이동" onClick={() => go("final")}>
+            <div className="k-top">
+              <span className="ico">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="9" cy="9" r="7" />
+                  <path d="M5.5 9h7" />
+                </svg>
+              </span>
+              감점 대상 지원자
+            </div>
+            <div className="num">
+              {pen}
+              <small>명</small>
+            </div>
+          </button>
+        )}
       </section>
 
       <section className="sum-cols">
@@ -229,6 +250,7 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
                     <br />
                     (외부)
                   </th>
+                  {hasPen && <th>감점</th>}
                   <th />
                 </tr>
               </thead>
@@ -251,6 +273,9 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
                     <td>{cell(p.attach, "a", p.no, "attach")}</td>
                     <td>{cell(p.internal, "s", p.no, "inx")}</td>
                     <td>{cell(p.external, "h", p.no, "exx")}</td>
+                    {hasPen && (
+                      <td>{p.penalty ? <span className="badge red">감점 대상</span> : <span className="no2">-</span>}</td>
+                    )}
                     <td className="go">›</td>
                   </tr>
                 ))}
