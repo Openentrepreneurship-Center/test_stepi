@@ -320,7 +320,7 @@ export default function UploadForm() {
                   </div>
                   <span className="hint" style={evalShowBad ? { color: "var(--red-text)" } : undefined}>
                     {evalShowBad
-                      ? "날짜를 2026-09-30 처럼 써 주세요. 2000년부터 2099년까지 됩니다."
+                      ? "날짜를 2026-09-30 처럼 작성해주세요."
                       : "비워 두면 오늘 날짜를 기준으로 검토합니다."}
                   </span>
                 </div>
