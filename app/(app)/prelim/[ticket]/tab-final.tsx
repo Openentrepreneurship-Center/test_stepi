@@ -106,7 +106,6 @@ export default function FinalTab({ ctx, final }: { ctx: Ctx; final: PrelimFinal 
         )}
         <span className="hint rest">
           위배 확정이 있는 지원자는 감점됩니다 · 보류·미판정 {final.pending}건 남음
-          {final.dropped > 0 && ` · 탈락 처리 ${final.dropped}명 제외`}
         </span>
       </div>
     </div>

@@ -722,8 +722,6 @@ export interface PrelimFinal {
   rows: PrelimFinalRow[];
   penalty: { no: string; count: number }[];
   pending: number;
-  /** 탈락 처리로 표에서 뺀 지원자 수 */
-  dropped: number;
 }
 export interface PrelimDerived {
   end: string | null; win: string | null;
