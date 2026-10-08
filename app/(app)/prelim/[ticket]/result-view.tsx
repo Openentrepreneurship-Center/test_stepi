@@ -364,7 +364,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
       <b className="font-semibold text-[var(--ink)] tabular-nums">
         {derived.end || "-"}
       </b>
-      <span className="mx-3 text-[var(--line)]">|</span>
+      <br />
       검토 파일{" "}
       <b className="font-semibold text-[var(--ink)]">
         {files.length ? files.join(" · ") : "자기소개서"}
