@@ -176,6 +176,12 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .jtext.ok { color: #0e6027; }
 .prelim .jtext.hd { color: var(--warn-text); }
 .prelim .jtext.non { color: var(--muted); font-weight: 400; }
+/* 블라인드 최종 결과 판정 상자. 담당자 HTML .jb 기준, 문제 없음 초록·미판정 굵게는 사용자 요청 */
+.prelim .jb { display: inline-block; min-width: 82px; padding: 6px 12px; text-align: center; font-size: 13px; line-height: 1.3; white-space: nowrap; color: var(--muted); font-weight: 600; }
+.prelim .jb.v { background: var(--red); color: #fff; font-weight: 600; box-shadow: 0 0 0 1px #a2191f; }
+.prelim .jb.h { background: var(--orange); color: #fff; font-weight: 600; box-shadow: 0 0 0 1px #c47600; }
+.prelim .jb.ok { background: var(--green); color: #fff; font-weight: 600; box-shadow: 0 0 0 1px #0e6027; }
+.prelim .dtable .jcol { text-align: center; }
 .prelim .yes2 { color: var(--red-text); font-weight: 600; white-space: nowrap; }
 .prelim .no2 { color: var(--muted); }
 .prelim .pill { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; font-size: 13.5px; background: var(--surface); border-radius: 0; white-space: nowrap; }

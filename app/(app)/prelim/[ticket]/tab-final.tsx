@@ -14,14 +14,15 @@ const FILTERS: [Filter, string][] = [
   ["", "미판정"],
   ["dismiss", "문제 없음"],
 ];
-const JCLS: Record<string, string> = { confirm: "v", hold: "hd", dismiss: "ok" };
+const JCLS: Record<string, string> = { confirm: "v", hold: "h", dismiss: "ok" };
 
 /** 블라인드 최종 결과. 판정은 표시만 하고 바꾸는 곳은 자기소개서·첨부 탭이다 */
 export default function FinalTab({ ctx, final }: { ctx: Ctx; final: PrelimFinal }) {
-  const { exportUrl, focusNo } = ctx;
+  const { exportUrl, focusNo, go } = ctx;
   const [filter, setFilter] = useState<Filter>("all");
   const rows = filter === "all" ? final.rows : final.rows.filter((r) => r.st === filter);
   const people = new Set(rows.map((r) => r.no)).size;
+  const jump = (r: PrelimFinalRow) => go(r.kind === "자기소개서" ? "essay" : "attach", { focus: r.no });
 
   return (
     <div className="panel">
@@ -51,13 +52,24 @@ export default function FinalTab({ ctx, final }: { ctx: Ctx; final: PrelimFinal 
               <th style={{ width: 150 }}>위배 항목</th>
               <th>위배 단어</th>
               <th style={{ width: 220 }}>위치</th>
-              <th style={{ width: 140 }}>판정</th>
+              <th className="jcol" style={{ width: 140 }}>판정</th>
             </tr>
           </thead>
           <tbody>
             {rows.length ? (
               rows.map((r) => (
-                <tr key={r.id} data-no={r.no} className={focusNo === r.no ? "focus" : undefined}>
+                <tr
+                  key={r.id}
+                  data-no={r.no}
+                  data-jump
+                  tabIndex={0}
+                  title={`${r.kind === "자기소개서" ? "자기소개서 위배" : "첨부 실적 내 위배"} 화면에서 보기`}
+                  className={focusNo === r.no ? "focus" : undefined}
+                  onClick={() => jump(r)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && e.target === e.currentTarget) jump(r);
+                  }}
+                >
                   <td className="mono">{r.no}</td>
                   <td>{r.kind}</td>
                   <td>{r.cat}</td>
@@ -66,9 +78,8 @@ export default function FinalTab({ ctx, final }: { ctx: Ctx; final: PrelimFinal 
                     {r.file && <span className="sub">{r.file}</span>}
                   </td>
                   <td>{r.where}</td>
-                  <td>
-                    <span className={`jtext ${JCLS[r.st] ?? "non"}`}>{BLABEL[r.st] ?? "미판정"}</span>
-                    {r.reason && <span className="sub">{r.reason}</span>}
+                  <td className="jcol">
+                    <span className={`jb ${JCLS[r.st] ?? ""}`}>{BLABEL[r.st] ?? "미판정"}</span>
                   </td>
                 </tr>
               ))
