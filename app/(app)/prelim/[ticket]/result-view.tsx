@@ -295,7 +295,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
         {head()}
         <div className="prelim result">
           <div className="empty" role="alert">
-            검토 결과를 불러오지 못했습니다. {error}
+            {error.startsWith("404 ") ? "검토를 찾을 수 없습니다." : `검토 결과를 불러오지 못했습니다. ${error}`}
           </div>
         </div>
       </div>
