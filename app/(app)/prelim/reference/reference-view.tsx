@@ -56,10 +56,10 @@ const REVIEWER_FORM: Section[] = [
   {
     title: "채용",
     fields: [
-      { key: "recruitment", label: "채용명 (예: 2025년 9차)", wide: true },
+      { key: "recruitment", label: "채용명 (예: 2025년 9차)", required: true, wide: true },
       { key: "job_group", label: "직군" },
       { key: "employment", label: "고용형태", max: 40 },
-      { key: "stage", label: "전형 (서류·필기·면접)", type: "choice", options: ["서류", "필기", "면접"] },
+      { key: "stage", label: "전형 (서류·필기·면접)", type: "choice", options: ["서류", "필기", "면접"], required: true },
       { key: "held_on", label: "일자", type: "date" },
     ],
   },
