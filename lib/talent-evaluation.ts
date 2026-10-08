@@ -112,8 +112,6 @@ export interface ApplicantEvaluation {
   axes: AxisResult[];
 }
 
-/** 인재상 하나당 문항 수 */
-export const CRITERIA_PER_AXIS = 10;
 /** 점수 만점 */
 export const TALENT_SCORE_MAX = 10;
 

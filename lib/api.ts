@@ -457,31 +457,6 @@ export const api = {
     }
     return res.json() as Promise<string[]>;
   },
-  injectInfoXlsx: async (
-    jobId: string,
-    infoFile: File,
-    opts?: { info_sheet_name?: string; replace?: boolean },
-  ) => {
-    const fd = new FormData();
-    fd.append("info_file", infoFile);
-    if (opts?.info_sheet_name) fd.append("info_sheet_name", opts.info_sheet_name);
-    if (opts?.replace) fd.append("replace", "true");
-    const res = await fetch(`${API_BASE}/analysis-jobs/${jobId}/inject-info-xlsx`, {
-      method: "POST",
-      body: fd,
-    });
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`${res.status}: ${text}`);
-    }
-    return res.json() as Promise<{
-      inserted_papers: number;
-      matched_applicants: number;
-      unmatched_count: number;
-      unmatched_applicants: string[];
-      replaced: boolean;
-    }>;
-  },
   uploadExcel: async (
     file: File,
     extra?: {
@@ -576,22 +551,6 @@ export const api = {
       { method: "POST" },
     ),
 };
-
-export function gradeFromScores(
-  jobFit?: Record<string, { score: number }>,
-): { grade: "S" | "A" | "B" | "C" | "D"; avg: number } {
-  if (!jobFit) return { grade: "C", avg: 0 };
-  const vals = Object.values(jobFit).map((v) => v.score);
-  if (vals.length === 0) return { grade: "C", avg: 0 };
-  const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-  let grade: "S" | "A" | "B" | "C" | "D" = "C";
-  if (avg >= 8.5) grade = "S";
-  else if (avg >= 8.0) grade = "A";
-  else if (avg >= 7.5) grade = "B";
-  else if (avg >= 7.0) grade = "C";
-  else grade = "D";
-  return { grade, avg };
-}
 
 export interface BlindHit {
   applicant_id: string;
@@ -886,7 +845,6 @@ export const prelim = {
     http<{ ticket: string }>(`/prelim/results/${encodeURIComponent(ticket)}${hard ? "?hard=1" : ""}`, { method: "DELETE" }),
   restore: (ticket: string) =>
     http<{ ticket: string }>(`/prelim/results/${encodeURIComponent(ticket)}/restore`, { method: "POST" }),
-  get: (ticket: string) => http<PrelimRunResponse>(`/prelim/results/${ticket}`),
   /** 제척 기준 정보(내부위원 학력정보, 섭외 심사위원 목록, 연구기관 목록). 검토 실행 때 서버가 이 표를 읽는다 */
   reference: {
     summary: () => http<PrelimRefSummary>(`/prelim/reference/summary`),
@@ -998,9 +956,6 @@ export const prelim = {
   exportKeyUrl: (ticket: string, key: string, stage?: PrelimStage) =>
     `${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/export/${encodeURIComponent(key)}` +
     (stage ? `?stage=${encodeURIComponent(stage)}` : ""),
-  /** 제척사유 / 블라인드위배 / 요약 3시트 xlsx. 서버가 attachment 로 내려주므로 링크로 연다 */
-  exportUrl: (ticket: string) =>
-    `${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/export`,
 };
 
 export function feedbackKey(component: string, itemKey = ""): string {
