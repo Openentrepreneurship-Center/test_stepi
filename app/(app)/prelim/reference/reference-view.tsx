@@ -309,7 +309,7 @@ export default function ReferenceView() {
 
   function applied(res: PrelimRefImportApplied) {
     setPreview(null);
-    setNote(`${res.file_name} 업로드 완료 · 추가 ${res.add} · 수정 ${res.update} · 삭제 ${res.delete}`);
+    setNote(`${res.file_name} 업로드 완료 · 추가 ${res.add} · 수정 ${res.update}`);
     void load();
   }
 
@@ -1082,8 +1082,6 @@ function ImportDialog({
                   <th>시트</th>
                   <th>추가</th>
                   <th>수정</th>
-                  <th>삭제</th>
-                  <th>충돌</th>
                   <th>반영 안 함</th>
                 </tr>
               </thead>
@@ -1093,8 +1091,6 @@ function ImportDialog({
                     <td className="nm">{s.label}</td>
                     <td>{s.add}</td>
                     <td>{s.update}</td>
-                    <td className={s.delete ? "del" : undefined}>{s.delete}</td>
-                    <td className={s.conflict ? "conf" : undefined}>{s.conflict}</td>
                     <td>{s.skipped.length}</td>
                   </tr>
                 ))}
