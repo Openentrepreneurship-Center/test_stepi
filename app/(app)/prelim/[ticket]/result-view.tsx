@@ -355,6 +355,8 @@ export default function ResultView({ ticket }: { ticket: string }) {
 
   const meta = (
     <>
+      저장명 <b className="font-semibold text-[var(--ink)]">{data.label || "-"}</b>
+      <span className="mx-3 text-[var(--line)]">|</span>
       검토 공고명{" "}
       <b className="font-semibold text-[var(--ink)]">{data.notice || "-"}</b>
       <span className="mx-3 text-[var(--line)]">|</span>
