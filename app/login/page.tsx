@@ -7,7 +7,9 @@ import StepiLogo from "@/components/stepi-logo";
 function LoginInner() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") || "/prelim";
+  // 우리 사이트 안 경로만 허용 (//, /\ 는 다른 사이트로 갈 수 있음)
+  const raw = params.get("next") ?? "";
+  const next = /^\/(?![/\\])/.test(raw) ? raw : "/prelim";
   const [pw, setPw] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
