@@ -236,8 +236,12 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .upbtn:hover { background: var(--surface); border-color: var(--navy); color: var(--navy); }
 .prelim .upbtn.done { border-style: solid; border-color: var(--green); color: var(--green); }
 .prelim .hdtools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.prelim .focus { outline: 3px solid var(--orange); outline-offset: -3px; }
-.prelim tr.focus td { box-shadow: inset 0 3px 0 var(--orange), inset 0 -3px 0 var(--orange); }
+/* 이동해 온 지원자 강조. 2초 유지 뒤 1초 동안 흐려짐 (시간은 animation 값으로 조절) */
+@property --fo { syntax: "<color>"; inherits: true; initial-value: #ed911a; }
+@keyframes focusfade { 0%, 66% { --fo: #ed911a; } 100% { --fo: transparent; } }
+.prelim .focus, .prelim .gfocus { animation: focusfade 3s forwards; }
+.prelim .focus { outline: 3px solid var(--fo); outline-offset: -3px; }
+.prelim tr.focus td { box-shadow: inset 0 3px 0 var(--fo), inset 0 -3px 0 var(--fo); }
 .prelim .backlink { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; border: 0; background: none; color: var(--navy); padding: 0; font-size: 15.5px; }
 .prelim .phead { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 16px; }
 .prelim .phead h2 { font-size: 30px; font-weight: 300; }
@@ -305,7 +309,7 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .input:focus { border-color: transparent; box-shadow: none; border-bottom: 1px solid var(--line-strong); }
 /* 여러 줄이 한 지원자로 묶인 표의 강조. 줄마다가 아니라 묶음 바깥쪽에만 주황 선을 그린다 */
 .prelim tr.gfocus td { --ft: 0px; --fb: 0px; --fl: 0px; --fr: 0px;
-  box-shadow: inset 0 var(--ft) 0 var(--orange), inset 0 calc(-1 * var(--fb)) 0 var(--orange), inset var(--fl) 0 0 var(--orange), inset calc(-1 * var(--fr)) 0 0 var(--orange); }
+  box-shadow: inset 0 var(--ft) 0 var(--fo), inset 0 calc(-1 * var(--fb)) 0 var(--fo), inset var(--fl) 0 0 var(--fo), inset calc(-1 * var(--fr)) 0 0 var(--fo); }
 .prelim tr.gfocus.gf-first td { --ft: 3px; }
 .prelim tr.gfocus.gf-last td { --fb: 3px; }
 .prelim tr.gfocus td:first-child { --fl: 3px; }
