@@ -961,6 +961,60 @@ export const prelim = {
     (stage ? `?stage=${encodeURIComponent(stage)}` : ""),
 };
 
+/** 외부위원 섭외 회차 정리. 기준일·경계일·대상은 서버가 계산한 값을 그대로 쓴다 */
+export interface PrelimRetentionPreview {
+  base_date: string;
+  cutoff: string;
+  token: string;
+  count: number;
+  items: { id: number; recruitment: string | null; stage: string | null; held_on: string; name: string }[];
+  excluded_internal: number;
+  needs_check: { unknown_origin: number; missing_date: number };
+}
+export interface PrelimRetentionRun {
+  id: number;
+  run_at: string;
+  base_date: string;
+  cutoff: string;
+  deleted_count: number;
+}
+/** status 가 409 면 미리보기 갱신 필요, 423 이면 다른 실행 중, 없으면 응답을 못 받음 */
+export type PrelimRetentionError = Error & { status?: number };
+
+async function retentionJson<T>(res: Response, fallback: string): Promise<T> {
+  try {
+    return await prelimJson<T>(res, fallback);
+  } catch (e) {
+    throw Object.assign(e instanceof Error ? e : new Error(fallback), { status: res.status });
+  }
+}
+
+export const prelimRetention = {
+  async preview(): Promise<PrelimRetentionPreview> {
+    const res = await fetch(`${API_BASE}/prelim/reference/retention/preview`, {
+      cache: "no-store",
+      signal: timeoutSignal(30_000),
+    });
+    return retentionJson<PrelimRetentionPreview>(res, "대상을 불러오지 못했습니다");
+  },
+  async history(limit = 20): Promise<{ items: PrelimRetentionRun[] }> {
+    const res = await fetch(`${API_BASE}/prelim/reference/retention/history?limit=${limit}`, {
+      cache: "no-store",
+      signal: timeoutSignal(30_000),
+    });
+    return retentionJson<{ items: PrelimRetentionRun[] }>(res, "실행 이력을 불러오지 못했습니다");
+  },
+  async run(body: { token: string; base_date: string; count: number }): Promise<Omit<PrelimRetentionRun, "id">> {
+    const res = await fetch(`${API_BASE}/prelim/reference/retention/run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: timeoutSignal(60_000),
+    });
+    return retentionJson<Omit<PrelimRetentionRun, "id">>(res, "삭제하지 못했습니다");
+  },
+};
+
 export function feedbackKey(component: string, itemKey = ""): string {
   return `${component}::${itemKey}`;
 }

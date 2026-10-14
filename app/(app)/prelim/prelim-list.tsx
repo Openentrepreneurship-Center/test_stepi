@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { ShieldAlert, Trash2, Undo2 } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { SkeletonTable } from "@/components/page-skeleton";
@@ -48,7 +48,7 @@ function formatTime(value?: string | null) {
   return `${p(d.getMonth() + 1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-export default function PrelimList({ trashed }: { trashed: boolean }) {
+export default function PrelimList({ trashed, tabs }: { trashed: boolean; tabs?: ReactNode }) {
   const [items, setItems] = useState<PrelimSummary[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -114,6 +114,7 @@ export default function PrelimList({ trashed }: { trashed: boolean }) {
           }
         />
       )}
+      {tabs}
 
       <section className="mt-8">
         {!trashed && (
