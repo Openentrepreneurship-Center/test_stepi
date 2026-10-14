@@ -14,20 +14,22 @@ export default function PapersSection({
   jobId: string;
   applicantId: string;
 }) {
-  const [files, setFiles] = useState<PaperFile[]>([]);
+  // null 이면 목록을 한 번도 받지 못한 것. 빈 배열(이력 없음)과 구별한다
+  const [files, setFiles] = useState<PaperFile[] | null>(null);
   const [details, setDetails] = useState<Record<number, PaperDetail | null>>({});
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [listError, setListError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
       const list = await api.listPapers(jobId, applicantId);
-      setFiles(list);
       // 분석 완료된 파일은 detail 미리 가져오기 (카드 렌더용). meta_only 는 file_id null → 제외.
+      // 실패해 null 로 둔 것은 다시 부르지 않는다. details 가 바뀔 때마다 refresh 가 돌아 끝없이 요청하게 된다
       const needDetail = list.filter(
         (f): f is PaperFile & { file_id: number } =>
-          f.file_id != null && f.status === "analyzed" && !details[f.file_id],
+          f.file_id != null && f.status === "analyzed" && details[f.file_id] === undefined,
       );
       if (needDetail.length > 0) {
         const fetched = await Promise.all(
@@ -43,8 +45,11 @@ export default function PapersSection({
           return next;
         });
       }
+      // 상세를 받은 뒤에 목록을 바꿔야 카드가 상세 조회 전 상태를 실패로 그리지 않는다
+      setFiles(list);
+      setListError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setListError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
@@ -56,7 +61,7 @@ export default function PapersSection({
 
   // 처리중 파일 있으면 3초 폴링
   useEffect(() => {
-    const hasPending = files.some((f) => PENDING.includes(f.status));
+    const hasPending = (files ?? []).some((f) => PENDING.includes(f.status));
     if (!hasPending) return;
     const timer = setInterval(refresh, 3000);
     return () => clearInterval(timer);
@@ -127,7 +132,16 @@ export default function PapersSection({
         </div>
       )}
 
-      {files.length === 0 ? (
+      {listError && (
+        <div className="text-[12px] text-red-600 border border-red-200 px-3 py-2">
+          {files === null
+            ? "학술지 게재 이력을 불러오지 못했습니다. 잠시 뒤 새로고침해 주세요."
+            : "학술지 게재 이력을 다시 불러오지 못해 이전 목록을 표시합니다."}
+          <div className="mt-1 break-all">{listError}</div>
+        </div>
+      )}
+
+      {files === null ? null : files.length === 0 ? (
         <p className="text-[13px] text-[var(--ink-muted)]">
           학술지 게재 이력 없음. xlsx 지원정보 또는 PDF 업로드로 등록됩니다.
         </p>

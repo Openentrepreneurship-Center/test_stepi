@@ -116,7 +116,7 @@ export default function Sidebar() {
     },
     {
       key: "turing",
-      label: "Turing",
+      label: "turing.",
       icon: Activity,
       href: "/turing",
       match: (p) => p.startsWith("/turing"),

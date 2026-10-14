@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import { api, type PaperDetail } from "@/lib/api";
+import { api, asError, isNotFound, type PaperDetail } from "@/lib/api";
 import RadarCard from "@/components/radar-card";
 import PapersPrintList from "@/components/papers-print-list";
 import TimelineSection from "@/components/timeline-section";
@@ -10,7 +10,7 @@ import DeptFitList from "@/components/dept-fit-list";
 import PrintAuto from "@/components/print-auto";
 import PrintButton from "@/components/print-button";
 import AiUsageSection from "@/components/ai-usage-section";
-import { MockBadge } from "@/components/mock-mark";
+import { PendingBadge } from "@/components/mock-mark";
 import TalentTypesSection from "@/components/talent-types-section";
 import { aiUsageHeadline } from "@/lib/ai-usage";
 import { cleanReason } from "@/lib/clean-reason";
@@ -42,7 +42,7 @@ const PRINT_RADAR_HEIGHT = 230;
  * 글 길이가 달라도 한 항목이 차지하는 자리는 같다. 섹션끼리는 빈틈 없이 이어 붙이고,
  * 내용이 없는 섹션은 한 줄 안내로 접는다.
  *
- * 아직 목업인 AI 사용 의심도와 인재상 유형도 함께 싣되, 화면과 같은 미개발 배지를 붙인다.
+ * 아직 준비 중인 AI 사용 의심도와 목업인 인재상 유형도 함께 싣되, 화면과 같은 배지를 붙인다.
  */
 export default async function ApplicantPrintPage({
   params,
@@ -55,21 +55,30 @@ export default async function ApplicantPrintPage({
   const { auto } = await searchParams;
   const decodedAppId = decodeURIComponent(applicantId);
 
-  const [result, papers, sourceInput, coreBaselineRes, deptFit] = await Promise.all([
-    api.getResult(id).catch(() => null),
-    api.listPapers(id, decodedAppId).catch(() => []),
-    api.getSourceInput(id).catch(() => null),
-    api.getCorePassedBaseline().catch(() => null),
-    api.getDeptFit(id, decodedAppId).catch(() => null),
+  const [resultRes, papersRes, sourceInputRes, coreBaselineRes, deptFitRes] = await Promise.all([
+    api.getResult(id).catch(asError),
+    api.listPapers(id, decodedAppId).catch(asError),
+    api.getSourceInput(id).catch(asError),
+    api.getCorePassedBaseline().catch(asError),
+    api.getDeptFit(id, decodedAppId).catch(asError),
   ]);
+  const papersFailed = papersRes instanceof Error;
+  const papers = papersFailed ? [] : papersRes;
+  const sourceFailed = sourceInputRes instanceof Error;
+  const baselineFailed = coreBaselineRes instanceof Error;
+  const deptFit = deptFitRes instanceof Error ? null : deptFitRes;
+  const resultFailed = resultRes instanceof Error && !isNotFound(resultRes);
 
-  const applicant = result?.results?.find((r) => r.applicant_id === decodedAppId);
+  const applicant =
+    resultRes instanceof Error ? undefined : resultRes.results?.find((r) => r.applicant_id === decodedAppId);
 
   if (!applicant) {
     return (
       <div className="px-8 py-9 max-w-3xl mx-auto">
         <div className="panel text-center py-16">
-          <h2 className="text-[22px] font-bold mb-2">지원자를 찾을 수 없습니다.</h2>
+          <h2 className="text-[22px] font-bold mb-2">
+            {resultFailed ? "지원자 정보를 불러오지 못했습니다." : "지원자를 찾을 수 없습니다."}
+          </h2>
           <p className="text-[14px] text-[var(--ink-muted)]">{decodedAppId}</p>
         </div>
       </div>
@@ -90,12 +99,15 @@ export default async function ApplicantPrintPage({
     paperDetails[fileId] = fetched[i];
   });
 
-  const coreBaseline = coreBaselineRes?.core_passed_baseline ?? null;
-  const sourceApplicant = sourceInput?.applicants.find((a) => a.applicant_id === decodedAppId);
+  const coreBaseline = baselineFailed ? null : coreBaselineRes.core_passed_baseline;
+  const hasBaseline = coreBaseline != null && Object.keys(coreBaseline).length > 0;
+  const sourceApplicant = sourceFailed
+    ? undefined
+    : sourceInputRes.applicants.find((a) => a.applicant_id === decodedAppId);
 
   const fitVals = Object.values(applicant.scores?.job_fit ?? {});
   const fitAvg100 =
-    fitVals.length > 0 ? (fitVals.reduce((s, v) => s + v.score, 0) / fitVals.length) * 10 : 0;
+    fitVals.length > 0 ? (fitVals.reduce((s, v) => s + v.score, 0) / fitVals.length) * 10 : null;
   const coreData = Object.entries(applicant.scores?.core_similarity ?? {}).map(([axis, value]) => ({
     axis,
     value: Number(value),
@@ -107,11 +119,13 @@ export default async function ApplicantPrintPage({
 
   const topDeptV2 = deptFit?.items?.[0];
   const analyzedPapers = papers.filter((p) => p.status === "analyzed");
-  const deptSub = topDeptV2
-    ? `${topDeptV2.score.toFixed(0)}점`
-    : deptFit?.skipped
-      ? "행정직 미산출"
-      : "논문 미첨부";
+  const deptStat = topDeptV2
+    ? { value: topDeptV2.dept_name, sub: `${topDeptV2.score.toFixed(0)}점` }
+    : !deptFit
+      ? { value: "불러오지 못했습니다", muted: true }
+      : deptFit.skipped
+        ? { value: "미산출", sub: "행정직 미산출", muted: true }
+        : { value: "미산출", sub: "아직 채점 결과가 없습니다", muted: true };
 
   const timelineTotal =
     (sourceApplicant?.education?.length ?? 0) + (sourceApplicant?.career?.length ?? 0);
@@ -165,20 +179,29 @@ export default async function ApplicantPrintPage({
             </p>
           </div>
           <div className="flex items-stretch">
-            <HeaderStat label="직무적합 평균" value={fitAvg100.toFixed(0)} unit="/ 100" accent />
+            {fitAvg100 == null ? (
+              <HeaderStat label="직무적합 평균" value="미산출" muted />
+            ) : (
+              <HeaderStat label="직무적합 평균" value={fitAvg100.toFixed(0)} unit="/ 100" accent />
+            )}
             <HeaderStat
               label="AI 사용 의심도"
               value={aiUsageHead.value}
               unit={aiUsageHead.unit}
               sub={aiUsageHead.sub}
+              muted
             />
-            <HeaderStat label="상위 부서" value={topDeptV2?.dept_name ?? "—"} sub={deptSub} text />
-            <HeaderStat
-              label="학술지 게재"
-              value={String(papers.length)}
-              unit="건"
-              sub={papers.length > 0 ? `PDF ${analyzedPapers.length}/${papers.length}` : "이력 없음"}
-            />
+            <HeaderStat label="상위 부서" text {...deptStat} />
+            {papersFailed ? (
+              <HeaderStat label="학술지 게재" value="불러오지 못했습니다" muted />
+            ) : (
+              <HeaderStat
+                label="학술지 게재"
+                value={String(papers.length)}
+                unit="건"
+                sub={papers.length > 0 ? `PDF ${analyzedPapers.length}/${papers.length}` : "이력 없음"}
+              />
+            )}
           </div>
         </div>
       </header>
@@ -186,6 +209,9 @@ export default async function ApplicantPrintPage({
       <div className="print-flow print-sections mt-5 flex flex-col gap-5">
         {/* 종합 요약 */}
         <Card title="종합 요약">
+          {!applicant.summary?.overall && !applicant.summary?.overall_lines?.length && (
+            <p className="text-[14px] text-[var(--ink-muted)]">산출된 결과가 없습니다.</p>
+          )}
           {applicant.summary?.overall && (
             <p className="serif text-[20px] leading-[1.55] tracking-[-0.005em] text-[var(--ink)] line-clamp-2">
               {applicant.summary.overall}
@@ -206,7 +232,9 @@ export default async function ApplicantPrintPage({
         </Card>
 
         {/* 학력 · 이력 */}
-        {timelineTotal === 0 ? (
+        {sourceFailed ? (
+          <EmptyRow title="학력 · 이력">불러오지 못했습니다.</EmptyRow>
+        ) : timelineTotal === 0 ? (
           <EmptyRow title="학력 · 이력">기입되지 않았습니다.</EmptyRow>
         ) : (
           <Card
@@ -233,7 +261,7 @@ export default async function ApplicantPrintPage({
             <Card
               figure
               title="핵심인재 유사도"
-              desc="합격자들의 자기소개서와 얼마나 닮았는지를 나타냅니다. 연한 음영은 역대 합격자 평균입니다."
+              desc={`합격자들의 자기소개서와 얼마나 닮았는지를 나타냅니다. ${baselineNote(hasBaseline, baselineFailed)}`}
             >
               <RadarCard data={coreData} color="#33307A" baseline={coreBaseline} height={PRINT_RADAR_HEIGHT} />
             </Card>
@@ -244,6 +272,9 @@ export default async function ApplicantPrintPage({
             </Card>
           )}
         </div>
+
+        {coreData.length === 0 && <EmptyRow title="핵심인재 유사도">산출된 결과가 없습니다.</EmptyRow>}
+        {fitData.length === 0 && <EmptyRow title="직무 적합도">산출된 결과가 없습니다.</EmptyRow>}
 
         {/* 직무적합 역량별 근거 */}
         {fitData.length > 0 && (
@@ -268,7 +299,9 @@ export default async function ApplicantPrintPage({
         )}
 
         {/* 직군 적합도 */}
-        {deptFit?.skipped ? (
+        {!deptFit ? (
+          <EmptyRow title="직군 적합도">불러오지 못했습니다.</EmptyRow>
+        ) : deptFit.skipped ? (
           <EmptyRow title="직군 적합도">
             {deptFit.skipped_reason ?? "행정직은 직군 적합도 산출 대상이 아닙니다."}
           </EmptyRow>
@@ -285,7 +318,7 @@ export default async function ApplicantPrintPage({
         {/* AI 사용 의심도 근거 — 대시보드와 같은 자리(자기소개서 핵심 바로 위) */}
         <Card
           title="AI 사용 의심도 근거"
-          badge={<MockBadge />}
+          badge={<PendingBadge />}
           desc="자기소개서 문체와 문장 흐름을 보고 AI가 썼는지 가늠합니다. 만들 지표 목록입니다."
         >
           <AiUsageSection />
@@ -381,7 +414,9 @@ export default async function ApplicantPrintPage({
         )}
 
         {/* 학술지 게재 이력 — 화면에서는 별도 탭 */}
-        {papers.length === 0 ? (
+        {papersFailed ? (
+          <EmptyRow title="학술지 게재 이력">불러오지 못했습니다.</EmptyRow>
+        ) : papers.length === 0 ? (
           <EmptyRow title="학술지 게재 이력">기입되지 않았습니다.</EmptyRow>
         ) : (
           <Card title="학술지 게재 이력" note={omitted(paperList.hidden, "편")} split>
@@ -464,6 +499,12 @@ function omitted(hidden: number, unit: string): string | undefined {
   return hidden > 0 ? `외 ${hidden}${unit} 생략` : undefined;
 }
 
+/** 핵심인재 레이더의 연한 음영 설명. 기준선이 없으면 있는 것처럼 적지 않는다 */
+function baselineNote(hasBaseline: boolean, failed: boolean): string {
+  if (hasBaseline) return "연한 음영은 역대 합격자 평균입니다.";
+  return failed ? "역대 합격자 평균을 불러오지 못해 음영 없이 표시합니다." : "비교할 역대 합격자 평균이 없어 음영 없이 표시합니다.";
+}
+
 function HeaderStat({
   label,
   value,
@@ -471,6 +512,7 @@ function HeaderStat({
   sub,
   accent,
   text,
+  muted,
 }: {
   label: string;
   value: string;
@@ -478,6 +520,7 @@ function HeaderStat({
   sub?: string;
   accent?: boolean;
   text?: boolean;
+  muted?: boolean;
 }) {
   return (
     <div className="px-5 first:pl-0 last:pr-0 border-l border-[var(--line)] first:border-l-0 min-w-0">
@@ -485,19 +528,23 @@ function HeaderStat({
         {label}
       </div>
       <div
-        className={`leading-none truncate max-w-[180px] ${
-          accent
-            ? "text-[30px] font-extrabold text-[var(--secondary-2)] tabular-nums"
-            : text
-              ? "text-[18px] font-bold text-[var(--ink)]"
-              : "text-[26px] font-extrabold text-[var(--ink)] tabular-nums"
+        className={`h-[31px] leading-none truncate max-w-[180px] ${
+          muted
+            ? "text-[18px] font-bold text-[var(--ink-muted)]"
+            : accent
+              ? "text-[30px] font-extrabold text-[var(--secondary-2)] tabular-nums"
+              : text
+                ? "text-[18px] font-bold text-[var(--ink)]"
+                : "text-[26px] font-extrabold text-[var(--ink)] tabular-nums"
         }`}
         title={value}
       >
+        {/* 빈 받침이 칸마다 기준선을 위에서 26px 에 묶어, 글자 크기가 달라도 값과 보조 문구 줄이 맞는다 */}
+        <span aria-hidden className="inline-block h-[26px] w-0" />
         {value}
         {unit && <span className="text-[13px] font-semibold text-[var(--ink-muted)] ml-1">{unit}</span>}
       </div>
-      {sub && <div className="mt-1.5 text-[12px] text-[var(--ink-muted)] truncate max-w-[180px]">{sub}</div>}
+      <div className="mt-1.5 min-h-[18px] text-[12px] text-[var(--ink-muted)] truncate max-w-[180px]">{sub}</div>
     </div>
   );
 }

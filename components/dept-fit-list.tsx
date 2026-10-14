@@ -37,7 +37,7 @@ export default function DeptFitList({
               key={d.dept_name}
               className="print-figure grid grid-cols-12 gap-x-4 gap-y-2 py-4 border-b border-[var(--line)]"
             >
-              <div className="col-span-1 text-[15px] font-medium text-[var(--ink-muted)] tabular-nums">
+              <div className="col-span-1 self-center text-[15px] font-medium text-[var(--ink-muted)] tabular-nums">
                 {String(i + 1).padStart(2, "0")}
               </div>
               <div className="col-span-11 lg:col-span-4 text-[17px] font-medium self-center">{d.dept_name}</div>
@@ -52,11 +52,11 @@ export default function DeptFitList({
                   />
                 </div>
               </div>
-              <div className="col-span-3 lg:col-span-2 text-right serif text-[20px] tabular-nums">
+              <div className="col-span-3 lg:col-span-2 self-center text-right serif text-[20px] tabular-nums">
                 {d.score.toFixed(0)}
               </div>
               {d.reason && (
-                <p className="col-span-12 lg:col-start-3 lg:col-span-10 text-[15px] leading-[1.7] text-[var(--ink-muted)]">
+                <p className="col-span-12 lg:col-start-2 lg:col-span-11 text-[15px] leading-[1.7] text-[var(--ink-muted)]">
                   {cleanReason(d.reason)}
                 </p>
               )}

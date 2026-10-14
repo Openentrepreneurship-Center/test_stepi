@@ -97,6 +97,9 @@ body {
   min-height: 100vh;
 }
 
+/* 모달·서랍이 스크롤을 잠그거나 화면마다 길이가 달라 세로 스크롤바가 생겼다 없어져도 본문이 옆으로 밀리지 않게 자리를 늘 남긴다 (사전스크리닝 prelim.css 와 같은 방식) */
+html { scrollbar-gutter: stable; }
+
 ::selection {
   background: var(--p-100);
   color: var(--ink);
@@ -376,7 +379,7 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.print-dept li > p { -webkit-line-clamp: 1; font-size: 12.5px; line-height: 1.5; grid-column: 3 / span 10; }
+.print-dept li > p { -webkit-line-clamp: 1; font-size: 12.5px; line-height: 1.5; grid-column: 2 / span 11; }
 /* 인쇄 폭은 lg 미만이라 부서 한 줄이 세 줄로 접힌다. 넓은 화면 배치를 그대로 박는다 */
 .print-dept li { padding-block: 5px; row-gap: 2px; }
 .print-dept li > div:nth-child(1) { grid-column: span 1; font-size: 13px; }

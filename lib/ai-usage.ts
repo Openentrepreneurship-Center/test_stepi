@@ -90,7 +90,7 @@ export const AI_USAGE_PLAN: {
     "완성돼도 확정 판정이 아닙니다. 면접에서 내용을 직접 물어보는 데 쓰는 참고자료입니다.",
 };
 
-/** 헤더 통계줄 한 칸. 값이 없으므로 자리만 지킨다 */
+/** 헤더 통계줄 한 칸. 점수가 없으므로 기능 상태만 적는다 */
 export function aiUsageHeadline(): { value: string; unit: string; sub: string } {
-  return { value: "–", unit: "", sub: "준비 중" };
+  return { value: "준비 중", unit: "", sub: "" };
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, Download, FileText, LayoutDashboard } from "lucide-react";
-import { api, failedLabel, type JobFailuresResponse } from "@/lib/api";
+import { api, asError, failedLabel, isNotFound, type JobFailuresResponse } from "@/lib/api";
 import ApplicantDeleteButton from "@/components/applicant-delete-button";
 import ApplicantPdfButton from "@/components/applicant-pdf-button";
 import BulkPdfButton from "@/components/bulk-pdf-button";
@@ -18,12 +18,15 @@ export default async function JobDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const status = await api.getStatus(id).catch(() => null);
+  const statusRes = await api.getStatus(id).catch(asError);
+  const status = statusRes instanceof Error ? null : statusRes;
   // 진행 중(running/pending)이어도 그때까지 끝난 지원자 부분 결과를 같이 가져온다
-  const result =
+  const resultRes =
     status && (status.progress.done > 0 || status.status === "done" || status.status === "failed")
-      ? await api.getResult(id).catch(() => null)
+      ? await api.getResult(id).catch(asError)
       : null;
+  const resultFailed = resultRes instanceof Error;
+  const result = resultFailed ? null : resultRes;
 
   // 첫 지원자 전에 크래시하거나 등록에 실패하면 failed_count 는 0 이지만 error 는 있다
   const showFailure =
@@ -32,7 +35,9 @@ export default async function JobDetailPage({
   const failures = showFailure ? await api.getFailures(id).catch(() => null) : null;
 
   // v2 dept-fit + 논문 분석 상태를 단일 배치 endpoint 로 한 번에 fetch (N+1 회피)
-  const summary = await api.applicantsSummary(id).catch(() => []);
+  const summaryRes = await api.applicantsSummary(id).catch(asError);
+  const summaryFailed = summaryRes instanceof Error;
+  const summary = summaryFailed ? [] : summaryRes;
   const perApplicantById = new Map(
     summary.map((s) => [
       s.applicant_id,
@@ -51,8 +56,12 @@ export default async function JobDetailPage({
       <div className="px-8 lg:px-12 py-9 max-w-3xl mx-auto">
         <PageHeader back={{ href: "/jobs", label: "분석 목록" }} eyebrow="지원자 분석" title="분석 보고" />
         <div className="mt-10 panel text-center py-16">
-          <h2 className="text-[22px] font-bold mb-2">작업을 찾을 수 없습니다.</h2>
-          <p className="text-[14px] text-[var(--ink-muted)] font-mono">{id}</p>
+          <h2 className="text-[22px] font-bold mb-2">
+            {isNotFound(statusRes) ? "작업을 찾을 수 없습니다." : "분석 정보를 불러오지 못했습니다."}
+          </h2>
+          <p className="text-[14px] text-[var(--ink-muted)] font-mono">
+            {isNotFound(statusRes) ? id : `잠시 뒤 새로고침해 주세요. ${id}`}
+          </p>
         </div>
       </div>
     );
@@ -143,6 +152,13 @@ export default async function JobDetailPage({
         </section>
       )}
 
+      {resultFailed && (
+        <div className="mt-10 panel text-center py-12">
+          <p className="text-[17px] font-bold mb-2">지원자 명부를 불러오지 못했습니다.</p>
+          <p className="text-[13.5px] text-[var(--ink-muted)]">잠시 뒤 새로고침해 주세요.</p>
+        </div>
+      )}
+
       {result?.results && (
         <>
           <div className="flex items-end justify-between mt-10 mb-4">
@@ -183,7 +199,7 @@ export default async function JobDetailPage({
               const fitAvg100 =
                 fitVals.length > 0
                   ? (fitVals.reduce((s, v) => s + v.score, 0) / fitVals.length) * 10
-                  : 0;
+                  : null;
               const meta = perApplicantById.get(a.applicant_id);
               return (
                 <Link
@@ -205,23 +221,31 @@ export default async function JobDetailPage({
                     )}
                   </div>
                   <div className="col-span-2 text-right">
-                    <span className="serif text-[22px] text-[var(--ink)] tabular-nums">
-                      {fitAvg100.toFixed(0)}
-                    </span>
-                    <span className="text-[12.5px] text-[var(--ink-muted)] ml-1">/ 100</span>
+                    {fitAvg100 == null ? (
+                      <span className="text-[14px] text-[var(--ink-soft)]">미산출</span>
+                    ) : (
+                      <>
+                        <span className="serif text-[22px] text-[var(--ink)] tabular-nums">
+                          {fitAvg100.toFixed(0)}
+                        </span>
+                        <span className="text-[12.5px] text-[var(--ink-muted)] ml-1">/ 100</span>
+                      </>
+                    )}
                   </div>
                   <div className="col-span-1 text-center text-[13.5px] tabular-nums">
-                    {meta && meta.totalPapers > 0 ? (
+                    {summaryFailed ? (
+                      <span className="text-[var(--ink-soft)]" title="게재 현황을 불러오지 못했습니다">확인 불가</span>
+                    ) : meta && meta.totalPapers > 0 ? (
                       <span className="text-[var(--ink)]">
                         {meta.analyzed}/{meta.totalPapers}
                       </span>
                     ) : (
-                      <span className="text-[var(--ink-soft)]">—</span>
+                      <span className="text-[var(--ink-soft)]">없음</span>
                     )}
                   </div>
                   <div className="col-span-4 text-[16px] leading-[1.55] text-[var(--ink-muted)] line-clamp-2">
                     {a.summary?.overall || (
-                      <span className="text-[var(--ink-soft)]">—</span>
+                      <span className="text-[var(--ink-soft)]">미산출</span>
                     )}
                   </div>
                   <div className="col-span-1 flex items-center justify-end gap-1">

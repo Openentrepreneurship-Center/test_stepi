@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import { api, feedbackKey } from "@/lib/api";
+import { api, asError, feedbackKey, isNotFound } from "@/lib/api";
 import RadarCard from "@/components/radar-card";
 import FeedbackButtons from "@/components/feedback-buttons";
 import RegenerateSummaryButton from "@/components/regenerate-summary-button";
@@ -11,7 +11,7 @@ import DeptFitV2Section from "@/components/dept-fit-v2-section";
 import DetailTabs from "@/components/detail-tabs";
 import TalentTypesSection from "@/components/talent-types-section";
 import AiUsageSection from "@/components/ai-usage-section";
-import { MockBadge } from "@/components/mock-mark";
+import { PendingBadge } from "@/components/mock-mark";
 import { aiUsageHeadline } from "@/lib/ai-usage";
 import InterviewQuestionsToggle from "@/components/interview-questions-toggle";
 import { cleanReason } from "@/lib/clean-reason";
@@ -29,19 +29,42 @@ export default async function ApplicantDetailPage({
   const { id, applicantId } = await params;
   const decodedAppId = decodeURIComponent(applicantId);
 
-  const [result, fb, papers, sourceInput, coreBaselineRes] = await Promise.all([
-    api.getResult(id).catch(() => null),
+  const [resultRes, fb, papersRes, sourceInputRes, coreBaselineRes] = await Promise.all([
+    api.getResult(id).catch(asError),
     api.listFeedback(id, decodedAppId).catch(() => ({ items: [] as never[] })),
-    api.listPapers(id, decodedAppId).catch(() => []),
-    api.getSourceInput(id).catch(() => null),
-    api.getCorePassedBaseline().catch(() => null),
+    api.listPapers(id, decodedAppId).catch(asError),
+    api.getSourceInput(id).catch(asError),
+    api.getCorePassedBaseline().catch(asError),
   ]);
-  const coreBaseline = coreBaselineRes?.core_passed_baseline ?? null;
-  const sourceApplicant = sourceInput?.applicants.find(
-    (a) => a.applicant_id === decodedAppId,
-  );
+  const papersFailed = papersRes instanceof Error;
+  const papers = papersFailed ? [] : papersRes;
+  const sourceFailed = sourceInputRes instanceof Error;
+  const baselineFailed = coreBaselineRes instanceof Error;
+  const coreBaseline = baselineFailed ? null : coreBaselineRes.core_passed_baseline;
+  const hasBaseline = coreBaseline != null && Object.keys(coreBaseline).length > 0;
+  const sourceApplicant = sourceFailed
+    ? undefined
+    : sourceInputRes.applicants.find((a) => a.applicant_id === decodedAppId);
 
-  const applicant = result?.results?.find((r) => r.applicant_id === decodedAppId);
+  // 404 가 아닌 조회 실패를 "찾을 수 없습니다"로 보이면 담당자가 지원자가 지워졌다고 오해한다
+  if (resultRes instanceof Error && !isNotFound(resultRes)) {
+    return (
+      <div className="px-8 lg:px-12 py-9 max-w-3xl mx-auto">
+        <Link
+          href={`/jobs/${id}`}
+          className="inline-flex items-center gap-1 text-[13.5px] text-[var(--ink-muted)] hover:text-[var(--ink)] mb-6 transition"
+        >
+          <ChevronLeft size={15} /> 분석 보고로 돌아가기
+        </Link>
+        <div className="panel text-center py-16">
+          <h2 className="text-[22px] font-bold mb-2">지원자 정보를 불러오지 못했습니다.</h2>
+          <p className="text-[14px] text-[var(--ink-muted)]">잠시 뒤 새로고침해 주세요. {decodedAppId}</p>
+        </div>
+      </div>
+    );
+  }
+  const applicant =
+    resultRes instanceof Error ? undefined : resultRes.results?.find((r) => r.applicant_id === decodedAppId);
 
   if (!applicant) {
     return (
@@ -72,7 +95,7 @@ export default async function ApplicantDetailPage({
   const fitAvg100 =
     fitVals.length > 0
       ? (fitVals.reduce((s, v) => s + v.score, 0) / fitVals.length) * 10
-      : 0;
+      : null;
   const coreData = Object.entries(applicant.scores?.core_similarity ?? {}).map(([axis, value]) => ({
     axis,
     value: Number(value),
@@ -82,17 +105,21 @@ export default async function ApplicantDetailPage({
     value: v.score * 10,
   }));
   // v2 dept-fit (행정직 skip / PDF 미첨부 시 빈 응답)
-  const deptFit = await api.getDeptFit(id, decodedAppId).catch(() => null);
+  const deptFitRes = await api.getDeptFit(id, decodedAppId).catch(asError);
+  const deptFit = deptFitRes instanceof Error ? null : deptFitRes;
   const topDeptV2 = deptFit?.items?.[0];
 
   // 학술지 게재 요약 — meta_only(PDF 없음) 도 게재 건수에 포함 (상세는 연구실적 탭)
   const analyzedPapers = papers.filter((p) => p.status === "analyzed");
 
-  const deptSub = topDeptV2
-    ? `${topDeptV2.score.toFixed(0)}점`
-    : deptFit?.skipped
-      ? "행정직 미산출"
-      : "논문 미첨부";
+  // 채점 전·조회 실패를 "논문 미첨부"로 단정하지 않는다
+  const deptStat = topDeptV2
+    ? { value: topDeptV2.dept_name, sub: `${topDeptV2.score.toFixed(0)}점` }
+    : !deptFit
+      ? { value: "불러오지 못했습니다", muted: true }
+      : deptFit.skipped
+        ? { value: "미산출", sub: "행정직 미산출", muted: true }
+        : { value: "미산출", sub: "아직 채점 결과가 없습니다", muted: true };
 
 
   return (
@@ -123,20 +150,29 @@ export default async function ApplicantDetailPage({
             </h1>
           </div>
           <div className="flex items-stretch">
-            <HeaderStat label="직무적합 평균" value={fitAvg100.toFixed(0)} unit="/ 100" accent />
+            {fitAvg100 == null ? (
+              <HeaderStat label="직무적합 평균" value="미산출" muted />
+            ) : (
+              <HeaderStat label="직무적합 평균" value={fitAvg100.toFixed(0)} unit="/ 100" accent />
+            )}
             <HeaderStat
               label="AI 사용 의심도"
               value={aiUsageHead.value}
               unit={aiUsageHead.unit}
               sub={aiUsageHead.sub}
+              muted
             />
-            <HeaderStat label="상위 부서" value={topDeptV2?.dept_name ?? "—"} sub={deptSub} text />
-            <HeaderStat
-              label="학술지 게재"
-              value={String(papers.length)}
-              unit="건"
-              sub={papers.length > 0 ? `PDF ${analyzedPapers.length}/${papers.length}` : "이력 없음"}
-            />
+            <HeaderStat label="상위 부서" text {...deptStat} />
+            {papersFailed ? (
+              <HeaderStat label="학술지 게재" value="불러오지 못했습니다" muted />
+            ) : (
+              <HeaderStat
+                label="학술지 게재"
+                value={String(papers.length)}
+                unit="건"
+                sub={papers.length > 0 ? `PDF ${analyzedPapers.length}/${papers.length}` : "이력 없음"}
+              />
+            )}
           </div>
         </div>
       </header>
@@ -164,6 +200,9 @@ export default async function ApplicantDetailPage({
                     </>
                   }
                 >
+                  {!applicant.summary?.overall && !applicant.summary?.overall_lines?.length && (
+                    <p className="text-[15px] text-[var(--ink-muted)]">산출된 결과가 없습니다.</p>
+                  )}
                   {applicant.summary?.overall && (
                     <p className="serif text-[20px] leading-[1.55] tracking-[-0.005em] text-[var(--ink)]">
                       {applicant.summary.overall}
@@ -185,23 +224,29 @@ export default async function ApplicantDetailPage({
 
                 {/* 학력 · 이력 — 연혁 바 + 상세 목록 (우측 레일에서 이동) */}
                 <Card title="학력 · 이력">
-                  <TimelineBar
-                    education={sourceApplicant?.education}
-                    career={sourceApplicant?.career}
-                  />
-                  <TimelineSection
-                    education={sourceApplicant?.education}
-                    career={sourceApplicant?.career}
-                  />
+                  {sourceFailed ? (
+                    <p className="text-[15px] text-[var(--ink-muted)]">학력·이력을 불러오지 못했습니다. 잠시 뒤 새로고침해 주세요.</p>
+                  ) : (
+                    <>
+                      <TimelineBar
+                        education={sourceApplicant?.education}
+                        career={sourceApplicant?.career}
+                      />
+                      <TimelineSection
+                        education={sourceApplicant?.education}
+                        career={sourceApplicant?.career}
+                      />
+                    </>
+                  )}
                 </Card>
 
                 {/* 역량 진단 — radar 2개 나란히 (동일 높이) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* 핵심인재 유사도 */}
-                {coreData.length > 0 && (
+                {/* 핵심인재 유사도. 점수가 없어도 카드를 남겨 빠진 이유를 적는다 */}
+                {coreData.length > 0 ? (
                   <Card
                     title="핵심인재 유사도"
-                    desc={"합격자들의 자기소개서와 얼마나 닮았는지를 나타냅니다.\n연한 음영은 역대 합격자 평균입니다."}
+                    desc={`합격자들의 자기소개서와 얼마나 닮았는지를 나타냅니다.\n${baselineNote(hasBaseline, baselineFailed)}`}
                     action={
                       <FeedbackButtons
                         jobId={id}
@@ -214,10 +259,18 @@ export default async function ApplicantDetailPage({
                   >
                     <RadarCard data={coreData} color="#33307A" baseline={coreBaseline} />
                   </Card>
+                ) : (
+                  <Card title="핵심인재 유사도" desc="합격자들의 자기소개서와 얼마나 닮았는지를 나타냅니다.">
+                    <p className="text-[15px] text-[var(--ink-muted)]">산출된 결과가 없습니다.</p>
+                  </Card>
                 )}
 
                 {/* 직무 적합도 */}
-                {fitData.length > 0 && (
+                {fitData.length === 0 ? (
+                  <Card title="직무 적합도" desc="직무에서 요구하는 5개 역량을 기준으로 평가한 적합도입니다.">
+                    <p className="text-[15px] text-[var(--ink-muted)]">산출된 결과가 없습니다.</p>
+                  </Card>
+                ) : (
                   <Card
                     title="직무 적합도"
                     desc="직무에서 요구하는 5개 역량을 기준으로 평가한 적합도입니다."
@@ -290,7 +343,7 @@ export default async function ApplicantDetailPage({
                     바로 아래에서 그 문항 내용을 확인하는 동선이 이어진다. */}
                 <Card
                   title="AI 사용 의심도 근거"
-                  badge={<MockBadge />}
+                  badge={<PendingBadge />}
                   desc="자기소개서 문체와 문장 흐름을 보고 AI가 썼는지 가늠합니다."
                 >
                   <AiUsageSection />
@@ -483,7 +536,13 @@ function Card({
   );
 }
 
-/** Highlights 헤더의 핵심 지표 셀 (첫 셀은 강조) */
+/** 핵심인재 레이더의 연한 음영 설명. 기준선이 없으면 있는 것처럼 적지 않는다 */
+function baselineNote(hasBaseline: boolean, failed: boolean): string {
+  if (hasBaseline) return "연한 음영은 역대 합격자 평균입니다.";
+  return failed ? "역대 합격자 평균을 불러오지 못해 음영 없이 표시합니다." : "비교할 역대 합격자 평균이 없어 음영 없이 표시합니다.";
+}
+
+/** Highlights 헤더의 핵심 지표 셀 (첫 셀은 강조, muted 는 값 대신 상태를 적을 때) */
 function HeaderStat({
   label,
   value,
@@ -491,6 +550,7 @@ function HeaderStat({
   sub,
   accent,
   text,
+  muted,
 }: {
   label: string;
   value: string;
@@ -498,6 +558,7 @@ function HeaderStat({
   sub?: string;
   accent?: boolean;
   text?: boolean;
+  muted?: boolean;
 }) {
   return (
     <div className="px-5 first:pl-0 last:pr-0 border-l border-[var(--line)] first:border-l-0 min-w-0">
@@ -505,19 +566,23 @@ function HeaderStat({
         {label}
       </div>
       <div
-        className={`leading-none truncate max-w-[180px] ${
-          accent
-            ? "text-[30px] font-extrabold text-[var(--secondary-2)] tabular-nums"
-            : text
-              ? "text-[18px] font-bold text-[var(--ink)]"
-              : "text-[26px] font-extrabold text-[var(--ink)] tabular-nums"
+        className={`h-[31px] leading-none truncate max-w-[180px] ${
+          muted
+            ? "text-[18px] font-bold text-[var(--ink-muted)]"
+            : accent
+              ? "text-[30px] font-extrabold text-[var(--secondary-2)] tabular-nums"
+              : text
+                ? "text-[18px] font-bold text-[var(--ink)]"
+                : "text-[26px] font-extrabold text-[var(--ink)] tabular-nums"
         }`}
         title={value}
       >
+        {/* 빈 받침이 칸마다 기준선을 위에서 26px 에 묶어, 글자 크기가 달라도 값과 보조 문구 줄이 맞는다 */}
+        <span aria-hidden className="inline-block h-[26px] w-0" />
         {value}
         {unit && <span className="text-[13px] font-semibold text-[var(--ink-muted)] ml-1">{unit}</span>}
       </div>
-      {sub && <div className="mt-1.5 text-[12px] text-[var(--ink-muted)] truncate max-w-[180px]">{sub}</div>}
+      <div className="mt-1.5 min-h-[18px] text-[12px] text-[var(--ink-muted)] truncate max-w-[180px]">{sub}</div>
     </div>
   );
 }

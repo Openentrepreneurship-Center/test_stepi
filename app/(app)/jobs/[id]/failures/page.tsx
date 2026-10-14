@@ -1,5 +1,5 @@
 import { AlertTriangle } from "lucide-react";
-import { api, type FailedApplicant, type FailureGroup } from "@/lib/api";
+import { api, asError, isNotFound, type FailedApplicant, type FailureGroup } from "@/lib/api";
 import PageHeader from "@/components/page-header";
 import JobAutoRefresh from "../auto-refresh";
 
@@ -7,21 +7,25 @@ export const dynamic = "force-dynamic";
 
 export default async function FailuresPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const failures = await api.getFailures(id).catch(() => null);
+  const failuresRes = await api.getFailures(id).catch(asError);
 
-  if (!failures) {
+  if (failuresRes instanceof Error) {
     return (
       <div className="px-8 lg:px-12 py-9 max-w-3xl mx-auto">
         <PageHeader back={{ href: `/jobs/${id}`, label: "분석 보고" }} eyebrow="지원자 분석" title="실패 원인" />
         <div className="mt-10 panel text-center py-16">
-          <h2 className="text-[22px] font-bold mb-2">작업을 찾을 수 없습니다.</h2>
-          <p className="text-[16px] text-[var(--ink-muted)] font-mono">{id}</p>
+          <h2 className="text-[22px] font-bold mb-2">
+            {isNotFound(failuresRes) ? "작업을 찾을 수 없습니다." : "실패 원인을 불러오지 못했습니다."}
+          </h2>
+          <p className="text-[16px] text-[var(--ink-muted)] font-mono">
+            {isNotFound(failuresRes) ? id : `잠시 뒤 새로고침해 주세요. ${id}`}
+          </p>
         </div>
       </div>
     );
   }
 
-  const { running, total, failed_applicants, failed_attempts, legacy, legacy_count, job_cause, groups } = failures;
+  const { running, total, failed_applicants, failed_attempts, legacy, legacy_count, job_cause, groups } = failuresRes;
   const headline =
     failed_attempts > failed_applicants
       ? `실패 ${failed_applicants}명, 오류 ${failed_attempts}번 (전체 ${total}명 중)`

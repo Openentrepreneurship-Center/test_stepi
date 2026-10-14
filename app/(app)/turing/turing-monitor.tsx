@@ -8,28 +8,35 @@ import { api, type TuringMetricsResponse, type TuringRiskItem } from "@/lib/api"
 
 const REFRESH_MS = 10000;
 
+type Slot<T> = { data: T | null; error: string | null; at: Date | null };
+const EMPTY_SLOT = { data: null, error: null, at: null };
+
+const errorText = (err: unknown, fallback: string) => (err instanceof Error ? err.message : fallback);
+const clock = (d: Date) => d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
 export default function TuringMonitor() {
-  const [data, setData] = useState<TuringMetricsResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // 두 요청을 따로 들고 있어야 한쪽만 실패해도 다른 쪽 결과를 정상처럼 섞어 보이지 않는다
+  const [m, setM] = useState<Slot<TuringMetricsResponse>>(EMPTY_SLOT);
+  const [r, setR] = useState<Slot<TuringRiskItem[]>>(EMPTY_SLOT);
   const [loading, setLoading] = useState(true);
-  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
-  const [risks, setRisks] = useState<TuringRiskItem[]>([]);
 
   const load = async () => {
-    try {
-      setError(null);
-      const [next, riskNext] = await Promise.all([
-        api.getTuringMetrics(50),
-        api.getTuringRisks(5, 8),
-      ]);
-      setData(next);
-      setRisks(riskNext.items);
-      setUpdatedAt(new Date());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Turing 지표를 불러오지 못했습니다.");
-    } finally {
-      setLoading(false);
-    }
+    const [metricsRes, risksRes] = await Promise.allSettled([
+      api.getTuringMetrics(50),
+      api.getTuringRisks(5, 8),
+    ]);
+    const at = new Date();
+    setM((prev) =>
+      metricsRes.status === "fulfilled"
+        ? { data: metricsRes.value, error: null, at }
+        : { ...prev, error: errorText(metricsRes.reason, "turing. 지표를 불러오지 못했습니다.") },
+    );
+    setR((prev) =>
+      risksRes.status === "fulfilled"
+        ? { data: risksRes.value.items, error: null, at }
+        : { ...prev, error: errorText(risksRes.reason, "검수 권장 목록을 불러오지 못했습니다.") },
+    );
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -44,9 +51,14 @@ export default function TuringMonitor() {
     };
   }, []);
 
+  const data = m.data;
+  const risks = r.data;
   const metrics = data?.metrics;
-  // 평균·최단·최장·표를 모두 '표시되는 작업별 1명당 시간' 한 집합에서 계산해 서로 모순되지 않게 한다.
+  // 성공한 지표가 없을 때는 0·빈 목록 대신 지금 상태를 쓴다
+  const metricState = data ? null : m.error ? "불러오지 못했습니다" : "불러오는 중";
+  // duration_seconds 가 없는 행의 1명당 시간은 백엔드가 대표값으로 채운 추정값이라(routers/turing.py) 평균·표에서 미측정으로 둔다
   const perAppTimes = (data?.jobs ?? [])
+    .filter((j) => j.duration_seconds != null)
     .map((j) => j.avg_seconds_per_applicant)
     .filter((v): v is number => v != null);
   const perAppAvgSec = perAppTimes.length
@@ -56,19 +68,24 @@ export default function TuringMonitor() {
   const tMin = perAppTimes.length ? Math.min(...perAppTimes) : null;
   const tMax = perAppTimes.length ? Math.max(...perAppTimes) : null;
   const latestRows = useMemo(() => data?.jobs.slice(0, 12) ?? [], [data]);
+  const shownAt = [m.at, r.at].filter((d): d is Date => d != null).sort((a, b) => a.getTime() - b.getTime())[0];
+  const failures = [
+    { label: "turing. 지표를", slot: m },
+    { label: "검수 권장 목록을", slot: r },
+  ].filter((f) => f.slot.error);
 
   return (
     <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
       <PageHeader
         eyebrow="AI 품질 점검"
         icon={Activity}
-        title="Turing"
+        title="turing."
         description="AI가 생성한 분석 결과의 신뢰성을 자동으로 점검합니다. ① 제출 자료에 없는 내용을 생성하지 않았는지, ② 모든 항목이 빠짐없이 완성됐는지, ③ 지원자 1명당 처리 시간을 최근 작업 기준으로 보여줍니다."
         aside={
           <div className="flex items-center gap-3 text-[14px] text-[var(--ink-muted)]">
-            {updatedAt && (
+            {shownAt && (
               <span className="tabular-nums">
-                {updatedAt.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })} 기준
+                {shownAt.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })} 기준
               </span>
             )}
             <button onClick={load} className="btn-ghost inline-flex items-center gap-2">
@@ -78,9 +95,15 @@ export default function TuringMonitor() {
         }
       />
 
-      {error && (
-        <div className="mt-8 border-l-2 border-[var(--bad)] pl-4 py-2 text-[14px] text-[var(--bad)]">
-          {error}
+      {failures.length > 0 && (
+        <div className="mt-8 border-l-2 border-[var(--bad)] pl-4 py-2 text-[14px] text-[var(--bad)] space-y-1.5">
+          {failures.map(({ label, slot }) => (
+            <div key={label}>
+              {label} 불러오지 못했습니다.
+              {slot.data != null && slot.at && ` ${clock(slot.at)}에 조회한 이전 결과를 표시합니다.`}
+              <div className="text-[12.5px] text-[var(--ink-muted)] break-all">{slot.error}</div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -90,6 +113,7 @@ export default function TuringMonitor() {
           label="할루시네이션 방지"
           hint="분석이 제출 자료에 충실하게 작성된 정도"
           value={metrics?.hallucination_prevention.rate}
+          empty={metricState ?? "검사 대상 없음"}
           suffix="%"
           detail="분석 속 숫자·이름·기관을 제출 자료와 대조"
         />
@@ -98,14 +122,16 @@ export default function TuringMonitor() {
           label="결과 완성도"
           hint="모든 분석 항목이 빠짐없이 작성된 정도"
           value={metrics?.format_compliance.rate}
+          empty={metricState ?? "검사 대상 없음"}
           suffix="%"
-          detail={`전체 ${(metrics?.format_compliance.total ?? 0).toLocaleString()}개 항목 중 ${(metrics?.format_compliance.passed ?? 0).toLocaleString()}개 충족`}
+          detail={metrics ? `전체 ${metrics.format_compliance.total.toLocaleString()}개 항목 중 ${metrics.format_compliance.passed.toLocaleString()}개 충족` : ""}
         />
         <MetricPanel
           icon={<Clock3 size={20} />}
           label="1명당 분석 시간"
           hint="지원자 한 명당 평균 소요 시간"
           value={perApplicantMinutes}
+          empty={metricState ?? "미측정"}
           suffix="분/명"
           decimals={2}
           detail={tMin != null && tMax != null && tMax - tMin > 1 ? `최단 ${minutes(tMin)} · 최장 ${minutes(tMax)}` : "최근 분석 작업 기준"}
@@ -118,8 +144,12 @@ export default function TuringMonitor() {
           <span className="inline-flex items-center gap-2 text-[13px] text-[var(--ink-muted)]"><AlertTriangle size={14} /> 제출 자료와 일치하지 않을 가능성이 있는 항목</span>
         </div>
         <div className="bg-[var(--paper)] border border-[var(--line-strong)] rounded-xl overflow-hidden">
-          {risks.length === 0 ? (
-            <div className="py-10 px-4 text-[14px] text-[var(--ink-muted)]">검수가 필요한 항목이 없습니다. 모든 분석이 제출 자료와 일치합니다.</div>
+          {risks === null ? (
+            <div className="py-10 px-4 text-[14px] text-[var(--ink-muted)]">
+              {r.error ? "검수 권장 목록을 불러오지 못했습니다." : "불러오는 중"}
+            </div>
+          ) : risks.length === 0 ? (
+            <div className="py-10 px-4 text-[14px] text-[var(--ink-muted)]">검수가 필요한 항목이 없습니다.</div>
           ) : (
           <>
           <div className="hidden lg:grid grid-cols-12 gap-4 px-4 py-3 bg-[var(--bg-2)] border-b border-[var(--line-strong)] text-[13.5px] font-semibold tracking-wide text-[var(--ink-muted)]">
@@ -183,7 +213,11 @@ export default function TuringMonitor() {
             <div className="col-span-2 text-right">1명당 시간</div>
             <div className="col-span-2 text-right">지원자</div>
           </div>
-          {latestRows.length === 0 ? (
+          {metricState ? (
+            <div className="py-16 text-center text-[15px] text-[var(--ink-muted)]">
+              {metricState === "불러오는 중" ? metricState : "최근 분석 점검 내역을 불러오지 못했습니다."}
+            </div>
+          ) : latestRows.length === 0 ? (
             <div className="py-16 text-center text-[15px] text-[var(--ink-muted)]">
               아직 집계할 분석 결과가 없습니다.
             </div>
@@ -200,7 +234,7 @@ export default function TuringMonitor() {
               <div className="col-span-1 text-center text-[13px] text-[var(--ink-muted)]">{statusLabel(row.status)}</div>
               <div className="col-span-2 text-right tabular-nums">{percent(row.hallucination_prevention_rate)}</div>
               <div className="col-span-2 text-right tabular-nums">{percent(row.format_compliance_rate)}</div>
-              <div className="col-span-2 text-right tabular-nums">{minutes(row.avg_seconds_per_applicant)}</div>
+              <div className="col-span-2 text-right tabular-nums">{minutes(row.duration_seconds == null ? null : row.avg_seconds_per_applicant)}</div>
               <div className="col-span-2 text-right tabular-nums text-[var(--ink-muted)]">
                 {row.applicants_done}/{row.applicants_total}
               </div>
@@ -218,8 +252,8 @@ export default function TuringMonitor() {
         </div>
         <div className="col-span-12 lg:col-span-8 panel">
           <div className="grid grid-cols-2 gap-4 text-[14px]">
-            <StatusItem label="분석 대상 지원자" value={`${metrics?.hallucination_prevention.samples ?? 0}명`} />
-            <StatusItem label="1명당 평균 처리 시간" value={minutes(perAppAvgSec)} />
+            <StatusItem label="분석 대상 지원자" value={metrics ? `${metrics.hallucination_prevention.samples}명` : (metricState ?? "")} />
+            <StatusItem label="1명당 평균 처리 시간" value={metricState ?? minutes(perAppAvgSec)} />
           </div>
         </div>
       </section>
@@ -227,7 +261,7 @@ export default function TuringMonitor() {
   );
 }
 
-function MetricPanel({ icon, label, hint, value, suffix, detail, decimals = 1 }: { icon: React.ReactNode; label: string; hint: string; value?: number | null; suffix: string; detail: string; decimals?: number }) {
+function MetricPanel({ icon, label, hint, value, empty, suffix, detail, decimals = 1 }: { icon: React.ReactNode; label: string; hint: string; value?: number | null; empty: string; suffix: string; detail: string; decimals?: number }) {
   return (
     <div className="col-span-12 lg:col-span-4 panel min-h-[170px] relative overflow-hidden">
       <span className="absolute left-0 top-0 h-full w-[3px] bg-[var(--secondary)]" />
@@ -235,9 +269,15 @@ function MetricPanel({ icon, label, hint, value, suffix, detail, decimals = 1 }:
         <span className="text-[var(--secondary-2)]">{icon}</span>{label}
       </div>
       <div className="mt-1.5 text-[13px] text-[var(--ink-muted)]">{hint}</div>
-      <div className="mt-3 flex items-baseline gap-2">
-        <span className="numeral text-[52px] leading-none text-[var(--ink)]">{value == null ? "—" : value.toFixed(decimals)}</span>
-        <span className="text-[15px] font-medium text-[var(--ink-muted)]">{suffix}</span>
+      <div className="mt-3 flex items-baseline gap-2 min-h-[52px]">
+        {value == null ? (
+          <span className="self-end text-[20px] font-semibold text-[var(--ink-muted)]">{empty}</span>
+        ) : (
+          <>
+            <span className="numeral text-[52px] leading-none text-[var(--ink)]">{value.toFixed(decimals)}</span>
+            <span className="text-[15px] font-medium text-[var(--ink-muted)]">{suffix}</span>
+          </>
+        )}
       </div>
       <div className="mt-4 pt-3 border-t border-[var(--line)] text-[13.5px] text-[var(--ink-muted)]">{detail}</div>
     </div>
@@ -251,15 +291,16 @@ function StatusItem({ label, value }: { label: string; value: string }) {
 }
 
 function percent(value?: number | null) {
-  return value == null ? "—" : `${value.toFixed(1)}%`;
+  return value == null ? "검사 대상 없음" : `${value.toFixed(1)}%`;
 }
 
 function minutes(value?: number | null) {
-  return value == null ? "—" : `${(value / 60).toFixed(2)}분`;
+  return value == null ? "미측정" : `${(value / 60).toFixed(2)}분`;
 }
 
 function statusLabel(status: string) {
   switch (status) {
+    case "done":
     case "completed": return "완료";
     case "running": return "분석 중";
     case "pending": return "대기";

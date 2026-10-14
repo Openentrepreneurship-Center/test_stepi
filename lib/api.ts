@@ -331,6 +331,11 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/** 서버 컴포넌트에서 실패를 빈 값과 구별해 받는다. `.catch(asError)` 뒤 `instanceof Error` 로 가른다 */
+export const asError = (e: unknown): Error => (e instanceof Error ? e : new Error(String(e)));
+/** http() 가 던진 404 인지. 오류 문구가 "404 Not Found: ..." 로 시작한다 */
+export const isNotFound = (e: unknown): boolean => e instanceof Error && e.message.startsWith("404 ");
+
 export const api = {
   // 분석별 선정 인재상 세트 (lib/talent-selection.ts 가 쓴다).
   // id 를 인코딩하지 않으면 "../" 가 든 값이 전송 전에 정규화돼 다른 엔드포인트를 때린다.

@@ -117,7 +117,9 @@ export default function PaperCard({
         <div className="px-5 py-8 text-[13px] text-[var(--ink-muted)] text-center">
           {file.status === "extract_fail" || file.status === "analysis_fail"
             ? `처리 실패: ${file.error_message ?? "오류"}`
-            : "분석 진행 중…"}
+            : file.status === "analyzed"
+              ? "분석 결과를 불러오지 못했습니다."
+              : "분석 진행 중…"}
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[var(--line)]">
