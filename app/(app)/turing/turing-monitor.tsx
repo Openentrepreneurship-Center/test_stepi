@@ -80,7 +80,7 @@ export default function TuringMonitor() {
         eyebrow="AI 품질 점검"
         icon={Activity}
         title="turing."
-        description="AI가 생성한 분석 결과의 신뢰성을 자동으로 점검합니다. ① 제출 자료에 없는 내용을 생성하지 않았는지, ② 모든 항목이 빠짐없이 완성됐는지, ③ 지원자 1명당 처리 시간을 최근 작업 기준으로 보여줍니다."
+        description={"AI가 생성한 분석 결과의 신뢰성을 자동으로 점검합니다.\n① 제출 자료에 없는 내용을 생성하지 않았는지,\n② 모든 항목이 빠짐없이 완성됐는지,\n③ 지원자 1명당 처리 시간을 최근 작업 기준으로 보여줍니다."}
         aside={
           <div className="flex items-center gap-3 text-[14px] text-[var(--ink-muted)]">
             {shownAt && (
