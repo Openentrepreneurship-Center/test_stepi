@@ -471,8 +471,27 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .ref-fields .datebox .cal { width: 42px; height: 42px; }
 .prelim .datebox .picker { position: absolute; right: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .prelim .ref-fields label > span.bad { color: var(--red-text); }
-.prelim .vw-box.imp { width: min(880px, 100%); }
-.prelim .imp .vw-body { background: #fff; }
+/* 엑셀 업로드 미리보기. 머리·바닥은 고정하고 가운데만 세로로 스크롤한다. 가운데를 grid 로 두면 표 감싸개가 눌려 작은 세로 스크롤이 생겨 block 으로 쌓는다 */
+.prelim .imp-box { width: min(880px, 100%); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line-strong); box-shadow: 0 12px 40px rgba(27,26,64,.28); outline: none; }
+.prelim .imp-head { flex: none; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 18px 24px; border-bottom: 1px solid var(--line); }
+.prelim .imp-head > div { min-width: 0; display: grid; gap: 4px; }
+.prelim .imp-head h2 { font-size: 18px; font-weight: 600; }
+.prelim .imp-head .ref-close { flex: none; margin: -8px -12px 0 0; }
+.prelim .imp-file { margin: 0; font-size: 15px; overflow-wrap: anywhere; }
+.prelim .imp-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px 24px 24px; font-size: 15px; line-height: 1.6; }
+.prelim .imp-body > * + * { margin-top: 20px; }
+.prelim .imp-part { display: grid; gap: 8px; }
+.prelim .imp-part h4 { margin: 0; font-size: 15px; font-weight: 600; }
+.prelim .imp-part h4 span { font-variant-numeric: tabular-nums; color: var(--muted); }
+.prelim .imp-names { margin: 0; padding-left: 20px; list-style: disc; display: grid; gap: 4px; }
+.prelim .imp-names .imp-same-name { display: block; }
+.prelim .imp-grid { table-layout: fixed; }
+.prelim .imp-grid th, .prelim .imp-grid td { vertical-align: top; overflow-wrap: anywhere; line-height: 1.5; }
+.prelim .imp-grid tbody th { font-weight: 600; text-align: left; }
+.prelim .imp-diff th:nth-child(1) { width: 20%; }
+.prelim .imp-diff th:nth-child(2) { width: 18%; }
+.prelim .imp-skip th:nth-child(1) { width: 96px; }
+.prelim .imp-skip th:nth-child(2) { width: 28%; }
 .prelim .imp-same { padding: 14px 16px; background: var(--surface); font-weight: 600; }
 .prelim .imp-count td { text-align: center; font-variant-numeric: tabular-nums; }
 .prelim .imp-count td.nm { text-align: left; }
@@ -483,13 +502,12 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .imp-sheet .hint { margin: 0; }
 .prelim .imp-line { margin: 0; font-size: 14.5px; line-height: 1.6; }
 .prelim .imp-line > b { margin-right: 6px; }
-.prelim .imp-line ul { margin: 4px 0 0; padding-left: 18px; list-style: disc; }
 .prelim .imp-line.del > b { color: var(--red-text); }
-.prelim .imp-same-name { font-style: normal; font-size: 13px; color: #8a5300; }
+.prelim .imp-same-name { font-style: normal; font-size: 14px; color: #8a5300; }
 .prelim .imp-conf { display: grid; gap: 8px; padding: 12px 14px; border: 1px solid #f0c98a; background: #fffaf2; }
 .prelim .imp-conf p { margin: 0; font-size: 14.5px; }
 .prelim .imp-conf .dtable { background: #fff; }
-.prelim .imp-foot { padding: 14px 24px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.prelim .imp-foot { flex: none; padding: 14px 24px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
 .prelim .ref-row.rv.nolead { grid-template-columns: minmax(0, 1fr) 64px; }
 .prelim .imp-warn { margin: 0; padding: 10px 14px; border: 1px solid #f0c98a; background: #fffaf2; color: #8a5300; font-size: 14.5px; }
 

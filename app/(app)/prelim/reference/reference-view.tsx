@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { CalendarDays, CircleCheck, Database, Download, Plus, Upload, X } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { Bar } from "@/components/page-skeleton";
@@ -11,6 +11,7 @@ import {
   type PrelimRefKind,
   type PrelimRefRow,
 } from "@/lib/api";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 import "../prelim.css";
 
 /** 엑셀 올리기 버튼을 보일지. 문제가 생기면 false 로 끈다(내려받기는 그대로) */
@@ -117,6 +118,7 @@ const TABS: { kind: PrelimRefKind; label: string; unit: string; desc: string; ad
 type Drawer = { kind: PrelimRefKind; id: number | "new"; values: Record<string, string>; dirty: boolean };
 
 const JOBS = ["연구직", "전문연구직", "행정직"];
+const STAFF_GRADES = ["책임연구원", "선임연구원", "연구원"];
 const STAGES = ["서류", "필기", "면접"];
 const ORG_KINDS = ["NRC", "NST"];
 const FOLD = 6;
@@ -181,6 +183,7 @@ export default function ReferenceView() {
   const [preview, setPreview] = useState<PrelimRefImportPreview | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const uploadRef = useRef<HTMLButtonElement>(null);
 
   const spec = TABS.find((t) => t.kind === tab)!;
 
@@ -320,7 +323,7 @@ export default function ReferenceView() {
       ? { label: "직군", aria: "직군으로 공고 필터", options: JOBS }
       : tab === "orgs"
         ? { label: "계열", aria: "계열로 거르기", options: ORG_KINDS }
-        : { label: "직급", aria: "직급으로 거르기", options: [...new Set((list ?? []).map((r) => str(r.grade)).filter(Boolean))] };
+        : { label: "직급", aria: "직급으로 거르기", options: [...new Set([...(list ?? []).map((r) => str(r.grade)).filter(Boolean), ...STAFF_GRADES])] };
   // 올리기·수정으로 사라진 직급 칩이 선택된 채 남지 않게
   const activeChips = chips.filter((c) => chipBar.options.includes(c));
 
@@ -338,6 +341,7 @@ export default function ReferenceView() {
               {IMPORT_ENABLED && (
                 <>
                   <button
+                    ref={uploadRef}
                     type="button"
                     className="btn sm quiet"
                     onClick={() => fileRef.current?.click()}
@@ -576,7 +580,9 @@ export default function ReferenceView() {
           </>
         )}
 
-        {preview && <ImportDialog preview={preview} onClose={() => setPreview(null)} onApplied={applied} />}
+        {preview && (
+          <ImportDialog preview={preview} onClose={() => setPreview(null)} onApplied={applied} returnFocus={uploadRef} />
+        )}
       </div>
     </div>
   );
@@ -1007,16 +1013,40 @@ function ImportDialog({
   preview,
   onClose,
   onApplied,
+  returnFocus,
 }: {
   preview: PrelimRefImportPreview;
   onClose: () => void;
   onApplied: (res: PrelimRefImportApplied) => void;
+  returnFocus: RefObject<HTMLButtonElement | null>;
 }) {
   const [choices, setChoices] = useState<Record<string, "db" | "excel">>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   const conflicts = preview.sheets.flatMap((s) => s.conflicts);
   const unresolved = conflicts.filter((c) => !choices[c.key]).length;
+
+  useFocusTrap(boxRef);
+
+  useEffect(() => {
+    // Enter 한 번에 반영되지 않게 첫 초점은 닫기 버튼
+    closeRef.current?.focus();
+    const back = returnFocus.current;
+    const body = document.body.style;
+    const prev = { overflow: body.overflow, paddingRight: body.paddingRight };
+    // 루트 scrollbar-gutter 자리는 clientWidth 에 안 잡혀 body 폭 차이로 스크롤바 폭을 잰다
+    const width = document.body.getBoundingClientRect().width;
+    body.overflow = "hidden";
+    const gap = document.body.getBoundingClientRect().width - width;
+    if (gap > 0) body.paddingRight = `${gap}px`;
+    return () => {
+      Object.assign(body, prev);
+      // 파일 선택창을 거치며 원래 초점이 사라지므로 엑셀 업로드 버튼으로 직접 돌려보낸다
+      back?.focus();
+    };
+  }, [returnFocus]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && !busy && onClose();
@@ -1025,6 +1055,7 @@ function ImportDialog({
   }, [busy, onClose]);
 
   async function apply() {
+    if (busy) return;
     // 한 시트에서 많이 지우면 한 번 더 묻는다(서버도 같은 기준으로 막음)
     const bulk = preview.sheets
       .filter((s) => s.bulk_delete)
@@ -1040,6 +1071,8 @@ function ImportDialog({
       )
     )
       return;
+    // 반영 버튼이 잠기면 초점이 배경으로 빠지므로 팝업에 붙잡아 둔다
+    boxRef.current?.focus();
     setBusy(true);
     setError(null);
     try {
@@ -1054,21 +1087,23 @@ function ImportDialog({
 
   const when = preview.downloaded_at ? preview.downloaded_at.slice(0, 16).replace("T", " ") : null;
   return (
-    <div className="vw" onClick={(e) => e.target === e.currentTarget && !busy && onClose()}>
-      <div className="vw-box imp" role="dialog" aria-modal="true" aria-labelledby="imp-title">
-        <header className="vw-head">
+    // 배경을 눌러도 닫지 않는다. 닫기·취소·Escape 로만 닫는다
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(27,26,64,0.32)] p-4 backdrop-blur-sm">
+      <div ref={boxRef} tabIndex={-1} className="imp-box" role="dialog" aria-modal="true" aria-labelledby="imp-title">
+        <header className="imp-head">
           <div>
-            <h2 id="imp-title">{preview.file_name}</h2>
+            <h2 id="imp-title">엑셀 업로드 미리보기</h2>
+            <p className="imp-file">{preview.file_name}</p>
             <div className="hint">
               {preview.form ? `양식 종류 ${preview.form}` : "양식 정보 없음"}
               {when ? ` · 내려받은 시각 ${when}` : ""}
             </div>
           </div>
-          <button type="button" className="ref-close" onClick={onClose} aria-label="닫기" disabled={busy}>
+          <button ref={closeRef} type="button" className="ref-close" onClick={onClose} aria-label="닫기" disabled={busy}>
             <X size={20} />
           </button>
         </header>
-        <div className="vw-body">
+        <div className="imp-body">
           {preview.no_change && <div className="imp-same">바뀌는 내용이 없습니다.</div>}
           {preview.already_applied && !preview.no_change && (
             <p className="imp-warn">
@@ -1112,28 +1147,51 @@ function ImportDialog({
                   </p>
                 )}
                 {s.add > 0 && (
-                  <p className="imp-line">
-                    <b>추가</b>{" "}
-                    {s.added.map((a, i) => (
-                      <span key={a.row}>
-                        {i > 0 && ", "}
-                        {a.name}
-                        {a.same_name && <em className="imp-same-name"> 같은 이름이 이미 있습니다</em>}
-                      </span>
-                    ))}
-                  </p>
-                )}
-                {s.update > 0 && (
-                  <div className="imp-line">
-                    <b>수정</b>
-                    <ul>
-                      {s.updated.map((u) => (
-                        <li key={u.id}>
-                          {u.name}:{" "}
-                          {u.changes.map((c) => `${c.label} ${shown(c.db)} → ${shown(c.excel)}`).join(", ")}
+                  <div className="imp-part">
+                    <h4>
+                      추가 <span>{s.add}</span>
+                    </h4>
+                    <ul className="imp-names">
+                      {s.added.map((a) => (
+                        <li key={a.row}>
+                          {a.name}
+                          {a.same_name && <span className="imp-same-name">같은 이름이 이미 있습니다</span>}
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+                {s.update > 0 && (
+                  <div className="imp-part">
+                    <h4>
+                      수정 <span>{s.update}</span>
+                    </h4>
+                    <table className="dtable imp-grid imp-diff">
+                      <thead>
+                        <tr>
+                          <th>대상</th>
+                          <th>항목</th>
+                          <th>기존 값</th>
+                          <th>변경 값</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {s.updated.flatMap((u) =>
+                          u.changes.map((c, i) => (
+                            <tr key={`${u.id}-${i}`}>
+                              {i === 0 && (
+                                <th scope="rowgroup" rowSpan={u.changes.length}>
+                                  {u.name}
+                                </th>
+                              )}
+                              <td>{c.label}</td>
+                              <td>{shown(c.db)}</td>
+                              <td>{shown(c.excel)}</td>
+                            </tr>
+                          )),
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 )}
                 {s.conflicts.map((c) => (
@@ -1182,15 +1240,28 @@ function ImportDialog({
                   </div>
                 ))}
                 {s.skipped.length > 0 && (
-                  <div className="imp-line">
-                    <b>반영 안 함</b>
-                    <ul>
-                      {s.skipped.map((k) => (
-                        <li key={k.row}>
-                          엑셀 {k.row}행{k.name ? ` ${k.name}` : ""}: {k.reason}
-                        </li>
-                      ))}
-                    </ul>
+                  <div className="imp-part">
+                    <h4>
+                      반영 안 함 <span>{s.skipped.length}</span>
+                    </h4>
+                    <table className="dtable imp-grid imp-skip">
+                      <thead>
+                        <tr>
+                          <th>엑셀 행</th>
+                          <th>대상</th>
+                          <th>사유</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {s.skipped.map((k) => (
+                          <tr key={k.row}>
+                            <td>{k.row}행</td>
+                            <td>{k.name}</td>
+                            <td>{k.reason}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </section>
