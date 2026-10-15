@@ -342,7 +342,10 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
         <header>
           <h2>학위별 동일학력</h2>
           <div className="hdtools">
-            <span className="hint">3개 항목 모두 일치 {degree.length}건</span>
+            <span className="hint">
+              3개 항목 모두 일치 {degree.filter((d) => !d.ai_confirmed).length}건
+              {degree.some((d) => d.ai_confirmed) && <> · AI 비교 후 담당자 확정 {degree.filter((d) => d.ai_confirmed).length}건</>}
+            </span>
             <XBtn href={exportUrl("degree")} title="전체 엑셀 다운로드" />
             <XBtn href={exportUrl("degree-v")} cap="제척" title="제척위원 엑셀 다운로드" />
           </div>
