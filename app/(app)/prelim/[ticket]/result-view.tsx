@@ -42,7 +42,7 @@ const BADGE_CLS: Record<string, string> = {
   exx: "red",
   final: "red",
 };
-// 전체 엑셀은 담당자 HTML 과 같은 순서로 10개를 따로 내려받는다
+// 전체 엑셀은 담당자 HTML 과 같은 순서로 따로 내려받는다. 전공명 AI 비교는 학위별 동일학력 다음
 const ALL_KEYS = [
   "essay",
   "attach",
@@ -50,6 +50,7 @@ const ALL_KEYS = [
   "inx",
   "work",
   "degree",
+  "degree-ai",
   "exx-org",
   "exx-com",
   "exx",
@@ -265,7 +266,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
   async function downloadAll() {
     setDownloading(true);
     // api 재시작 전 응답에는 최종 결과가 없다
-    for (const key of ALL_KEYS.filter((k) => k !== "final" || derived?.final)) {
+    for (const key of ALL_KEYS.filter((k) => (k !== "final" || derived?.final) && (k !== "degree-ai" || derived?.inx.degree_ai))) {
       const a = document.createElement("a");
       a.href = exportUrl(key);
       a.download = "";
