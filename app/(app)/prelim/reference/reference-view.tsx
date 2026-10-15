@@ -310,6 +310,12 @@ export default function ReferenceView() {
     }
   }
 
+  function closePreview() {
+    // 못 지워도 서버가 하루 뒤 지운다
+    if (preview) prelim.reference.importCancel(preview.token).catch(() => {});
+    setPreview(null);
+  }
+
   function applied(res: PrelimRefImportApplied) {
     setPreview(null);
     setNote(`${res.file_name} 업로드 완료 · 추가 ${res.add} · 수정 ${res.update}`);
@@ -581,7 +587,7 @@ export default function ReferenceView() {
         )}
 
         {preview && (
-          <ImportDialog preview={preview} onClose={() => setPreview(null)} onApplied={applied} returnFocus={uploadRef} />
+          <ImportDialog preview={preview} onClose={closePreview} onApplied={applied} returnFocus={uploadRef} />
         )}
       </div>
     </div>

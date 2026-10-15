@@ -899,6 +899,15 @@ export const prelim = {
       });
       return prelimJson<PrelimRefImportApplied>(res, "반영하지 못했습니다");
     },
+    async importCancel(token: string): Promise<void> {
+      const res = await fetch(`${API_BASE}/prelim/reference/import/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+        signal: timeoutSignal(30_000),
+      });
+      await prelimJson(res, "미리보기를 지우지 못했습니다");
+    },
   },
   result: (ticket: string) => http<PrelimResult>(`/prelim/results/${encodeURIComponent(ticket)}`),
   verdict: {
