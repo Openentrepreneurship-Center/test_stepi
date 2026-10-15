@@ -14,9 +14,20 @@ const AI_CLS: Record<string, string> = {
   different: "ai-diff",
 };
 
-/** 전공명 AI 비교 한 줄. 근거는 저장된 값 그대로, 전공이 여럿이면 비교마다 한 줄 */
-function AiRow({ d, cls }: { d: PrelimDegreeAiRow; cls?: string }) {
-  const many = d.comparisons.length > 1;
+/** 전공명 AI 비교 한 줄. 근거는 서버가 만든 문장(전공별 한 줄), 확정하면 동일학력 제척에 들어간다 */
+function AiRow({ d, cls, judge, busy }: { d: PrelimDegreeAiRow; cls?: string; judge: Ctx["judge"]; busy: string | null }) {
+  const v = d.verdict ?? null;
+  const btn = (val: "confirm" | "dismiss", c: string, label: string) => (
+    <button
+      type="button"
+      className={`jbtn ${c}`}
+      aria-pressed={v === val}
+      disabled={busy === `deg_ai:${d.id}`}
+      onClick={() => void judge("deg_ai", d.id, v === val ? null : val)}
+    >
+      {label}
+    </button>
+  );
   return (
     <tr data-no={d.no} className={cls}>
       <td className="mono">{d.no}</td>
@@ -30,19 +41,15 @@ function AiRow({ d, cls }: { d: PrelimDegreeAiRow; cls?: string }) {
       <td style={{ whiteSpace: "nowrap" }}>
         <span className={`tag ${AI_CLS[d.relation] ?? "ai-unk"}`}>{d.label}</span>
       </td>
-      <td>
-        {many ? (
-          <ul className="ai-why">
-            {d.comparisons.map((c, i) => (
-              <li key={i}>
-                {c.applicant_major || "빈 칸"} / {c.staff_major || "빈 칸"}: <b>{c.label}</b> {c.reason}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          d.reason
-        )}
+      <td style={{ whiteSpace: "pre-line" }}>
+        {d.why ?? d.reason}
         {d.incomplete && <div className="no2">일부 비교 미완료</div>}
+      </td>
+      <td>
+        <div className="jbtns">
+          {btn("confirm", "c", "제척 확정")}
+          {btn("dismiss", "d", "제외")}
+        </div>
       </td>
     </tr>
   );
@@ -64,7 +71,7 @@ function UpWarn({ list }: { list?: string[] }) {
 }
 
 export default function InternalTab({ ctx }: { ctx: Ctx }) {
-  const { derived, uploads, busy, upload, focusNo, exportUrl } = ctx;
+  const { derived, uploads, busy, upload, focusNo, exportUrl, judge } = ctx;
   const { staff_rows: rows, pending_count: pendingCnt, internal, work, degree } = derived.inx;
   const advisor = derived.inx.advisor ?? [];
   const ai = derived.inx.degree_ai;
@@ -82,7 +89,8 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
       <th style={{ width: 84 }}>내부직원</th>
       <th style={{ minWidth: 120 }}>내부직원 학과(전공)</th>
       <th style={{ width: 190 }}>AI 비교 결과</th>
-      <th style={{ minWidth: 200 }}>근거</th>
+      <th style={{ minWidth: 240 }}>근거</th>
+      <th style={{ width: 150 }}>담당자 판정</th>
     </tr>
   );
   const fcls = (no: string) => (focusNo === no ? "focus" : undefined);
@@ -376,13 +384,13 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
                   <td className="nm">{d.name}</td>
                   <td>{d.deg}</td>
                   <td>{d.school}</td>
-                  <td>{d.major}</td>
+                  <td style={{ whiteSpace: "pre-line" }}>{d.major}</td>
                   <td>{d.prof}</td>
                   <td className="nm">{d.staff}</td>
                   <td>{d.staffDept}</td>
                   <td>{d.staffDeg}</td>
                   <td style={{ whiteSpace: "nowrap" }}>
-                    <span className="yes2">학교·학과·지도교수 일치</span>
+                    <span className="yes2">{d.ai_confirmed ? "AI 비교 후 담당자 확정" : "학교·학과·지도교수 일치"}</span>
                   </td>
                 </tr>
               ))}
@@ -413,8 +421,8 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
           </header>
           <div className="guide" style={{ background: "#fff", borderBottom: "1px solid var(--line)" }}>
             <span className="hint upfmt">
-              학교·지도교수는 같지만 전공명이 직접 일치하지 않는 학력을 서버의 AI 모델로 비교한 결과입니다. <b>제척 확정이 아니며</b> 위 학위별 동일학력, 제척
-              내부위원 전체 목록과 건수에 들어가지 않습니다. 양쪽 전공 원문과 근거를 보고 확인해 주세요.
+              학교·지도교수는 같지만 전공명이 직접 일치하지 않는 학력을 서버의 AI 모델로 비교한 결과입니다. <b>제척 확정이 아니며</b> 양쪽 전공 원문과 근거를 보고
+              판정해 주세요. <b>제척 확정</b>을 누른 줄만 위 학위별 동일학력, 제척 내부위원 전체 목록과 건수에 들어갑니다.
             </span>
           </div>
           <div className="tblwrap">
@@ -422,10 +430,10 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
               <thead>{aiHead}</thead>
               <tbody>
                 {aiShown.length ? (
-                  aiShown.map((d) => <AiRow key={d.id} d={d} cls={fcls(d.no)} />)
+                  aiShown.map((d) => <AiRow key={d.id} d={d} cls={fcls(d.no)} judge={judge} busy={busy} />)
                 ) : (
                   <tr>
-                    <td colSpan={10} className="no2">
+                    <td colSpan={11} className="no2">
                       확인이 필요한 AI 비교 결과가 없습니다.
                     </td>
                   </tr>
@@ -441,7 +449,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
                   <thead>{aiHead}</thead>
                   <tbody>
                     {aiDiff.map((d) => (
-                      <AiRow key={d.id} d={d} cls={fcls(d.no)} />
+                      <AiRow key={d.id} d={d} cls={fcls(d.no)} judge={judge} busy={busy} />
                     ))}
                   </tbody>
                 </table>

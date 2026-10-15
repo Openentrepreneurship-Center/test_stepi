@@ -98,7 +98,7 @@ export interface Ctx {
   go: (tab: TabKey, opts?: { focus?: string; person?: string }) => void;
   setStage: (s: PrelimStage) => void;
   judge: (
-    kind: "essay" | "attach" | "out",
+    kind: "essay" | "attach" | "out" | "deg_ai",
     itemId: string,
     value: string | null,
     reason?: string | null,

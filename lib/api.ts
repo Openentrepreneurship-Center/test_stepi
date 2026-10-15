@@ -681,6 +681,8 @@ export interface PrelimWorkRow {
 export interface PrelimDegreeRow {
   id: string; no: string; name: string; deg: string; school: string; major: string;
   prof: string; staff: string; staffDept: string; staffDeg: string;
+  /** 담당자가 전공명 AI 비교에서 확정한 줄 */
+  ai_confirmed?: boolean;
 }
 /** 전공명 AI 비교(확정 제척 아님). label 은 서버가 붙인 화면·엑셀 공통 글자 */
 export type PrelimAiRelation = "equivalent_expression" | "related_uncertain" | "different" | "unknown";
@@ -688,6 +690,8 @@ export interface PrelimDegreeAiRow extends PrelimDegreeRow {
   staffMajor: string; relation: PrelimAiRelation; label: string; reason: string;
   error: string | null; incomplete: boolean; cached: boolean;
   model: string | null; prompt_version: string | null; compared_at: string | null;
+  /** 근거 칸 문장(전공별 한 줄), 담당자 판정 */
+  why?: string; verdict?: "confirm" | "dismiss" | null;
   comparisons: { applicant_major: string; staff_major: string; relation: PrelimAiRelation; label: string;
     reason: string; error: string | null; cached: boolean }[];
 }
@@ -784,6 +788,8 @@ export interface PrelimVerdicts {
   essay: Record<string, PrelimVerdict>;
   attach: Record<string, PrelimVerdict>;
   out: Record<string, PrelimVerdict>;
+  /** 전공명 AI 비교 줄 확정·제외. api 재시작 전 응답에는 없다 */
+  deg_ai?: Record<string, PrelimVerdict>;
 }
 export type PrelimUploadKind = "inx" | "work";
 export interface PrelimResult extends PrelimRunResponse {
@@ -924,7 +930,7 @@ export const prelim = {
   result: (ticket: string) => http<PrelimResult>(`/prelim/results/${encodeURIComponent(ticket)}`),
   verdict: {
     /** value 가 null 이면 판정 취소. 화면은 응답의 verdicts·derived 로만 갱신한다 */
-    async put(ticket: string, body: { kind: "essay" | "attach" | "out"; item_id: string; value: string | null; reason?: string | null }) {
+    async put(ticket: string, body: { kind: "essay" | "attach" | "out" | "deg_ai"; item_id: string; value: string | null; reason?: string | null }) {
       const res = await fetch(`${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/verdicts`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
