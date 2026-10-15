@@ -534,3 +534,10 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .kpi.pen { border-top-color: var(--orange); text-align: left; font: inherit; color: inherit; cursor: pointer; }
 .prelim .kpi.pen:hover { background: var(--surface); }
 .prelim .kpi.pen .ico { background: var(--orange); }
+/* 전공명 AI 비교(확정 제척 아님). 결과는 글자로 구분하고 색은 보조. 제척 확정의 빨강을 쓰지 않는다 */
+.prelim .tag.ai-cand { border: 1px solid var(--orange); background: var(--warn-bg); color: var(--warn-text); font-weight: 600; }
+.prelim .tag.ai-rel { border: 1px solid var(--line-strong); background: #fff; color: var(--ink); }
+.prelim .tag.ai-unk { border: 1px dashed var(--line-strong); background: var(--surface); color: var(--muted); }
+.prelim .tag.ai-diff { background: var(--surface); color: var(--muted); }
+.prelim .ai-why { margin: 0; padding-left: 16px; }
+.prelim .ai-diff-list > summary { padding: 12px 24px; border-top: 1px solid var(--line); font-size: 14.5px; color: var(--navy); }

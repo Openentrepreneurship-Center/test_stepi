@@ -1,10 +1,52 @@
 "use client";
 
+import type { PrelimDegreeAiRow } from "@/lib/api";
 import { Dash, UpBtn, XBtn, Y2 } from "./parts";
 import type { Ctx } from "./result-view";
 
 const REASON_CLS: Record<string, string> = { 연구책임자: "r-pi", 소속부서장: "r-hd", 동일학력: "r-dg", 지도교수: "r-dg" };
 const STEPI = "과학기술정책연구원";
+
+const AI_CLS: Record<string, string> = {
+  equivalent_expression: "ai-cand",
+  related_uncertain: "ai-rel",
+  unknown: "ai-unk",
+  different: "ai-diff",
+};
+
+/** 전공명 AI 비교 한 줄. 근거는 저장된 값 그대로, 전공이 여럿이면 비교마다 한 줄 */
+function AiRow({ d, cls }: { d: PrelimDegreeAiRow; cls?: string }) {
+  const many = d.comparisons.length > 1;
+  return (
+    <tr data-no={d.no} className={cls}>
+      <td className="mono">{d.no}</td>
+      <td className="nm">{d.name}</td>
+      <td>{d.deg}</td>
+      <td>{d.school}</td>
+      <td style={{ whiteSpace: "pre-line" }}>{d.major || <span className="no2">빈 칸</span>}</td>
+      <td>{d.prof}</td>
+      <td className="nm">{d.staff}</td>
+      <td style={{ whiteSpace: "pre-line" }}>{d.staffMajor || <span className="no2">빈 칸</span>}</td>
+      <td style={{ whiteSpace: "nowrap" }}>
+        <span className={`tag ${AI_CLS[d.relation] ?? "ai-unk"}`}>{d.label}</span>
+      </td>
+      <td>
+        {many ? (
+          <ul className="ai-why">
+            {d.comparisons.map((c, i) => (
+              <li key={i}>
+                {c.applicant_major || "빈 칸"} / {c.staff_major || "빈 칸"}: <b>{c.label}</b> {c.reason}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          d.reason
+        )}
+        {d.incomplete && <div className="no2">일부 비교 미완료</div>}
+      </td>
+    </tr>
+  );
+}
 
 /** 올린 연구 목록·인사기록 파일에서 빠진 열·빈 칸 알림. 열 이름의 **굵게** 를 반영한다 */
 function UpWarn({ list }: { list?: string[] }) {
@@ -25,6 +67,24 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
   const { derived, uploads, busy, upload, focusNo, exportUrl } = ctx;
   const { staff_rows: rows, pending_count: pendingCnt, internal, work, degree } = derived.inx;
   const advisor = derived.inx.advisor ?? [];
+  const ai = derived.inx.degree_ai;
+  const aiCnt = derived.inx.degree_ai_counts;
+  const aiShown = (ai ?? []).filter((d) => d.relation !== "different");
+  const aiDiff = (ai ?? []).filter((d) => d.relation === "different");
+  const aiHead = (
+    <tr>
+      <th style={{ width: 88 }}>수험번호</th>
+      <th style={{ width: 76 }}>성명</th>
+      <th style={{ width: 60 }}>학위</th>
+      <th style={{ minWidth: 120 }}>학교</th>
+      <th style={{ minWidth: 120 }}>지원자 학과(전공)</th>
+      <th style={{ width: 84 }}>지도교수</th>
+      <th style={{ width: 84 }}>내부직원</th>
+      <th style={{ minWidth: 120 }}>내부직원 학과(전공)</th>
+      <th style={{ width: 190 }}>AI 비교 결과</th>
+      <th style={{ minWidth: 200 }}>근거</th>
+    </tr>
+  );
   const fcls = (no: string) => (focusNo === no ? "focus" : undefined);
 
   return (
@@ -338,6 +398,68 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
           </table>
         </div>
       </div>
+
+      {ai && (
+        <div className="panel">
+          <header>
+            <h2>전공명 AI 비교</h2>
+            <div className="hdtools">
+              <span className="hint">
+                동일학력 후보 {aiCnt?.equivalent_expression ?? 0}건 · 검토 필요 {aiCnt?.related_uncertain ?? 0}건 · 판단 불가 {aiCnt?.unknown ?? 0}건 · 다른 전공{" "}
+                {aiCnt?.different ?? 0}건
+              </span>
+              <XBtn href={exportUrl("degree-ai")} title="전체 엑셀 다운로드" />
+            </div>
+          </header>
+          <div className="guide" style={{ background: "#fff", borderBottom: "1px solid var(--line)" }}>
+            <span className="hint upfmt">
+              학교·지도교수는 같지만 전공명이 직접 일치하지 않는 학력을 서버의 AI 모델로 비교한 결과입니다. <b>제척 확정이 아니며</b> 위 학위별 동일학력, 제척
+              내부위원 전체 목록과 건수에 들어가지 않습니다. 양쪽 전공 원문과 근거를 보고 확인해 주세요.
+            </span>
+          </div>
+          <div className="tblwrap">
+            <table className="dtable">
+              <thead>{aiHead}</thead>
+              <tbody>
+                {aiShown.length ? (
+                  aiShown.map((d) => <AiRow key={d.id} d={d} cls={fcls(d.no)} />)
+                ) : (
+                  <tr>
+                    <td colSpan={10} className="no2">
+                      확인이 필요한 AI 비교 결과가 없습니다.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          {aiDiff.length > 0 && (
+            <details className="ai-diff-list">
+              <summary>다른 전공으로 비교된 학력 {aiDiff.length}건 보기</summary>
+              <div className="tblwrap">
+                <table className="dtable">
+                  <thead>{aiHead}</thead>
+                  <tbody>
+                    {aiDiff.map((d) => (
+                      <AiRow key={d.id} d={d} cls={fcls(d.no)} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          )}
+          <div className="note">
+            판단 불가는 정보 부족, 모델 오류, 시간 초과처럼 비교를 끝내지 못한 경우를 포함하며 불일치가 아닙니다. 검토를 실행할 때 비교해 저장한 결과이며 다시 열거나
+            엑셀을 받을 때 다시 비교하지 않습니다.
+            {ai[0]?.model && (
+              <>
+                {" "}
+                비교 모델 <span className="mono">{ai[0].model}</span>, 프롬프트 <span className="mono">{ai[0].prompt_version}</span>.
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="panel">
         <header>

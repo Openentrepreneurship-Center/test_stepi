@@ -682,6 +682,15 @@ export interface PrelimDegreeRow {
   id: string; no: string; name: string; deg: string; school: string; major: string;
   prof: string; staff: string; staffDept: string; staffDeg: string;
 }
+/** 전공명 AI 비교(확정 제척 아님). label 은 서버가 붙인 화면·엑셀 공통 글자 */
+export type PrelimAiRelation = "equivalent_expression" | "related_uncertain" | "different" | "unknown";
+export interface PrelimDegreeAiRow extends PrelimDegreeRow {
+  staffMajor: string; relation: PrelimAiRelation; label: string; reason: string;
+  error: string | null; incomplete: boolean; cached: boolean;
+  model: string | null; prompt_version: string | null; compared_at: string | null;
+  comparisons: { applicant_major: string; staff_major: string; relation: PrelimAiRelation; label: string;
+    reason: string; error: string | null; cached: boolean }[];
+}
 /** 지원자 지도교수가 내부위원(제척(내부)) 또는 직전 채용 섭외 위원(제척(외부))인 경우 */
 export interface PrelimAdvisorRow {
   id: string; no: string; name: string; advisor: string; rule: "내부위원" | "직전 채용 위원";
@@ -755,6 +764,9 @@ export interface PrelimDerived {
     pending_count: number;
     internal: PrelimInternalRow[]; work: PrelimWorkRow[]; degree: PrelimDegreeRow[];
     advisor?: PrelimAdvisorRow[];
+    /** api 재시작 전 응답에는 없고, M1 이전에 실행한 검토는 null */
+    degree_ai?: PrelimDegreeAiRow[] | null;
+    degree_ai_counts?: Record<PrelimAiRelation, number>;
   };
   /** api 재시작 전 응답에는 없다 */
   final?: PrelimFinal;
