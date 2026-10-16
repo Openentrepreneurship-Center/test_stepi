@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { API_BASE, type PrelimAttachItem, type PrelimVerdict } from "@/lib/api";
+import { downloadUrl, type PrelimAttachItem, type PrelimVerdict } from "@/lib/api";
 import { XBtn } from "./parts";
 import type { Ctx } from "./result-view";
 
@@ -11,7 +11,7 @@ const IMAGE_RE = /\.(jpe?g|png|bmp|tiff?|gif)$/i;
 /** 쪽 그림을 보여 줄 수 있는 형식(pdf, 이미지). docx·hwp 는 발췌 문장만 */
 export const canRender = (a: PrelimAttachItem) => /\.pdf$/i.test(a.file) || IMAGE_RE.test(a.file);
 export const attachPageUrl = (ticket: string, id: string, n: number) =>
-  `${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/attach/${encodeURIComponent(id)}/page/${n}`;
+  downloadUrl(`/prelim/results/${encodeURIComponent(ticket)}/attach/${encodeURIComponent(id)}/page/${n}`);
 export const langLabel = (a: PrelimAttachItem) => `${a.lang}(${a.match})`;
 
 /** 담당자가 누른 판정이 없으면 시스템 제안 판정을 보여 준다 */
@@ -31,7 +31,7 @@ export function attText(st: { value?: string; reason?: string | null }) {
 }
 
 export const attachFileUrl = (ticket: string, id: string) =>
-  `${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/attach/${encodeURIComponent(id)}`;
+  downloadUrl(`/prelim/results/${encodeURIComponent(ticket)}/attach/${encodeURIComponent(id)}`);
 
 function Excerpt({ text, match }: { text: string; match: string }) {
   const i = match ? text.indexOf(match) : -1;

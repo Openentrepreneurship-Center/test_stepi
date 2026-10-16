@@ -1,4 +1,59 @@
+import { SESSION_COOKIE, sessionExp, signApiToken, verifySession } from "./auth";
+
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+
+// 키가 없으면 토큰 없이 보낸다(백엔드 off/observe). exp 는 이 컴퓨터 시계 기준으로 바꿔 둔다(시계 어긋남 대비)
+let browserToken: { token: string | null; exp: number } | null = null;
+let browserTokenReq: Promise<string | null> | null = null;
+
+/** minLeft: 남은 수명이 이보다 짧으면 새로 받는다. nginx 가 본문을 다 받은 뒤 넘기는 업로드는 길게 */
+async function apiToken(minLeft = 60): Promise<string | null> {
+  const now = Math.floor(Date.now() / 1000);
+  if (typeof window === "undefined") {
+    const secret = process.env.API_AUTH_SECRET ?? "";
+    if (!secret) return null;
+    // proxy.ts 를 건너뛴 요청(예: 확장자로 끝나는 주소)이어도 로그인 안 된 요청에는 서명하지 않는다
+    const { cookies } = await import("next/headers");
+    const session = (await cookies()).get(SESSION_COOKIE)?.value ?? "";
+    if (!(await verifySession(session, process.env.SESSION_SECRET ?? ""))) return null;
+    return signApiToken({ p: "api", exp: Math.min(now + 60, sessionExp(session)) }, secret);
+  }
+  if (browserToken && browserToken.exp - minLeft > now) return browserToken.token;
+  browserTokenReq ??= fetch("/api/api-token", { method: "POST", cache: "no-store" })
+    .then(async (res) => {
+      if (res.status === 401 || res.redirected) {
+        window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+        throw new Error("로그인이 필요합니다.");
+      }
+      if (!res.ok) throw new Error(`접속 확인 실패: ${res.status}`);
+      const body = (await res.json()) as { token: string | null; ttl: number };
+      browserToken = { token: body.token, exp: now + body.ttl };
+      return browserToken.token;
+    })
+    .finally(() => {
+      browserTokenReq = null;
+    });
+  return browserTokenReq;
+}
+
+/** 로그아웃 때 메모리의 토큰을 버린다 */
+export const clearApiToken = () => {
+  browserToken = null;
+};
+
+/** 백엔드 호출은 모두 이것으로 한다. FormData 의 Content-Type 은 건드리지 않는다 */
+export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const upload = init.body instanceof FormData || init.body instanceof Blob;
+  const token = await apiToken(upload ? 540 : 60);
+  const headers = new Headers(init.headers);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  if (res.status === 401 && typeof window !== "undefined") browserToken = null;
+  return res;
+}
+
+/** <a href>·<img src> 용. 프론트 서버가 로그인을 확인하고 서명한 API 주소로 넘겨 준다 */
+export const downloadUrl = (path: string) => `/api/dl?u=${encodeURIComponent(path)}`;
 
 /** AbortSignal.timeout 이 없는 옛 Safari 에서는 시간 제한 없이 보낸다 */
 const timeoutSignal = (ms: number) =>
@@ -318,7 +373,7 @@ export interface TalentSelectionResponse {
 }
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await apiFetch(path, {
     ...init,
     cache: "no-store",
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
@@ -452,7 +507,7 @@ export const api = {
   listExcelSheets: async (file: File): Promise<string[]> => {
     const fd = new FormData();
     fd.append("file", file);
-    const res = await fetch(`${API_BASE}/analysis-jobs/excel-sheets`, {
+    const res = await apiFetch(`/analysis-jobs/excel-sheets`, {
       method: "POST",
       body: fd,
     });
@@ -483,7 +538,7 @@ export const api = {
     if (extra?.sheet_name) fd.append("sheet_name", extra.sheet_name);
     if (extra?.info_sheet_name) fd.append("info_sheet_name", extra.info_sheet_name);
     if (extra?.limit !== undefined) fd.append("limit", String(extra.limit));
-    const res = await fetch(`${API_BASE}/analysis-jobs/from-excel`, {
+    const res = await apiFetch(`/analysis-jobs/from-excel`, {
       method: "POST",
       body: fd,
     });
@@ -501,7 +556,7 @@ export const api = {
   bulkUploadPapers: async (id: string, zipFile: File) => {
     const fd = new FormData();
     fd.append("file", zipFile);
-    const res = await fetch(`${API_BASE}/analysis-jobs/${id}/papers/bulk-upload`, {
+    const res = await apiFetch(`/analysis-jobs/${id}/papers/bulk-upload`, {
       method: "POST",
       body: fd,
     });
@@ -518,8 +573,8 @@ export const api = {
       queued_file_ids: number[];
     }>;
   },
-  reportPdfUrl: (id: string) => `${API_BASE}/analysis-jobs/${id}/report.pdf`,
-  resultCsvUrl: (id: string) => `${API_BASE}/analysis-jobs/${id}/result.csv`,
+  reportPdfUrl: (id: string) => downloadUrl(`/analysis-jobs/${id}/report.pdf`),
+  resultCsvUrl: (id: string) => downloadUrl(`/analysis-jobs/${id}/result.csv`),
 
   // 논문 첨부
   listPapers: (id: string, applicantId: string) =>
@@ -529,8 +584,7 @@ export const api = {
   uploadPaper: async (id: string, applicantId: string, file: File) => {
     const fd = new FormData();
     fd.append("file", file);
-    const res = await fetch(
-      `${API_BASE}/analysis-jobs/${id}/applicants/${applicantId}/papers`,
+    const res = await apiFetch(`/analysis-jobs/${id}/applicants/${applicantId}/papers`,
       { method: "POST", body: fd },
     );
     if (!res.ok) {
@@ -545,7 +599,7 @@ export const api = {
       { method: "DELETE" },
     ),
   paperPdfUrl: (id: string, applicantId: string, fileId: number) =>
-    `${API_BASE}/analysis-jobs/${id}/applicants/${applicantId}/papers/${fileId}/pdf`,
+    downloadUrl(`/analysis-jobs/${id}/applicants/${applicantId}/papers/${fileId}/pdf`),
 
   // 직군 적합도 v2
   getDeptFit: (id: string, applicantId: string) =>
@@ -843,7 +897,7 @@ export interface PrelimSummary {
 
 export const prelim = {
   async run(form: FormData): Promise<PrelimRunResponse> {
-    const res = await fetch(`${API_BASE}/prelim/run`, {
+    const res = await apiFetch(`/prelim/run`, {
       method: "POST",
       body: form,
     });
@@ -871,7 +925,7 @@ export const prelim = {
     summary: () => http<PrelimRefSummary>(`/prelim/reference/summary`),
     list: (kind: PrelimRefKind) => http<{ items: PrelimRefRow[] }>(`/prelim/reference/${kind}`),
     async create(kind: PrelimRefKind, body: Record<string, string | null>): Promise<PrelimRefRow> {
-      const res = await fetch(`${API_BASE}/prelim/reference/${kind}`, {
+      const res = await apiFetch(`/prelim/reference/${kind}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -880,7 +934,7 @@ export const prelim = {
       return prelimJson<PrelimRefRow>(res, "추가하지 못했습니다");
     },
     async update(kind: PrelimRefKind, id: number, body: Record<string, string | null>): Promise<PrelimRefRow> {
-      const res = await fetch(`${API_BASE}/prelim/reference/${kind}/${id}`, {
+      const res = await apiFetch(`/prelim/reference/${kind}/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -889,15 +943,15 @@ export const prelim = {
       return prelimJson<PrelimRefRow>(res, "저장하지 못했습니다");
     },
     async remove(kind: PrelimRefKind, id: number): Promise<void> {
-      const res = await fetch(`${API_BASE}/prelim/reference/${kind}/${id}`, { method: "DELETE" });
+      const res = await apiFetch(`/prelim/reference/${kind}/${id}`, { method: "DELETE" });
       await prelimJson(res, "삭제하지 못했습니다");
     },
     /** empty 면 줄 없는 빈 양식 */
-    exportUrl: (empty = false) => `${API_BASE}/prelim/reference/export.xlsx${empty ? "?empty=1" : ""}`,
+    exportUrl: (empty = false) => downloadUrl(`/prelim/reference/export.xlsx${empty ? "?empty=1" : ""}`),
     async importPreview(file: File): Promise<PrelimRefImportPreview> {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch(`${API_BASE}/prelim/reference/import/preview`, {
+      const res = await apiFetch(`/prelim/reference/import/preview`, {
         method: "POST",
         body: fd,
         signal: timeoutSignal(120_000),
@@ -909,7 +963,7 @@ export const prelim = {
       choices: Record<string, "db" | "excel">;
       confirm_bulk_delete: boolean;
     }): Promise<PrelimRefImportApplied> {
-      const res = await fetch(`${API_BASE}/prelim/reference/import/apply`, {
+      const res = await apiFetch(`/prelim/reference/import/apply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -918,7 +972,7 @@ export const prelim = {
       return prelimJson<PrelimRefImportApplied>(res, "반영하지 못했습니다");
     },
     async importCancel(token: string): Promise<void> {
-      const res = await fetch(`${API_BASE}/prelim/reference/import/cancel`, {
+      const res = await apiFetch(`/prelim/reference/import/cancel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token }),
@@ -931,7 +985,7 @@ export const prelim = {
   verdict: {
     /** value 가 null 이면 판정 취소. 화면은 응답의 verdicts·derived 로만 갱신한다 */
     async put(ticket: string, body: { kind: "essay" | "attach" | "out" | "deg_ai"; item_id: string; value: string | null; reason?: string | null }) {
-      const res = await fetch(`${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/verdicts`, {
+      const res = await apiFetch(`/prelim/results/${encodeURIComponent(ticket)}/verdicts`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -945,7 +999,7 @@ export const prelim = {
     async put(ticket: string, kind: PrelimUploadKind, file: File) {
       const form = new FormData();
       form.append("file", file);
-      const res = await fetch(`${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/uploads/${kind}`, {
+      const res = await apiFetch(`/prelim/results/${encodeURIComponent(ticket)}/uploads/${kind}`, {
         method: "PUT",
         body: form,
         signal: timeoutSignal(120_000),
@@ -957,17 +1011,20 @@ export const prelim = {
     status: () => http<{ enabled: boolean; max_bytes: number }>(`/prelim/attach/status`),
     /** 크기·디스크 검사를 먼저 하고, 통과하면 zip 본문을 그대로 보낸다. 진행률 때문에 XHR 을 쓴다 */
     async send(ticket: string, file: File, onProgress: (ratio: number) => void): Promise<void> {
-      const base = `${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/attach`;
-      const pre = await fetch(`${base}/prepare`, {
+      const base = `/prelim/results/${encodeURIComponent(ticket)}/attach`;
+      const pre = await apiFetch(`${base}/prepare`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ size_bytes: file.size, file_name: file.name }),
       });
       await prelimJson<unknown>(pre, "첨부 실적 업로드 준비 실패");
+      // 본문 전송 시작 때 한 번만 검사하므로, 긴 전송 중에 토큰이 만료돼도 끊기지 않는다
+      const token = await apiToken(540);
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", base);
+        xhr.open("POST", `${API_BASE}${base}`);
         xhr.setRequestHeader("Content-Type", "application/zip");
+        if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
         xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) return resolve();
@@ -984,8 +1041,10 @@ export const prelim = {
   },
   /** 표별 xlsx. stage 는 exx-com 에만 쓴다 */
   exportKeyUrl: (ticket: string, key: string, stage?: PrelimStage) =>
-    `${API_BASE}/prelim/results/${encodeURIComponent(ticket)}/export/${encodeURIComponent(key)}` +
-    (stage ? `?stage=${encodeURIComponent(stage)}` : ""),
+    downloadUrl(
+      `/prelim/results/${encodeURIComponent(ticket)}/export/${encodeURIComponent(key)}` +
+        (stage ? `?stage=${encodeURIComponent(stage)}` : ""),
+    ),
 };
 
 /** 외부위원 섭외 회차 정리. 기준일·경계일·대상은 서버가 계산한 값을 그대로 쓴다 */
@@ -1018,21 +1077,21 @@ async function retentionJson<T>(res: Response, fallback: string): Promise<T> {
 
 export const prelimRetention = {
   async preview(): Promise<PrelimRetentionPreview> {
-    const res = await fetch(`${API_BASE}/prelim/reference/retention/preview`, {
+    const res = await apiFetch(`/prelim/reference/retention/preview`, {
       cache: "no-store",
       signal: timeoutSignal(30_000),
     });
     return retentionJson<PrelimRetentionPreview>(res, "대상을 불러오지 못했습니다");
   },
   async history(limit = 20): Promise<{ items: PrelimRetentionRun[] }> {
-    const res = await fetch(`${API_BASE}/prelim/reference/retention/history?limit=${limit}`, {
+    const res = await apiFetch(`/prelim/reference/retention/history?limit=${limit}`, {
       cache: "no-store",
       signal: timeoutSignal(30_000),
     });
     return retentionJson<{ items: PrelimRetentionRun[] }>(res, "실행 이력을 불러오지 못했습니다");
   },
   async run(body: { token: string; base_date: string; count: number }): Promise<Omit<PrelimRetentionRun, "id">> {
-    const res = await fetch(`${API_BASE}/prelim/reference/retention/run`, {
+    const res = await apiFetch(`/prelim/reference/retention/run`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

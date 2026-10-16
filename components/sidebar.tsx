@@ -20,6 +20,7 @@ import {
 import StepiLogo from "./stepi-logo";
 import TalentSelectModal from "./talent-select-modal";
 import { useTalentSets, retryTalentSets, MAX_TALENT_SETS } from "@/lib/talent-selection";
+import { clearApiToken } from "@/lib/api";
 
 const STORAGE_KEY = "stepi-sidebar-collapsed";
 
@@ -129,6 +130,7 @@ export default function Sidebar() {
 
   const logout = async () => {
     await fetch("/api/logout", { method: "POST" });
+    clearApiToken();
     router.replace("/login");
   };
 

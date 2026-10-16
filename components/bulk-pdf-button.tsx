@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { FileArchive, Loader2 } from "lucide-react";
-import { API_BASE } from "@/lib/api";
+import { apiFetch, downloadUrl } from "@/lib/api";
 
 type Status = {
   status: "running" | "ready" | "error";
@@ -64,8 +64,8 @@ export default function BulkPdfButton({ jobId }: { jobId: string }) {
 
     const poll = async () => {
       try {
-        const res = await fetch(
-          `${API_BASE}/analysis-jobs/${encodeURIComponent(jobId)}/applicants-report/${taskId}`,
+        const res = await apiFetch(
+          `/analysis-jobs/${encodeURIComponent(jobId)}/applicants-report/${taskId}`,
           { cache: "no-store" },
         );
         // 렌더러가 재기동됐거나 보관 기한이 지났다. 없는 작업을 붙들지 말고 처음으로 돌린다
@@ -125,7 +125,7 @@ export default function BulkPdfButton({ jobId }: { jobId: string }) {
 
   const zipUrl =
     taskId && state?.status === "ready"
-      ? `${API_BASE}/analysis-jobs/${encodeURIComponent(jobId)}/applicants-report/${taskId}.zip`
+      ? downloadUrl(`/analysis-jobs/${encodeURIComponent(jobId)}/applicants-report/${taskId}.zip`)
       : null;
 
   const showProgress = busy && state != null && state.total > 0;

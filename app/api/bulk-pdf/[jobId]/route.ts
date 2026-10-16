@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE } from "@/lib/auth";
+import { apiFetch } from "@/lib/api";
 
 export const runtime = "nodejs";
 
@@ -25,13 +26,12 @@ export async function POST(
     return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
   }
 
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
-  if (!apiBase) {
+  if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
     return NextResponse.json({ error: "API 주소가 설정되지 않았습니다." }, { status: 500 });
   }
 
-  const res = await fetch(
-    `${apiBase.replace(/\/$/, "")}/analysis-jobs/${encodeURIComponent(jobId)}/applicants-report`,
+  const res = await apiFetch(
+    `/analysis-jobs/${encodeURIComponent(jobId)}/applicants-report`,
     {
       method: "POST",
       headers: { "content-type": "application/json" },
