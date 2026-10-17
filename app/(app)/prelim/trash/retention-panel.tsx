@@ -70,6 +70,7 @@ export default function RetentionPanel() {
   const [asking, setAsking] = useState(false);
   const [running, setRunning] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
+  const msgRef = useRef<HTMLParagraphElement>(null);
 
   const loadPreview = useCallback(async () => {
     setLoading(true);
@@ -127,6 +128,8 @@ export default function RetentionPanel() {
     } finally {
       setRunning(false);
       await Promise.all([loadPreview(), loadHistory()]);
+      // 확인 창이 닫힐 때 삭제 버튼이 비활성이라 초점이 빠지므로 결과 문구로 옮긴다
+      msgRef.current?.focus();
     }
   }
 
@@ -189,7 +192,7 @@ export default function RetentionPanel() {
       {asking && preview && <ConfirmDelete count={count} onCancel={() => setAsking(false)} onConfirm={() => void run()} />}
 
       {msg && (
-        <p role={msg.ok ? "status" : "alert"} className={msg.ok ? "upload-note" : "ref-error"}>
+        <p ref={msgRef} tabIndex={-1} role={msg.ok ? "status" : "alert"} className={msg.ok ? "upload-note" : "ref-error"}>
           {msg.text}
         </p>
       )}
