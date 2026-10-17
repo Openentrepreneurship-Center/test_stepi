@@ -151,7 +151,7 @@ export default function TalentSelectModal({
         role="dialog"
         aria-modal="true"
         aria-label="인재상 선택"
-        className="w-full max-w-[720px] max-h-[85vh] flex flex-col rounded-xl bg-[var(--paper)] shadow-[0_12px_40px_rgba(27,26,64,0.28)] outline-none"
+        className="w-full max-w-[720px] max-h-[85vh] flex flex-col bg-[var(--paper)] shadow-[0_12px_40px_rgba(27,26,64,0.28)] outline-none"
       >
         {/* 머리 */}
         <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b border-[var(--line)]">
@@ -171,7 +171,7 @@ export default function TalentSelectModal({
           <button
             onClick={onClose}
             aria-label="닫기"
-            className="shrink-0 rounded-md p-1.5 text-[var(--ink-muted)] hover:bg-[var(--bg-2)] hover:text-[var(--ink)] transition"
+            className="shrink-0 p-1.5 text-[var(--ink-muted)] hover:bg-[var(--bg-2)] hover:text-[var(--ink)] transition"
           >
             <X size={17} />
           </button>
@@ -186,7 +186,7 @@ export default function TalentSelectModal({
                 key={s.id}
                 onClick={() => setActiveId(s.id)}
                 aria-pressed={on}
-                className={`max-w-[190px] rounded-full border px-3.5 py-1.5 text-[13.5px] transition ${
+                className={`max-w-[190px] border px-3.5 py-1.5 text-[13.5px] transition ${
                   on
                     ? "border-[var(--secondary)] bg-[var(--s-50)] font-semibold text-[var(--ink)]"
                     : "border-[var(--line)] text-[var(--ink-muted)] hover:border-[var(--line-strong)] hover:text-[var(--ink)]"
@@ -212,7 +212,7 @@ export default function TalentSelectModal({
           {draft.length < MAX_TALENT_SETS && (
             <button
               onClick={addSet}
-              className="inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--line-strong)] px-3.5 py-1.5 text-[13.5px] text-[var(--ink-muted)] hover:text-[var(--ink)] transition"
+              className="inline-flex items-center gap-1 border border-dashed border-[var(--line-strong)] px-3.5 py-1.5 text-[13.5px] text-[var(--ink-muted)] hover:text-[var(--ink)] transition"
             >
               <Plus size={14} />
               세트 추가
@@ -233,7 +233,7 @@ export default function TalentSelectModal({
                   maxLength={MAX_SET_NAME}
                   aria-label="세트 이름"
                   placeholder={defaultSetName(draft.indexOf(active))}
-                  className="min-w-0 flex-1 rounded-md border border-[var(--line)] px-3 py-2 text-[14.5px] font-semibold text-[var(--ink)] outline-none focus:border-[var(--secondary)] transition"
+                  className="min-w-0 flex-1 border border-[var(--line)] px-3 py-2 text-[14.5px] font-semibold text-[var(--ink)] outline-none focus:border-[var(--secondary)] transition"
                 />
                 <span className="shrink-0 text-[13px] tabular-nums text-[var(--secondary-2)]">
                   {active.nos.length} / {MAX_TALENT_SELECTION}
@@ -243,7 +243,7 @@ export default function TalentSelectModal({
                   disabled={draft.length <= 1}
                   title={draft.length <= 1 ? "마지막 세트는 지울 수 없습니다" : "이 세트 삭제"}
                   aria-label="이 세트 삭제"
-                  className="shrink-0 rounded-md p-2 text-[var(--ink-muted)] transition hover:bg-[var(--bg-2)] hover:text-[var(--bad)] disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--ink-muted)]"
+                  className="shrink-0 p-2 text-[var(--ink-muted)] transition hover:bg-[var(--bg-2)] hover:text-[var(--bad)] disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--ink-muted)]"
                 >
                   <Trash2 size={15} />
                 </button>
@@ -273,7 +273,7 @@ export default function TalentSelectModal({
                       onClick={() => toggle(t.no)}
                       disabled={blocked}
                       aria-pressed={on}
-                      className={`flex items-center gap-2 rounded-md border px-3 py-2.5 text-left text-[13.5px] transition ${
+                      className={`flex items-center gap-2 border px-3 py-2.5 text-left text-[13.5px] transition ${
                         on
                           ? "border-[var(--secondary)] bg-[var(--s-50)] font-semibold text-[var(--ink)]"
                           : blocked
