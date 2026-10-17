@@ -67,7 +67,7 @@ export function UpBtn({
       {busy ? "올리는 중" : fileName || label}
       <input
         type="file"
-        accept=".xlsx,.xls,.csv"
+        accept=".xlsx,.csv"
         hidden
         disabled={busy}
         onChange={(e) => {
