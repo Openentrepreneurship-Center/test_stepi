@@ -20,6 +20,18 @@ function ConfirmDelete({ count, onCancel, onConfirm }: { count: number; onCancel
   const boxRef = useRef<HTMLDivElement>(null);
   useFocusTrap(boxRef);
   useEffect(() => {
+    // 엑셀 업로드 미리보기 창처럼 뒤 화면 스크롤을 잠그고, 스크롤바 폭만큼 채워 화면이 밀리지 않게 한다
+    const body = document.body.style;
+    const prev = { overflow: body.overflow, paddingRight: body.paddingRight };
+    const width = document.body.getBoundingClientRect().width;
+    body.overflow = "hidden";
+    const gap = document.body.getBoundingClientRect().width - width;
+    if (gap > 0) body.paddingRight = `${gap}px`;
+    return () => {
+      Object.assign(body, prev);
+    };
+  }, []);
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCancel();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
