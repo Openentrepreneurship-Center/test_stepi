@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshCw, Trash2 } from "lucide-react";
 import {
   prelimRetention,
@@ -8,11 +8,58 @@ import {
   type PrelimRetentionPreview,
   type PrelimRetentionRun,
 } from "@/lib/api";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 type Msg = { ok: boolean; text: string } | null;
 
 // 서버가 준 "2026-10-15T10:20:30" 을 "2026-10-15 10:20" 으로만 바꿔 보인다
 const stamp = (s: string) => s.replace("T", " ").slice(0, 16);
+
+/** 영구 삭제 확인 창. 엑셀 업로드 미리보기 창과 같은 모양, 배경을 눌러도 닫지 않는다 */
+function ConfirmDelete({ count, onCancel, onConfirm }: { count: number; onCancel: () => void; onConfirm: () => void }) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(boxRef);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCancel();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(27,26,64,0.32)] p-4 backdrop-blur-sm">
+      <div
+        ref={boxRef}
+        tabIndex={-1}
+        className="imp-box"
+        style={{ width: "min(480px, 100%)" }}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="rt-confirm-title"
+        aria-describedby="rt-confirm-desc"
+      >
+        <header className="imp-head">
+          <h2 id="rt-confirm-title">외부위원 회차 정리</h2>
+        </header>
+        <div className="imp-body">
+          <p id="rt-confirm-desc" className="m-0">
+            <b>{count}건</b>을 영구 삭제합니다. 삭제한 회차는 복원할 수 없습니다.
+            <br />
+            계속할까요?
+          </p>
+        </div>
+        <footer className="imp-foot">
+          <div className="flex justify-end gap-3">
+            <button type="button" className="btn sm quiet" onClick={onCancel}>
+              취소
+            </button>
+            <button type="button" className="btn sm primary" onClick={onConfirm}>
+              영구 삭제
+            </button>
+          </div>
+        </footer>
+      </div>
+    </div>
+  );
+}
 
 export default function RetentionPanel() {
   const [preview, setPreview] = useState<PrelimRetentionPreview | null>(null);
@@ -20,8 +67,7 @@ export default function RetentionPanel() {
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState<PrelimRetentionRun[] | null>(null);
   const [historyFailed, setHistoryFailed] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const [typed, setTyped] = useState("");
+  const [asking, setAsking] = useState(false);
   const [running, setRunning] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
 
@@ -55,13 +101,12 @@ export default function RetentionPanel() {
 
   function refresh() {
     setMsg(null);
-    setConfirming(false);
-    setTyped("");
     void loadPreview();
     void loadHistory();
   }
 
   async function run() {
+    setAsking(false);
     if (!preview || running) return;
     setRunning(true);
     setMsg(null);
@@ -81,8 +126,6 @@ export default function RetentionPanel() {
       });
     } finally {
       setRunning(false);
-      setConfirming(false);
-      setTyped("");
       await Promise.all([loadPreview(), loadHistory()]);
     }
   }
@@ -130,8 +173,8 @@ export default function RetentionPanel() {
         <button
           type="button"
           className="btn sm primary"
-          onClick={() => setConfirming(true)}
-          disabled={!canDelete || confirming}
+          onClick={() => setAsking(true)}
+          disabled={!canDelete}
         >
           <Trash2 size={16} aria-hidden="true" />
           {running ? "삭제하는 중" : preview ? `대상 ${count}건 삭제` : "대상 삭제"}
@@ -143,44 +186,7 @@ export default function RetentionPanel() {
         )}
       </div>
 
-      {confirming && preview && (
-        <div className="border border-[var(--red)] bg-[#fff1f1] px-5 py-4 grid gap-3" role="group" aria-label="삭제 확인">
-          <p className="m-0 leading-[1.6]">
-            <b>{count}건</b>을 영구 삭제합니다. 삭제한 회차는 복원할 수 없습니다.
-            <br />
-            계속하려면 삭제할 건수 <b>{count}</b>를 입력해 주세요.
-          </p>
-          <div className="flex flex-wrap items-center gap-3">
-            <input
-              className="h-10 w-28 border border-[var(--line-strong)] bg-white px-3 tabular-nums"
-              inputMode="numeric"
-              aria-label="삭제할 건수"
-              value={typed}
-              onChange={(e) => setTyped(e.target.value)}
-              autoFocus
-            />
-            <button
-              type="button"
-              className="btn sm primary"
-              disabled={typed.trim() !== String(count) || running}
-              onClick={() => void run()}
-            >
-              {running ? "삭제하는 중" : "영구 삭제"}
-            </button>
-            <button
-              type="button"
-              className="btn sm quiet"
-              disabled={running}
-              onClick={() => {
-                setConfirming(false);
-                setTyped("");
-              }}
-            >
-              취소
-            </button>
-          </div>
-        </div>
-      )}
+      {asking && preview && <ConfirmDelete count={count} onCancel={() => setAsking(false)} onConfirm={() => void run()} />}
 
       {msg && (
         <p role={msg.ok ? "status" : "alert"} className={msg.ok ? "upload-note" : "ref-error"}>
