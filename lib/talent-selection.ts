@@ -137,6 +137,8 @@ export type TalentStatus = "loading" | "ready" | "error";
 export type TalentSnapshot = {
   sets: TalentSet[];
   status: TalentStatus;
+  /** 서버에 저장된 세트 대신 기본 예시를 보여주는지 여부 */
+  isDefault: boolean;
 };
 
 /**
@@ -145,8 +147,8 @@ export type TalentSnapshot = {
  * 값이 바뀔 때만 새 객체를 넣는다. 아래 두 상수도 그래서 모듈 수준에 둔다.
  */
 const cache = new Map<string, TalentSnapshot>();
-const LOADING: TalentSnapshot = { sets: DEFAULT_TALENT_SETS, status: "loading" };
-const FAILED: TalentSnapshot = { sets: DEFAULT_TALENT_SETS, status: "error" };
+const LOADING: TalentSnapshot = { sets: DEFAULT_TALENT_SETS, status: "loading", isDefault: true };
+const FAILED: TalentSnapshot = { sets: DEFAULT_TALENT_SETS, status: "error", isDefault: true };
 /**
  * 이미 서버에 물어본 분석.
  *
@@ -166,7 +168,8 @@ function loadOnce(jobId: string): void {
   api
     .getTalentSelection(jobId)
     .then((res) => {
-      cache.set(jobId, { sets: normalize(res.sets), status: "ready" });
+      const sets = normalize(res.sets);
+      cache.set(jobId, { sets, status: "ready", isDefault: sets === DEFAULT_TALENT_SETS });
       notify();
     })
     .catch((e) => {
@@ -224,14 +227,15 @@ export async function saveTalentSets(jobId: string, sets: TalentSet[]): Promise<
   }));
 
   const prev = cache.get(jobId);
-  cache.set(jobId, { sets: clean, status: "ready" });
+  cache.set(jobId, { sets: clean, status: "ready", isDefault: false });
   fetched.add(jobId);
   notify();
 
   try {
     const res = await api.putTalentSelection(jobId, clean);
     // 서버가 정리한 결과를 정본으로 삼는다 (id 중복 분리 등)
-    cache.set(jobId, { sets: normalize(res.sets), status: "ready" });
+    const saved = normalize(res.sets);
+    cache.set(jobId, { sets: saved, status: "ready", isDefault: saved === DEFAULT_TALENT_SETS });
     notify();
   } catch (e) {
     if (prev) cache.set(jobId, prev);

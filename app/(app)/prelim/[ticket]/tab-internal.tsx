@@ -48,7 +48,7 @@ function AiRow({ d, cls, judge, busy }: { d: PrelimDegreeAiRow; cls?: string; ju
       <td>
         <div className="jbtns">
           {btn("confirm", "c", "제척 확정")}
-          {btn("dismiss", "d", "제외")}
+          {d.relation !== "different" ? btn("dismiss", "d", "제외") : v === "dismiss" ? btn("dismiss", "d", "제외 취소") : null}
         </div>
       </td>
     </tr>
@@ -425,7 +425,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
           <div className="guide" style={{ background: "#fff", borderBottom: "1px solid var(--line)" }}>
             <span className="hint upfmt">
               학교·지도교수는 같지만 전공명이 직접 일치하지 않는 학력을 서버의 AI 모델로 비교한 결과입니다. <b>제척 확정이 아니며</b> 양쪽 전공 원문과 근거를 보고
-              판정해 주세요. <b>제척 확정</b>을 누른 줄만 위 학위별 동일학력, 제척 내부위원 전체 목록과 건수에 들어갑니다.
+              판정해 주세요. 다른 전공으로 비교된 학력은 아래에 접어 두었으며, 따로 제외하지 않아도 됩니다. <b>제척 확정</b>을 누른 줄만 위 학위별 동일학력, 제척 내부위원 전체 목록과 건수에 들어갑니다.
             </span>
           </div>
           <div className="tblwrap">

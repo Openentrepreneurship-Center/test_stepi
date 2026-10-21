@@ -46,7 +46,7 @@ export default function Sidebar() {
   const jobMatch = pathname.match(/^\/jobs\/([^/]+)/);
   const jobId = jobMatch && jobMatch[1] !== "new" ? jobMatch[1] : null;
   const [talentOpen, setTalentOpen] = useState(false);
-  const { sets: talentSets, status: talentStatus } = useTalentSets(jobId ?? "");
+  const { sets: talentSets, status: talentStatus, isDefault: talentIsDefault } = useTalentSets(jobId ?? "");
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -290,7 +290,9 @@ export default function Sidebar() {
                       ? "불러오는 중"
                       : talentStatus === "error"
                         ? "불러오기 실패"
-                        : `${talentSets.length} / ${MAX_TALENT_SETS} 세트`}
+                        : talentIsDefault
+                          ? "기본 예시"
+                          : `${talentSets.length} / ${MAX_TALENT_SETS} 세트`}
                   </span>
                 </>
               )}

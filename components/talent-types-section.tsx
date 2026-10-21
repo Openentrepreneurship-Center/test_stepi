@@ -109,7 +109,7 @@ export default function TalentTypesSection({
 
   // 이 분석에 저장된 세트들. 없으면 미팅 자료의 예시가 기본값이다.
   // 아직 못 불러왔을 때도 기본값이 오므로, 그 둘을 status 로 구분해 알려준다.
-  const { sets, status } = useTalentSets(jobId);
+  const { sets, status, isDefault } = useTalentSets(jobId);
   // 어느 세트든 선정된 항목은 전체 목록에서 강조한다
   const selectedNos = useMemo(() => new Set(sets.flatMap((s) => s.nos)), [sets]);
 
@@ -170,11 +170,11 @@ export default function TalentTypesSection({
       {/* ── 1안 : 선정 인재상 ── */}
       <Block
         title="선정 인재상"
-        count={status === "loading" ? "" : `${sets.length}세트`}
+        count={status === "loading" ? "" : status === "error" ? "불러오기 실패" : isDefault ? "기본 예시" : `${sets.length}세트`}
         badge={<MockBadge />}
         desc={
           <>
-            이번 분석에 적용된 인재상입니다. 왼쪽 메뉴의{" "}
+            {status === "ready" && isDefault ? "저장된 인재상 세트가 없어 기본 예시를 표시합니다." : "이번 분석에 적용된 인재상입니다."} 왼쪽 메뉴의{" "}
             <b className="font-bold text-[var(--ink)]">인재상 선택</b>에서 변경할 수 있습니다.
           </>
         }
