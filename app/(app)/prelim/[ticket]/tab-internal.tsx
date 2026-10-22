@@ -48,7 +48,7 @@ function AiRow({ d, cls, judge, busy }: { d: PrelimDegreeAiRow; cls?: string; ju
       <td>
         <div className="jbtns">
           {btn("confirm", "c", "제척 확정")}
-          {d.relation !== "different" ? btn("dismiss", "d", "제외") : v === "dismiss" ? btn("dismiss", "d", "제외 취소") : null}
+          {btn("dismiss", "d", "제외")}
         </div>
       </td>
     </tr>
@@ -77,7 +77,6 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
   const ai = derived.inx.degree_ai;
   const aiCnt = derived.inx.degree_ai_counts;
   const aiShown = (ai ?? []).filter((d) => d.relation !== "different");
-  const aiDiff = (ai ?? []).filter((d) => d.relation === "different");
   const aiHead = (
     <tr>
       <th style={{ width: 88 }}>수험번호</th>
@@ -425,7 +424,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
           <div className="guide" style={{ background: "#fff", borderBottom: "1px solid var(--line)" }}>
             <span className="hint upfmt">
               학교·지도교수는 같지만 전공명이 직접 일치하지 않는 학력을 서버의 AI 모델로 비교한 결과입니다. <b>제척 확정이 아니며</b> 양쪽 전공 원문과 근거를 보고
-              판정해 주세요. 다른 전공으로 비교된 학력은 아래에 접어 두었으며, 따로 제외하지 않아도 됩니다. <b>제척 확정</b>을 누른 줄만 위 학위별 동일학력, 제척 내부위원 전체 목록과 건수에 들어갑니다.
+              판정해 주세요. 다른 전공으로 비교된 학력은 판정 대상에서 빼고 전체 엑셀에만 남겼습니다. <b>제척 확정</b>을 누른 줄만 위 학위별 동일학력, 제척 내부위원 전체 목록과 건수에 들어갑니다.
             </span>
           </div>
           <div className="tblwrap">
@@ -444,21 +443,6 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
               </tbody>
             </table>
           </div>
-          {aiDiff.length > 0 && (
-            <details className="ai-diff-list">
-              <summary>다른 전공으로 비교된 학력 {aiDiff.length}건 보기</summary>
-              <div className="tblwrap">
-                <table className="dtable">
-                  <thead>{aiHead}</thead>
-                  <tbody>
-                    {aiDiff.map((d) => (
-                      <AiRow key={d.id} d={d} cls={fcls(d.no)} judge={judge} busy={busy} />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </details>
-          )}
           <div className="note">
             판단 불가는 정보 부족, 모델 오류, 시간 초과처럼 비교를 끝내지 못한 경우를 포함하며 불일치가 아닙니다. 검토를 실행할 때 비교해 저장한 결과이며 다시 열거나
             엑셀을 받을 때 다시 비교하지 않습니다.

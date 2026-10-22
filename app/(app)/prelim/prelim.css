@@ -539,4 +539,3 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .tag.ai-rel { border: 1px solid var(--line-strong); background: #fff; color: var(--ink); }
 .prelim .tag.ai-unk { border: 1px dashed var(--line-strong); background: var(--surface); color: var(--muted); }
 .prelim .tag.ai-diff { background: var(--surface); color: var(--muted); }
-.prelim .ai-diff-list > summary { padding: 12px 24px; border-top: 1px solid var(--line); font-size: 14.5px; color: var(--navy); }
