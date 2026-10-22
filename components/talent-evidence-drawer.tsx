@@ -12,7 +12,6 @@ import {
   TALENT_SCORE_DISPLAY_MAX,
 } from "@/lib/talent-evaluation";
 import { useFocusTrap } from "@/lib/use-focus-trap";
-import { MockBadge } from "@/components/mock-mark";
 
 /**
  * 인재상 하나의 문항별 판정과 근거를 보여주는 오른쪽 패널.
@@ -111,7 +110,7 @@ export default function TalentEvidenceDrawer({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="min-w-0 truncate text-[18.5px] font-bold text-[var(--ink)]">{axis.axis}</h3>
-                  <MockBadge />
+
                 </div>
                 <p className="mt-1 text-[13.5px] text-[var(--ink-muted)] tabular-nums">
                   충족 {axis.o_count} · 미충족 {axis.x_count} · 판정 불가 {axis.n_count}
@@ -148,7 +147,7 @@ export default function TalentEvidenceDrawer({
               {axis.score === null
                 ? "판정할 수 있는 문항이 없어 점수를 내지 못했습니다."
                 : axis.n_count > 0
-                  ? `문항 ${axis.items.length}개 중 ${axis.n_count}개는 근거 데이터가 없어 계산에서 뺐습니다. 남은 ${axis.effective_total}개 중 ${axis.o_count}개를 충족해 ${formatScore100(axis.score)}점입니다.`
+                  ? `문항 ${axis.items.length}개 중 ${axis.n_count}개는 판정할 수 없어 계산에서 뺐습니다. 남은 ${axis.effective_total}개 중 ${axis.o_count}개를 충족해 ${formatScore100(axis.score)}점입니다.`
                   : `문항 ${axis.items.length}개 중 ${axis.o_count}개를 충족해 ${formatScore100(axis.score)}점입니다.`}
             </p>
 
@@ -159,7 +158,7 @@ export default function TalentEvidenceDrawer({
             )}
           </div>
 
-          {/* ── 문항 목록 ── 근거 칸의 논문·회사·인용문은 전부 지어낸 값이다 */}
+          {/* ── 문항 목록 ── 서버 판정에 사용된 근거를 표시한다 */}
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
             <ul className="space-y-2.5">
               {groups.map((g) =>
@@ -354,7 +353,7 @@ function EvidenceView({ ev }: { ev: Evidence }) {
           “{ev.quote}”
         </p>
         <p className="mt-1 pl-2.5 text-[12px] text-[var(--ink-soft)]">
-          자기소개서 {ev.essay_index}번 {ev.question && `· ${ev.question}`}
+          자기소개서 {ev.essay_index != null && `${ev.essay_index}번 `}{ev.question && `· ${ev.question}`}
         </p>
       </div>
     );

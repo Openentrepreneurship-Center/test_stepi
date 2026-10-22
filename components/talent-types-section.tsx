@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { TALENT_TYPES } from "@/lib/talent-types";
 import { useTalentSets, type TalentSet } from "@/lib/talent-selection";
@@ -10,10 +10,10 @@ import {
   TALENT_SCORE_MAX,
   TALENT_SCORE_DISPLAY_MAX,
   type AxisResult,
+  type ApplicantEvaluation,
 } from "@/lib/talent-evaluation";
 import RadarCard from "@/components/radar-card";
 import TalentEvidenceDrawer from "@/components/talent-evidence-drawer";
-import { MockBadge } from "@/components/mock-mark";
 import { Bar } from "@/components/page-skeleton";
 
 /**
@@ -29,8 +29,8 @@ import { Bar } from "@/components/page-skeleton";
  * 그 수만큼이면 글자가 겹쳐 읽을 수 없다. 가로 막대가 유일한 현실적 선택이다.
  *
  * ── 점수의 출처
- *    lib/talent-evaluation.ts 가 문항 10개의 판정(O/X/N)에서 계산한다.
- *    아직 목 데이터이지만 계산 방식은 실제와 같다. 어느 줄이든 눌러 근거를 볼 수 있다.
+ *    백엔드가 엑셀 기준 문항의 판정(O/X/N)에서 계산한다.
+ *    어느 줄이든 눌러 실제 입력 근거와 보류 사유를 볼 수 있다.
  *
  * `"use client"` 인 이유는 펼치기 상태·근거 패널·세트 저장값 구독 때문이다.
  */
@@ -99,11 +99,19 @@ export default function TalentTypesSection({
    */
   const triggerRef = useRef<HTMLElement | null>(null);
 
-  // 지원자 한 명의 34유형 채점 결과. 목 단계에서는 동기 함수라 그대로 읽는다.
-  // 서버 호출이 생기면 lib/talent-selection.ts 의 useSyncExternalStore 방식을 따른다.
-  const evaluation = useMemo(() => getEvaluation(applicantId), [applicantId]);
+  const [result, setResult] = useState<{ key: string; data?: ApplicantEvaluation; error?: string } | null>(null);
+  const requestKey = `${jobId}/${applicantId}`;
+  useEffect(() => {
+    const controller = new AbortController();
+    getEvaluation(jobId, applicantId, controller.signal).then(
+      (data) => { if (!controller.signal.aborted) setResult({ key: requestKey, data }); },
+      () => { if (!controller.signal.aborted) setResult({ key: requestKey, error: "인재상 판정 결과를 불러오지 못했습니다." }); },
+    );
+    return () => controller.abort();
+  }, [jobId, applicantId, requestKey]);
+  const evaluation = result?.key === requestKey ? result.data : undefined;
   const axisByNo = useMemo(
-    () => new Map(evaluation.axes.map((a) => [a.no, a])),
+    () => new Map((evaluation?.axes ?? []).map((a) => [a.no, a])),
     [evaluation],
   );
 
@@ -137,7 +145,7 @@ export default function TalentTypesSection({
 
   // 어느 세트에도 없는 나머지. 기본 상태에서는 목록만 접히고 구획 머리는 남는다
   const others = useMemo(
-    () => evaluation.axes.filter((a) => !selectedNos.has(a.no)).sort(byScoreDesc),
+    () => (evaluation?.axes ?? []).filter((a) => !selectedNos.has(a.no)).sort(byScoreDesc),
     [evaluation, selectedNos],
   );
   const allShown = expanded || printMode;
@@ -154,9 +162,12 @@ export default function TalentTypesSection({
   };
   const opened = openNo === null ? null : (axisByNo.get(openNo) ?? null);
 
+  if (!evaluation) return <div role="status">{result?.key === requestKey && result.error ? result.error : "인재상 판정 결과를 불러오는 중입니다."}</div>;
+
   return (
     // 자기소개서 탭과 같은 간격으로 카드를 쌓는다
     <div className="print-flow print-sections flex flex-col gap-5">
+      <p className="text-sm text-[var(--ink-muted)]">초기 판정입니다. 추가 요청·미확정 기준은 점수에서 제외됩니다. {evaluation.reference_date ? `기준일: ${evaluation.reference_date}` : "기준일 미지정으로 최근 연도·기간 판정을 보류합니다."}</p>
       <style>{`
         @keyframes stepi-talent-grow {
           from {transform: scaleX(0);}
@@ -171,7 +182,7 @@ export default function TalentTypesSection({
       <Block
         title="선정 인재상"
         count={status === "loading" ? "" : status === "error" ? "불러오기 실패" : isDefault ? "기본 예시" : `${sets.length}세트`}
-        badge={<MockBadge />}
+        badge={<span className="text-xs">엑셀 v0.2 초기 판정</span>}
         desc={
           <>
             {status === "ready" && isDefault ? "저장된 인재상 세트가 없어 기본 예시를 표시합니다." : "이번 분석에 적용된 인재상입니다."} 왼쪽 메뉴의{" "}
@@ -229,10 +240,10 @@ export default function TalentTypesSection({
         title="전체 인재상"
         split
         count={`${TALENT_TYPES.length}개`}
-        badge={<MockBadge />}
+        badge={<span className="text-xs">엑셀 v0.2 초기 판정</span>}
         desc={
           <>
-            인재상마다 사실 확인 문항 10개 중 충족한 수로 점수를 냅니다.{" "}
+            인재상마다 판정 가능한 문항 중 충족한 수로 점수를 냅니다. 미확정 기준과 자료 부족은 판정 불가로 표시합니다.{" "}
             <b className="font-bold text-[var(--ink)]">줄을 누르면 판정과 근거가 열립니다.</b>
           </>
         }
