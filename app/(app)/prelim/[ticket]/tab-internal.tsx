@@ -462,12 +462,6 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
           <div className="note">
             판단 불가는 정보 부족, 모델 오류, 시간 초과처럼 비교를 끝내지 못한 경우를 포함하며 불일치가 아닙니다. 검토를 실행할 때 비교해 저장한 결과이며 다시 열거나
             엑셀을 받을 때 다시 비교하지 않습니다.
-            {ai[0]?.model && (
-              <>
-                {" "}
-                비교 모델 <span className="mono">{ai[0].model}</span>, 프롬프트 <span className="mono">{ai[0].prompt_version}</span>.
-              </>
-            )}
           </div>
         </div>
       )}
