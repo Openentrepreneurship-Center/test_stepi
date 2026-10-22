@@ -20,10 +20,9 @@ export async function POST(req: Request) {
   const job = url.searchParams.get("job"); const applicant = url.searchParams.get("applicant");
   if (!job || !applicant) return NextResponse.json({ error: "missing_job_or_applicant" }, { status: 400 });
   const key = process.env.AI_DETECTION_API_TOKEN;
-  if (!key) return NextResponse.json({ error: "ai_detection_disabled" }, { status: 503 });
   try {
     const res = await apiFetch(`/analysis-jobs/${encodeURIComponent(job)}/applicants/${encodeURIComponent(applicant)}/ai-detection`, {
-      method: "POST", headers: { "X-AI-Detection-Key": key }, cache: "no-store", signal: AbortSignal.timeout(90_000),
+      method: "POST", headers: key ? { "X-AI-Detection-Key": key } : {}, cache: "no-store", signal: AbortSignal.timeout(90_000),
     });
     return new NextResponse(await res.text(), { status: res.status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
   } catch (error) {
