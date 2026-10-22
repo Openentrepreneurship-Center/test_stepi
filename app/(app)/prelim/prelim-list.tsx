@@ -247,7 +247,7 @@ export default function PrelimList({ trashed, tabs }: { trashed: boolean; tabs?:
                     {vc ? (
                       <span className="text-[16.5px] font-medium text-[var(--ink)] tabular-nums">
                         {r.judged ?? 0}
-                        <span className="text-[var(--ink-muted)] font-normal"> / {vc.essay + vc.attach}</span>
+                        <span className="text-[var(--ink-muted)] font-normal"> / {r.judged_total ?? vc.essay + vc.attach}</span>
                       </span>
                     ) : (
                       <span className={CELL}>-</span>

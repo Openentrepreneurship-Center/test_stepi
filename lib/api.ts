@@ -893,6 +893,8 @@ export interface PrelimSummary {
   /** view 를 저장하기 전의 옛 실행은 null */
   view_counts?: { essay: number; attach: number; inx: number; exx: number } | null;
   judged?: number;
+  /** 판정 대상 수(자소서 위배 + 첨부 후보 + 다른 전공이 아닌 AI 비교 줄) */
+  judged_total?: number | null;
 }
 
 export const prelim = {
