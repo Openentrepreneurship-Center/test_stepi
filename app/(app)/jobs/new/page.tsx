@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { UploadCloud, FileSpreadsheet, FilePlus2, FileArchive } from "lucide-react";
 import { api } from "@/lib/api";
@@ -25,6 +25,10 @@ export default function NewJobPage() {
   const [busyMsg, setBusyMsg] = useState<string>("업로드 중…");
   const [err, setErr] = useState<string | null>(null);
   const [zipSummary, setZipSummary] = useState<string | null>(null);
+  const [zipErrors, setZipErrors] = useState<string[]>([]);
+  const [unmatchedApplicants, setUnmatchedApplicants] = useState<string[]>([]);
+  const [createdJobId, setCreatedJobId] = useState<string | null>(null);
+  const submitting = useRef(false);
   const [sheets, setSheets] = useState<string[]>([]);
   const [sheetName, setSheetName] = useState<string>("");
   const [infoSheets, setInfoSheets] = useState<string[]>([]);
@@ -79,43 +83,113 @@ export default function NewJobPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) return;
+    if (submitting.current || (!createdJobId && !file)) return;
+    submitting.current = true;
     setBusy(true);
-    setBusyMsg("자기소개서 업로드 중…");
+    setBusyMsg(createdJobId ? "논문 PDF ZIP 업로드 중…" : "자기소개서 업로드 중…");
     setErr(null);
     setZipSummary(null);
+    setZipErrors([]);
+    setUnmatchedApplicants([]);
     try {
-      const r = await api.uploadExcel(file, {
-        request_id: label || undefined,
-        mode,
-        job_track: track || undefined,
-        info_file: infoFile ?? undefined,
-        sheet_name: sheetName || undefined,
-        info_sheet_name: infoSheetName || undefined,
-      });
+      let jobId = createdJobId;
+      if (!jobId && file) {
+        const r = await api.uploadExcel(file, {
+          request_id: label || undefined,
+          mode,
+          job_track: track || undefined,
+          info_file: infoFile ?? undefined,
+          sheet_name: sheetName || undefined,
+          info_sheet_name: infoSheetName || undefined,
+        });
+        jobId = r.job_id;
+        setCreatedJobId(jobId);
+      }
+      if (!jobId) return;
       if (pdfZip) {
         setBusyMsg("논문 PDF zip 업로드 중…");
         try {
-          const bulk = await api.bulkUploadPapers(r.job_id, pdfZip);
+          const bulk = await api.bulkUploadPapers(jobId, pdfZip);
           setZipSummary(
             `논문 PDF ${bulk.queued}건 분석을 시작했습니다 · 중복 제외 ${bulk.duplicate_skipped}건 · 연결 안 된 지원자 ${bulk.unmatched_applicants.length}명`,
           );
+          setZipErrors(bulk.errors);
+          setUnmatchedApplicants(bulk.unmatched_applicants);
         } catch (zerr) {
-          // zip 업로드 실패해도 job 자체는 진행 — 사용자가 상세 페이지에서 재시도 가능
           setErr(
             `자기소개서 분석은 시작됐으나 PDF zip 업로드 실패: ${
               zerr instanceof Error ? zerr.message : String(zerr)
             }`,
           );
         }
+        // 생성된 분석은 유지하고 ZIP 결과를 확인·재시도한 뒤 이동한다.
+        return;
       }
 
-      router.push(`/jobs/${r.job_id}`);
+      router.push(`/jobs/${encodeURIComponent(jobId)}`);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "업로드 실패");
+    } finally {
+      submitting.current = false;
       setBusy(false);
     }
   };
+
+  if (createdJobId) {
+    return (
+      <div className="px-8 lg:px-12 py-9 max-w-3xl mx-auto fade-up">
+        <PageHeader
+          eyebrow="지원자 분석"
+          icon={FilePlus2}
+          title="논문 PDF 업로드 결과"
+          description="자기소개서 분석은 시작됐습니다. 논문 업로드 결과를 확인한 뒤 분석 결과로 이동해 주세요."
+        />
+        <form onSubmit={submit} className="space-y-6 mt-6 panel">
+          {busy && <p role="status">{busyMsg}</p>}
+          {err && <p role="alert" className="text-[var(--bad)] break-words">{err}</p>}
+          {zipSummary && <p role="status">{zipSummary}</p>}
+          {zipErrors.length > 0 && (
+            <section aria-label="처리하지 못한 논문">
+              <h2 className="font-semibold">논문 처리 안내 {zipErrors.length}건</h2>
+              <ul className="list-disc pl-5 mt-2 space-y-1 break-words">
+                {zipErrors.map((message, index) => <li key={index}>{message}</li>)}
+              </ul>
+            </section>
+          )}
+          {unmatchedApplicants.length > 0 && (
+            <section aria-label="연결하지 못한 지원자">
+              <h2 className="font-semibold">연결하지 못한 지원자 {unmatchedApplicants.length}명</h2>
+              <p className="mt-2 break-words">{unmatchedApplicants.join(", ")}</p>
+              <p className="mt-2">폴더의 지원자 번호가 자기소개서의 지원자 번호와 같은지 확인해 주세요.</p>
+            </section>
+          )}
+          <label className="block space-y-2">
+            <span className="block">논문 PDF ZIP 다시 선택 (PDF 파일 1개당 최대 50MB)</span>
+            <input
+              type="file"
+              className="block w-full min-w-0 max-w-full"
+              accept=".zip,application/zip,application/x-zip-compressed"
+              disabled={busy}
+              onChange={(e) => setPdfZip(e.target.files?.[0] ?? null)}
+            />
+          </label>
+          <p className="text-[13px] text-[var(--ink-muted)]">
+            용량을 초과했다면 파일을 나눠서 올려 주세요. 다시 올려도 자기소개서 분석은 새로 만들지 않습니다.
+            이미 등록된 논문은 중복 제외됩니다. 분석을 시작하지 못한 논문은 분석 결과에서 상태를 확인해 주세요.
+          </p>
+          <div className="flex flex-wrap gap-3 justify-end">
+            <button type="submit" className="btn-primary" disabled={busy || !pdfZip}>
+              {busy ? busyMsg : "논문 ZIP 다시 올리기"}
+            </button>
+            <button type="button" className="btn-primary" disabled={busy}
+              onClick={() => router.push(`/jobs/${encodeURIComponent(createdJobId)}`)}>
+              분석 결과 보기
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="px-8 lg:px-12 py-9 max-w-3xl mx-auto fade-up">
