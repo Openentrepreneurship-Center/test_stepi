@@ -256,7 +256,7 @@ export default function NewJobPage() {
 
         <label className="block">
           <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
-            논문 PDF (선택 · 압축파일)
+            논문 PDF (선택 · 압축파일 · PDF 파일 1개당 최대 50MB)
           </span>
           <label
             {...dragProps("zip")}

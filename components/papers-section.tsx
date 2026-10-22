@@ -111,7 +111,7 @@ export default function PapersSection({
       >
         <Upload size={14} className="text-[var(--ink-muted)]" />
         <span className="text-[13px] text-[var(--ink-muted)]">
-          {uploading ? "업로드 중…" : "PDF 논문 첨부 (50MB까지)"}
+          {uploading ? "업로드 중…" : "PDF 논문 첨부 (파일 1개당 최대 50MB)"}
         </span>
         <input
           type="file"
