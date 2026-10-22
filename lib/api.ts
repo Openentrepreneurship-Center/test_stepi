@@ -442,13 +442,13 @@ export const api = {
       { method: "POST" },
     ),
   listFeedback: (id: string, applicantId: string) =>
-    http<{ items: FeedbackEntry[] }>(`/analysis-jobs/${id}/applicants/${applicantId}/feedback`),
+    http<{ items: FeedbackEntry[] }>(`/analysis-jobs/${id}/applicants/${encodeURIComponent(applicantId)}/feedback`),
   upsertFeedback: (
     id: string,
     applicantId: string,
     body: { component: string; item_key?: string; rating: boolean },
   ) =>
-    http<FeedbackEntry>(`/analysis-jobs/${id}/applicants/${applicantId}/feedback`, {
+    http<FeedbackEntry>(`/analysis-jobs/${id}/applicants/${encodeURIComponent(applicantId)}/feedback`, {
       method: "PUT",
       body: JSON.stringify(body),
     }),
@@ -459,7 +459,7 @@ export const api = {
     itemKey = "",
   ) => {
     const qs = new URLSearchParams({ component, item_key: itemKey });
-    return http<void>(`/analysis-jobs/${id}/applicants/${applicantId}/feedback?${qs}`, {
+    return http<void>(`/analysis-jobs/${id}/applicants/${encodeURIComponent(applicantId)}/feedback?${qs}`, {
       method: "DELETE",
     });
   },
@@ -578,13 +578,13 @@ export const api = {
 
   // 논문 첨부
   listPapers: (id: string, applicantId: string) =>
-    http<PaperFile[]>(`/analysis-jobs/${id}/applicants/${applicantId}/papers`),
+    http<PaperFile[]>(`/analysis-jobs/${id}/applicants/${encodeURIComponent(applicantId)}/papers`),
   getPaperDetail: (id: string, applicantId: string, fileId: number) =>
-    http<PaperDetail>(`/analysis-jobs/${id}/applicants/${applicantId}/papers/${fileId}`),
+    http<PaperDetail>(`/analysis-jobs/${id}/applicants/${encodeURIComponent(applicantId)}/papers/${fileId}`),
   uploadPaper: async (id: string, applicantId: string, file: File) => {
     const fd = new FormData();
     fd.append("file", file);
-    const res = await apiFetch(`/analysis-jobs/${id}/applicants/${applicantId}/papers`,
+    const res = await apiFetch(`/analysis-jobs/${id}/applicants/${encodeURIComponent(applicantId)}/papers`,
       { method: "POST", body: fd },
     );
     if (!res.ok) {
@@ -595,18 +595,18 @@ export const api = {
   },
   deletePaper: (id: string, applicantId: string, fileId: number) =>
     http<void>(
-      `/analysis-jobs/${id}/applicants/${applicantId}/papers/${fileId}`,
+      `/analysis-jobs/${id}/applicants/${encodeURIComponent(applicantId)}/papers/${fileId}`,
       { method: "DELETE" },
     ),
   paperPdfUrl: (id: string, applicantId: string, fileId: number) =>
-    downloadUrl(`/analysis-jobs/${id}/applicants/${applicantId}/papers/${fileId}/pdf`),
+    downloadUrl(`/analysis-jobs/${id}/applicants/${encodeURIComponent(applicantId)}/papers/${fileId}/pdf`),
 
   // 직군 적합도 v2
   getDeptFit: (id: string, applicantId: string) =>
-    http<DeptFitResponse>(`/analysis-jobs/${id}/applicants/${applicantId}/dept-fit`),
+    http<DeptFitResponse>(`/analysis-jobs/${id}/applicants/${encodeURIComponent(applicantId)}/dept-fit`),
   recomputeDeptFit: (id: string, applicantId: string) =>
     http<{ enqueued: boolean; applicant_id: string }>(
-      `/analysis-jobs/${id}/applicants/${applicantId}/dept-fit/recompute`,
+      `/analysis-jobs/${id}/applicants/${encodeURIComponent(applicantId)}/dept-fit/recompute`,
       { method: "POST" },
     ),
 };
