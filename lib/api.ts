@@ -1,3 +1,4 @@
+import type { AiDetectionExplanation } from "./ai-detection";
 import { SESSION_COOKIE, sessionExp, signApiToken, verifySession } from "./auth";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
@@ -182,6 +183,7 @@ export interface AiDetection {
     threshold_score: number; threshold_exceeded: boolean; warnings: string[];
     model_version: string; calibration_version: string; normalization_version: string;
     input_hash: string; analyzed_at: string;
+    explanation?: AiDetectionExplanation;
   };
   last_attempt: null | { run_id: string; started_at: string; finished_at: string | null; error_code: string | null };
   stale: boolean;

@@ -12,6 +12,7 @@ import DeptFitV2Section from "@/components/dept-fit-v2-section";
 import DetailTabs from "@/components/detail-tabs";
 import TalentTypesSection from "@/components/talent-types-section";
 import AiUsageSection from "@/components/ai-usage-section";
+import { ExperimentalBadge } from "@/components/mock-mark";
 import { aiUsageHeadline } from "@/lib/ai-usage";
 import InterviewQuestionsToggle from "@/components/interview-questions-toggle";
 import { cleanReason } from "@/lib/clean-reason";
@@ -344,7 +345,7 @@ export default async function ApplicantDetailPage({
                     바로 아래에서 그 문항 내용을 확인하는 동선이 이어진다. */}
                 <Card
                   title="AI 사용 의심도 근거"
-                  badge={<span className="rounded-full border border-[var(--line-strong)] px-2 py-0.5 text-[11px] text-[var(--ink-muted)]">실험용</span>}
+                  badge={<ExperimentalBadge />}
                   desc="자기소개서의 문자 패턴을 비교한 실험 점수입니다. AI 사용 비율이나 작성 확률이 아닙니다."
                 >
                   <AiDetectionButton jobId={id} applicantId={decodedAppId} running={applicant.ai_detection?.status === "running"} />

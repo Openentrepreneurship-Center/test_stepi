@@ -13,3 +13,8 @@ export function MockBadge() {
 export function PendingBadge() {
   return <span className={BADGE}>준비 중</span>;
 }
+
+/** AI 검토의 실험 상태. 기존 준비 중 배지와 동일한 디자인을 사용한다. */
+export function ExperimentalBadge() {
+  return <span className={BADGE}>실험중</span>;
+}

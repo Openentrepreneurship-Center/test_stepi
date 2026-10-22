@@ -10,6 +10,7 @@ import DeptFitList from "@/components/dept-fit-list";
 import PrintAuto from "@/components/print-auto";
 import PrintButton from "@/components/print-button";
 import AiUsageSection from "@/components/ai-usage-section";
+import { ExperimentalBadge } from "@/components/mock-mark";
 import TalentTypesSection from "@/components/talent-types-section";
 import { aiUsageHeadline } from "@/lib/ai-usage";
 import { cleanReason } from "@/lib/clean-reason";
@@ -318,7 +319,7 @@ export default async function ApplicantPrintPage({
         {/* AI 사용 의심도 근거 — 대시보드와 같은 자리(자기소개서 핵심 바로 위) */}
         <Card
           title="AI 사용 의심도 근거"
-          badge={<span className="rounded-full border border-[var(--line-strong)] px-2 py-0.5 text-[11px] text-[var(--ink-muted)]">실험용</span>}
+          badge={<ExperimentalBadge />}
           desc="자기소개서의 문자 패턴을 비교한 실험 점수입니다. AI 사용 비율이나 작성 확률이 아닙니다."
         >
           <AiUsageSection detection={applicant.ai_detection} />
