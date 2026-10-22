@@ -1,5 +1,5 @@
 import type { JudgedBy, SourceField, ItemFlag } from "./talent-criteria";
-import { apiFetch } from "./api";
+import { API_BASE } from "./api";
 export type { JudgedBy, SourceField, ItemFlag };
 
 export type Verdict = "O" | "X" | "N";
@@ -89,7 +89,7 @@ export function evidenceFor(_applicantId: string, item: ItemResult): Evidence[] 
   return item.evidence;
 }
 export async function getEvaluation(jobId: string, applicantId: string, signal?: AbortSignal): Promise<ApplicantEvaluation> {
-  const res = await apiFetch(`/analysis-jobs/${encodeURIComponent(jobId)}/applicants/${encodeURIComponent(applicantId)}/talent-evaluation`, { cache: "no-store", signal });
+  const res = await fetch(`${API_BASE}/analysis-jobs/${encodeURIComponent(jobId)}/applicants/${encodeURIComponent(applicantId)}/talent-evaluation`, { cache: "no-store", signal });
   if (!res.ok) throw new Error("인재상 판정 결과를 불러오지 못했습니다.");
   return res.json();
 }
