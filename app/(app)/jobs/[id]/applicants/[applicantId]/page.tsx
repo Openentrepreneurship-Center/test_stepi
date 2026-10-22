@@ -1,3 +1,4 @@
+import AiDetectionButton from "@/components/ai-detection-button";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { api, asError, feedbackKey, isNotFound } from "@/lib/api";
@@ -11,7 +12,6 @@ import DeptFitV2Section from "@/components/dept-fit-v2-section";
 import DetailTabs from "@/components/detail-tabs";
 import TalentTypesSection from "@/components/talent-types-section";
 import AiUsageSection from "@/components/ai-usage-section";
-import { PendingBadge } from "@/components/mock-mark";
 import { aiUsageHeadline } from "@/lib/ai-usage";
 import InterviewQuestionsToggle from "@/components/interview-questions-toggle";
 import { cleanReason } from "@/lib/clean-reason";
@@ -19,7 +19,7 @@ import ApplicantPdfButton from "@/components/applicant-pdf-button";
 
 export const dynamic = "force-dynamic";
 
-const aiUsageHead = aiUsageHeadline();
+
 
 export default async function ApplicantDetailPage({
   params,
@@ -90,6 +90,7 @@ export default async function ApplicantDetailPage({
     return fbMap.has(k) ? (fbMap.get(k) as boolean) : null;
   };
 
+  const aiUsageHead = aiUsageHeadline(applicant.ai_detection);
   const fitVals = Object.values(applicant.scores?.job_fit ?? {});
   // LLM 채점은 1-10 scale 로 들어오지만 UI 는 /100 로 표시 (직군적합도 v2 와 통일).
   const fitAvg100 =
@@ -343,10 +344,11 @@ export default async function ApplicantDetailPage({
                     바로 아래에서 그 문항 내용을 확인하는 동선이 이어진다. */}
                 <Card
                   title="AI 사용 의심도 근거"
-                  badge={<PendingBadge />}
-                  desc="자기소개서 문체와 문장 흐름을 보고 AI가 썼는지 가늠합니다."
+                  badge={<span className="rounded-full border border-[var(--line-strong)] px-2 py-0.5 text-[11px] text-[var(--ink-muted)]">실험용</span>}
+                  desc="자기소개서의 문자 패턴을 비교한 실험 점수입니다. AI 사용 비율이나 작성 확률이 아닙니다."
                 >
-                  <AiUsageSection />
+                  <AiDetectionButton jobId={id} applicantId={decodedAppId} running={applicant.ai_detection?.status === "running"} />
+                  <AiUsageSection detection={applicant.ai_detection} />
                 </Card>
 
                 {/* 자기소개서 핵심 — 문항별로 묶어 정리 */}

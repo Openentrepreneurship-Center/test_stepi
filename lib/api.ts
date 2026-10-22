@@ -175,7 +175,20 @@ export interface JobFailuresResponse {
   groups: FailureGroup[];
 }
 
+export interface AiDetection {
+  status: "not_analyzed" | "running" | "succeeded" | "insufficient_input" | "failed";
+  last_success: null | {
+    score: number; score_kind: "experimental_suspicion";
+    threshold_score: number; threshold_exceeded: boolean; warnings: string[];
+    model_version: string; calibration_version: string; normalization_version: string;
+    input_hash: string; analyzed_at: string;
+  };
+  last_attempt: null | { run_id: string; started_at: string; finished_at: string | null; error_code: string | null };
+  stale: boolean;
+}
+
 export interface ApplicantResult {
+  ai_detection?: AiDetection;
   applicant_id: string;
   job_track: string;
   job_field?: string | null;

@@ -10,7 +10,6 @@ import DeptFitList from "@/components/dept-fit-list";
 import PrintAuto from "@/components/print-auto";
 import PrintButton from "@/components/print-button";
 import AiUsageSection from "@/components/ai-usage-section";
-import { PendingBadge } from "@/components/mock-mark";
 import TalentTypesSection from "@/components/talent-types-section";
 import { aiUsageHeadline } from "@/lib/ai-usage";
 import { cleanReason } from "@/lib/clean-reason";
@@ -28,7 +27,7 @@ export async function generateMetadata({
   return { title: { absolute: decodeURIComponent(applicantId) } };
 }
 
-const aiUsageHead = aiUsageHeadline();
+
 
 // 화면 기본(320)대로 그리면 레이더 카드가 첫 장 남은 자리에 안 들어가 통째로 다음 장으로 밀린다
 const PRINT_RADAR_HEIGHT = 230;
@@ -42,7 +41,7 @@ const PRINT_RADAR_HEIGHT = 230;
  * 글 길이가 달라도 한 항목이 차지하는 자리는 같다. 섹션끼리는 빈틈 없이 이어 붙이고,
  * 내용이 없는 섹션은 한 줄 안내로 접는다.
  *
- * 아직 준비 중인 AI 사용 의심도와 목업인 인재상 유형도 함께 싣되, 화면과 같은 배지를 붙인다.
+ * 실험용 AI 사용 의심도와 목업인 인재상 유형도 함께 싣되, 화면과 같은 배지를 붙인다.
  */
 export default async function ApplicantPrintPage({
   params,
@@ -105,6 +104,7 @@ export default async function ApplicantPrintPage({
     ? undefined
     : sourceInputRes.applicants.find((a) => a.applicant_id === decodedAppId);
 
+  const aiUsageHead = aiUsageHeadline(applicant.ai_detection);
   const fitVals = Object.values(applicant.scores?.job_fit ?? {});
   const fitAvg100 =
     fitVals.length > 0 ? (fitVals.reduce((s, v) => s + v.score, 0) / fitVals.length) * 10 : null;
@@ -318,10 +318,10 @@ export default async function ApplicantPrintPage({
         {/* AI 사용 의심도 근거 — 대시보드와 같은 자리(자기소개서 핵심 바로 위) */}
         <Card
           title="AI 사용 의심도 근거"
-          badge={<PendingBadge />}
-          desc="자기소개서 문체와 문장 흐름을 보고 AI가 썼는지 가늠합니다. 만들 지표 목록입니다."
+          badge={<span className="rounded-full border border-[var(--line-strong)] px-2 py-0.5 text-[11px] text-[var(--ink-muted)]">실험용</span>}
+          desc="자기소개서의 문자 패턴을 비교한 실험 점수입니다. AI 사용 비율이나 작성 확률이 아닙니다."
         >
-          <AiUsageSection />
+          <AiUsageSection detection={applicant.ai_detection} />
         </Card>
 
         {/* 자기소개서 핵심 */}
