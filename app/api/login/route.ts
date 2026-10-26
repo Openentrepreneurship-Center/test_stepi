@@ -41,7 +41,8 @@ export async function POST(req: Request) {
   res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // https 가 없는 기관 내부망 대비. 기본은 켜짐 (spec 009 결정 7번)
+    secure: process.env.NODE_ENV === "production" && process.env.SESSION_COOKIE_SECURE !== "false",
     path: "/",
     maxAge: SESSION_DURATION_SECONDS,
   });

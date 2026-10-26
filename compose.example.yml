@@ -1,0 +1,11 @@
+# 예시. 운영 compose 는 nginx·백엔드 통합 spec 에서 정한다 (spec 009 결정 1번)
+services:
+  frontend:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+    env_file: .env
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3006}:3000"
+    restart: unless-stopped
