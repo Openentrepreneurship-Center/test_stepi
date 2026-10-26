@@ -52,4 +52,6 @@ docker run -d --name stepi-frontend -p 127.0.0.1:3006:3000 --env-file .env stepi
 실행 때 쓰는 환경변수(값은 기관에서 새로 발급하고 문서·Git에 적지 않는다):
 `SESSION_SECRET`, `AUTH_PASSWORD`, `AUTH_PASSWORD_2`, `API_AUTH_SECRET`, `AI_DETECTION_API_TOKEN`, `AI_DETECTION_ALLOWED_ORIGIN`
 
-접속 주소가 https가 아니면 로그인 쿠키가 저장되지 않는다. 이때만 `.env`에 `SESSION_COOKIE_SECURE=false`를 넣는다.
+위 명령은 서버 안(127.0.0.1)에서만 열린다. 다른 PC에서 접속하려면 앞에 nginx 같은 리버스 프록시를 두거나 연결 주소를 바꾼다.
+
+접속 주소가 https가 아니면 로그인 쿠키가 저장되지 않는다. 이때만 `.env`에 `SESSION_COOKIE_SECURE=false`를 넣는다(정확히 소문자 `false`).

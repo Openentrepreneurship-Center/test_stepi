@@ -1,6 +1,28 @@
-node_modules
-.next
-.git
-.env*
-*.tsbuildinfo
-*.rootbak.*
+# 허용 목록: 빌드에 필요한 것만 넣는다. 새 소스 파일·폴더를 추가하면 여기에도 적는다(빠지면 빌드가 실패한다)
+*
+!app
+!components
+!lib
+!public
+!proxy.ts
+!next.config.ts
+!tsconfig.json
+!postcss.config.mjs
+!eslint.config.mjs
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+
+# 허용한 폴더 안에 섞여 든 비밀값·업무 데이터도 뺀다. public/templates 의 양식만 되살린다
+**/.env*
+**/attachments
+**/samples
+**/지원자데이터
+**/.polaris
+**/*.xlsx
+**/*.xls
+**/*.csv
+**/*.zip
+**/*.pkl
+!public/templates/*.xlsx
+!public/templates/*.zip
