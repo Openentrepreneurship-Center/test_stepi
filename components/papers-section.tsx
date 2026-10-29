@@ -107,7 +107,7 @@ export default function PapersSection({
     <div className="space-y-8">
       {/* 업로드 영역 */}
       <label
-        className="flex items-center justify-center gap-2 border border-dashed border-[var(--line-strong)] py-6 cursor-pointer hover:bg-[var(--bg-2)] transition"
+        className="flex items-center justify-center gap-2 border border-dashed border-[var(--line-strong)] py-6 cursor-pointer hover:bg-[var(--bg-2)] transition has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--ink)]"
       >
         <Upload size={14} className="text-[var(--ink-muted)]" />
         <span className="text-[13px] text-[var(--ink-muted)]">
@@ -116,7 +116,7 @@ export default function PapersSection({
         <input
           type="file"
           accept="application/pdf,.pdf"
-          className="hidden"
+          className="sr-only"
           disabled={uploading}
           onChange={(e) => {
             const f = e.target.files?.[0];

@@ -208,7 +208,7 @@ export default function NewJobPage() {
           </span>
           <label
             {...dragProps("essay")}
-            className={`flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed transition cursor-pointer py-10 px-6 ${
+            className={`flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed transition cursor-pointer py-10 px-6 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--ink)] ${
               dragOver === "essay"
                 ? "border-[var(--secondary)] bg-[var(--secondary)]/8"
                 : "border-[var(--line-strong)] bg-[var(--bg-2)]/40 hover:bg-[var(--bg-2)]"
@@ -271,7 +271,7 @@ export default function NewJobPage() {
           </span>
           <label
             {...dragProps("info")}
-            className={`flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed transition cursor-pointer py-7 px-6 ${
+            className={`flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed transition cursor-pointer py-7 px-6 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--ink)] ${
               dragOver === "info"
                 ? "border-[var(--secondary)] bg-[var(--secondary)]/8"
                 : "border-[var(--line)] bg-[var(--bg-2)]/30 hover:bg-[var(--bg-2)]"
@@ -334,7 +334,7 @@ export default function NewJobPage() {
           </span>
           <label
             {...dragProps("zip")}
-            className={`flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed transition cursor-pointer py-7 px-6 ${
+            className={`flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed transition cursor-pointer py-7 px-6 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--ink)] ${
               dragOver === "zip"
                 ? "border-[var(--secondary)] bg-[var(--secondary)]/8"
                 : "border-[var(--line)] bg-[var(--bg-2)]/30 hover:bg-[var(--bg-2)]"
@@ -412,7 +412,7 @@ export default function NewJobPage() {
             ].map((opt) => (
               <label
                 key={opt.v}
-                className={`cursor-pointer rounded-xl border px-4 py-3 transition ${
+                className={`cursor-pointer rounded-xl border px-4 py-3 transition has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--ink)] ${
                   mode === opt.v
                     ? "border-[var(--primary)] bg-[var(--primary)] text-white"
                     : "border-[var(--line-strong)] hover:border-[var(--primary)]"

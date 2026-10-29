@@ -60,6 +60,7 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .drop.filled::before { content: "✓"; color: var(--green); font-weight: 700; }
 .prelim .drop .fname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .prelim .drop input[type=file] { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+.prelim .drop:has(input:focus-visible) { outline: 2px solid var(--navy); outline-offset: -2px; }
 .prelim .drop .btn { min-height: 44px; position: relative; pointer-events: none; }
 .prelim .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
 .prelim .run { display: flex; align-items: center; gap: 16px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--muted); }
