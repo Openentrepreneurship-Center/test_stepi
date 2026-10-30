@@ -15,6 +15,7 @@ import {
 import RadarCard from "@/components/radar-card";
 import TalentEvidenceDrawer from "@/components/talent-evidence-drawer";
 import { Bar } from "@/components/page-skeleton";
+import { ExperimentalBadge } from "@/components/mock-mark";
 
 /**
  * 인재상 유형 도달도 - 미팅 자료의 1안과 2안을 한 화면에 위아래로 쌓는다.
@@ -182,7 +183,7 @@ export default function TalentTypesSection({
       <Block
         title="선정 인재상"
         count={status === "loading" ? "" : status === "error" ? "불러오기 실패" : isDefault ? "기본 예시" : `${sets.length}세트`}
-        badge={<span className="text-xs">엑셀 v0.2 초기 판정</span>}
+        badge={<><ExperimentalBadge /><span className="text-xs">엑셀 v0.2 초기 판정</span></>}
         desc={
           <>
             {status === "ready" && isDefault ? "저장된 인재상 세트가 없어 기본 예시를 표시합니다." : "이번 분석에 적용된 인재상입니다."} 왼쪽 메뉴의{" "}
@@ -240,7 +241,7 @@ export default function TalentTypesSection({
         title="전체 인재상"
         split
         count={`${TALENT_TYPES.length}개`}
-        badge={<span className="text-xs">엑셀 v0.2 초기 판정</span>}
+        badge={<><ExperimentalBadge /><span className="text-xs">엑셀 v0.2 초기 판정</span></>}
         desc={
           <>
             인재상마다 판정 가능한 문항 중 충족한 수로 점수를 냅니다. 미확정 기준과 자료 부족은 판정 불가로 표시합니다.{" "}
