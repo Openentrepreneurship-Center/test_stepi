@@ -90,7 +90,7 @@ export default function TalentEvidenceDrawer({
 
       {/* 배경 - 클릭하면 닫힌다 */}
       <div
-        className="fixed inset-0 z-50 flex justify-end bg-[rgba(27,26,64,0.45)]"
+        className="fixed inset-0 z-50 flex justify-end bg-[rgba(27,26,64,0.32)]"
         onClick={onClose}
       >
         {/* 본체 - 배경 클릭이 여기까지 번지지 않게 막는다 */}
@@ -228,7 +228,7 @@ function VerdictBadge({ verdict }: { verdict: ItemResult["verdict"] }) {
       ? "text-[var(--good)]"
       : verdict === "X"
         ? "text-[var(--bad)]"
-        : "text-[var(--secondary)]";
+        : "text-[var(--s-700)]";
   return (
     // role 없는 span 의 aria-label 은 스크린리더가 무시하고 "O" 를 그대로 읽는다
     <span

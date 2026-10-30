@@ -46,7 +46,7 @@ export default async function TrashPage() {
                 >
                   <div className="col-span-5">
                     <div className="text-[16px] font-medium text-[var(--ink-muted)] truncate">{label}</div>
-                    <div className="mt-0.5 font-mono text-[13px] text-[var(--ink-soft)]">
+                    <div className="mt-0.5 tabular-nums text-[13px] text-[var(--ink-soft)]">
                       {j.job_id}
                     </div>
                   </div>

@@ -17,7 +17,7 @@ export default async function FailuresPage({ params }: { params: Promise<{ id: s
           <h2 className="text-[22px] font-bold mb-2">
             {isNotFound(failuresRes) ? "작업을 찾을 수 없습니다." : "실패 원인을 불러오지 못했습니다."}
           </h2>
-          <p className="text-[16px] text-[var(--ink-muted)] font-mono">
+          <p className="text-[16px] text-[var(--ink-muted)] tabular-nums">
             {isNotFound(failuresRes) ? id : `잠시 뒤 새로고침해 주세요. ${id}`}
           </p>
         </div>
@@ -73,7 +73,7 @@ export default async function FailuresPage({ params }: { params: Promise<{ id: s
               {job_cause.code === "unknown" && job_cause.raw_summary && (
                 <details className="mt-3">
                   <summary className="text-[15px] text-[var(--secondary-2)] cursor-pointer">오류 원문 보기</summary>
-                  <div className="mt-2 text-[12.5px] font-mono text-[var(--ink-muted)] break-all">
+                  <div className="mt-2 text-[12.5px] tabular-nums text-[var(--ink-muted)] break-all">
                     {job_cause.raw_summary}
                   </div>
                 </details>
@@ -127,7 +127,7 @@ function FailureGroupPanel({ group }: { group: FailureGroup }) {
           <summary className="text-[15px] text-[var(--secondary-2)] cursor-pointer">오류 원문 보기</summary>
           <div className="mt-2 flex flex-col gap-1">
             {group.applicants.map((a) => (
-              <div key={a.applicant_id} className="text-[12.5px] font-mono text-[var(--ink-muted)] break-all">
+              <div key={a.applicant_id} className="text-[12.5px] tabular-nums text-[var(--ink-muted)] break-all">
                 {a.applicant_id}: {a.raw_summary ?? "없음"}
               </div>
             ))}
@@ -167,7 +167,7 @@ function ApplicantRow({ applicant }: { applicant: FailedApplicant }) {
               <div key={`${a.failed_at}-${i}`} className="flex gap-3 text-[13px] text-[var(--ink-muted)]">
                 <span className="tabular-nums">{timeText(a.failed_at)}</span>
                 <span className="text-[var(--ink)]">{a.title}</span>
-                {a.raw_summary && <span className="font-mono break-all">{a.raw_summary}</span>}
+                {a.raw_summary && <span className="tabular-nums break-all">{a.raw_summary}</span>}
               </div>
             ))}
           </div>

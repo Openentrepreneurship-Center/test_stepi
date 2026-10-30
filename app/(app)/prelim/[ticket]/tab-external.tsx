@@ -189,7 +189,9 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
             <tfoot>
               <tr>
                 <td colSpan={4}>
-                  검토를 실행할 때의 섭외 심사위원 목록과 비교한 결과입니다. 동명이인일 수 있으니 소속을 확인해 주세요.
+                  <div className="tf-in">
+                    검토를 실행할 때의 섭외 심사위원 목록과 비교한 결과입니다. 동명이인일 수 있으니 소속을 확인해 주세요.
+                  </div>
                 </td>
               </tr>
             </tfoot>
@@ -239,7 +241,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan={4}>직전공고·동일직군 최근공고에 섭외된 위원은 모두 제척 외부위원입니다.</td>
+                  <td colSpan={4}><div className="tf-in">직전공고·동일직군 최근공고에 섭외된 위원은 모두 제척 외부위원입니다.</div></td>
                 </tr>
               </tfoot>
             </table>
@@ -324,7 +326,9 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
             <tfoot>
               <tr>
                 <td colSpan={7}>
-                  서류·필기 탈락을 누르면 그 다음 전형의 외부 위원 및 기관 목록에서 해당 지원자가 제외됩니다. 같은 버튼을 다시 누르면 취소(진행 중)됩니다.
+                  <div className="tf-in">
+                    서류·필기 탈락을 누르면 그 다음 전형의 외부 위원 및 기관 목록에서 해당 지원자가 제외됩니다. 같은 버튼을 다시 누르면 취소(진행 중)됩니다.
+                  </div>
                 </td>
               </tr>
             </tfoot>

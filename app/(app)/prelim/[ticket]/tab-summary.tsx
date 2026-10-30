@@ -15,15 +15,14 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
   const { derived, stage, go, exportUrl } = ctx;
   const s = derived.summary_fixed;
   const { kpi, progress } = s;
-  const C = 2 * Math.PI * 34;
-  const ratio = progress.total ? progress.done / progress.total : 0;
-  const max = s.org_bars.length ? s.org_bars[0][1] : 1;
   const exCom = derived.exx[stage].restricted_committee;
   const inStaff = s.internal_staff;
   const restMissing = kpi.missing.count - kpi.missing.rows.length;
   // api 재시작 전 응답에는 감점 값이 없다
   const hasPen = !!derived.final;
   const pen = hasPen ? (kpi.penalty_people ?? 0) : null;
+
+  const num = (n: number | null) => (n ? "num" : "num zero");
 
   const cell = (n: number, cls: string, no: string, tab: Exclude<TabKey, "person" | "summary">) =>
     n ? (
@@ -69,10 +68,6 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
           </p>
         </div>
         <div className="pring">
-          <svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true">
-            <circle cx="42" cy="42" r="34" fill="none" stroke="rgba(255,255,255,.25)" strokeWidth="8" />
-            <circle cx="42" cy="42" r="34" fill="none" stroke="#ed911a" strokeWidth="8" strokeDasharray={C} strokeDashoffset={C * (1 - ratio)} />
-          </svg>
           <div className="t">
             판정 완료
             <b>
@@ -82,18 +77,12 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
         </div>
       </section>
 
-      <section className={`kpis${pen != null ? " five" : ""}`}>
-        <div className="kpi blind">
+      <section className="kpis">
+        <div className="kpi">
           <div className="k-top">
-            <span className="ico">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M1.5 9S4.2 4 9 4s7.5 5 7.5 5-2.7 5-7.5 5S1.5 9 1.5 9Z" />
-                <path d="M3 15 15 3" />
-              </svg>
-            </span>
             자기소개서 위배
           </div>
-          <div className="num">
+          <div className={num(kpi.essay_total)}>
             {kpi.essay_total}
             <small>건 · 지원자 {kpi.essay_people}명</small>
           </div>
@@ -114,14 +103,9 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
 
         <div className="kpi att">
           <div className="k-top">
-            <span className="ico">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M12.5 5 6 11.5a2.1 2.1 0 0 0 3 3l6-6a4.2 4.2 0 0 0-6-6L3 8.5" />
-              </svg>
-            </span>
             첨부 실적 내 위배
           </div>
-          <div className="num">
+          <div className={num(s.attach_confirmed)}>
             {s.attach_confirmed}
             <small>건 확정 · 후보 {kpi.attach_total}건</small>
           </div>
@@ -137,23 +121,13 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
           </button>
         </div>
 
-        <div className="kpi excl">
+        <div className="kpi">
           <div className="k-top">
-            <span className="ico">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="9" cy="9" r="6.5" />
-                <path d="m4.5 13.5 9-9" />
-              </svg>
-            </span>
             제척
           </div>
-          <div className="num">
+          <div className={num(kpi.internal_total + kpi.external_total)}>
             {kpi.internal_total + kpi.external_total}
             <small>건</small>
-          </div>
-          <div className="split" aria-hidden="true">
-            <i style={{ flex: kpi.external_total, background: "var(--red)" }} />
-            <i style={{ flex: kpi.internal_total, border: "2px solid var(--red)" }} />
           </div>
           <div className="legend">
             <span>
@@ -170,17 +144,11 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
           </button>
         </div>
 
-        <div className="kpi miss">
+        <div className="kpi">
           <div className="k-top">
-            <span className="ico">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M9 2 16.5 15.5h-15L9 2Z" />
-                <path d="M9 7v4M9 13v.4" />
-              </svg>
-            </span>
             수험번호 누락
           </div>
-          <div className="num">
+          <div className={num(kpi.missing.count)}>
             {kpi.missing.count}
             <small>줄</small>
           </div>
@@ -200,15 +168,9 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
         {pen != null && (
           <button className="kpi pen" type="button" title="블라인드 최종 결과로 이동" onClick={() => go("final")}>
             <div className="k-top">
-              <span className="ico">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <circle cx="9" cy="9" r="7" />
-                  <path d="M5.5 9h7" />
-                </svg>
-              </span>
               감점 대상 지원자
             </div>
-            <div className="num">
+            <div className={num(pen)}>
               {pen}
               <small>명</small>
             </div>
@@ -295,9 +257,6 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
                 <div className="l">
                   <span>{org}</span>
                   <b>{n}명</b>
-                </div>
-                <div className="track">
-                  <div className="fill" style={{ width: `${(n / max) * 100}%` }} />
                 </div>
               </div>
             ))}

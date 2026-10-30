@@ -37,7 +37,7 @@ function ConfirmDelete({ count, onCancel, onConfirm }: { count: number; onCancel
     return () => window.removeEventListener("keydown", onKey);
   }, [onCancel]);
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(27,26,64,0.32)] p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(27,26,64,0.32)] p-4">
       <div
         ref={boxRef}
         tabIndex={-1}

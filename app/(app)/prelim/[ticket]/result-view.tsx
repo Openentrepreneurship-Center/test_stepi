@@ -373,7 +373,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
     </>
   );
   const actions = (
-    <div className="flex items-center gap-2">
+    <div className="res-actions flex items-center gap-2">
       {!scanning && (
         <div className="relative">
           <button

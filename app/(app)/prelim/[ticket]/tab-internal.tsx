@@ -167,8 +167,10 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
             <tfoot>
               <tr>
                 <td colSpan={5}>
-                  제척사유 · <b>연구책임자</b>(참여과제 연구책임자·상급결재권자) / <b>소속부서장</b>(근무부서 부서장·상위부서장) / <b>동일학력</b>(학위별
-                  학교·학과·지도교수 일치) / <b>지도교수</b>(지원자 지도교수가 내부직원). 아래 종류별 표의 2년 기준 해당 건만 집계합니다.
+                  <div className="tf-in">
+                    제척사유 · <b>연구책임자</b>(참여과제 연구책임자·상급결재권자) / <b>소속부서장</b>(근무부서 부서장·상위부서장) / <b>동일학력</b>(학위별
+                    학교·학과·지도교수 일치) / <b>지도교수</b>(지원자 지도교수가 내부직원). 아래 종류별 표의 2년 기준 해당 건만 집계합니다.
+                  </div>
                 </td>
               </tr>
             </tfoot>
@@ -250,7 +252,9 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
             <tfoot>
               <tr>
                 <td colSpan={10}>
-                  2년 기준 여부는 <b>연구 종료일</b>과 평가기준일을 비교해 자동 계산됩니다. 해당 시 연구책임자·상급결재권자를 평가에서 제척합니다.
+                  <div className="tf-in">
+                    2년 기준 여부는 <b>연구 종료일</b>과 평가기준일을 비교해 자동 계산됩니다. 해당 시 연구책임자·상급결재권자를 평가에서 제척합니다.
+                  </div>
                 </td>
               </tr>
             </tfoot>
@@ -328,8 +332,10 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
             <tfoot>
               <tr>
                 <td colSpan={8}>
-                  2년 이내 여부는 근무 종료일과 평가기준일(<span className="mono">{derived.end}</span>)을 비교해 자동 계산됩니다. 해당 시 부서장·상위부서장을
-                  평가에서 제척합니다.
+                  <div className="tf-in">
+                    2년 이내 여부는 근무 종료일과 평가기준일(<span className="mono">{derived.end}</span>)을 비교해 자동 계산됩니다. 해당 시 부서장·상위부서장을
+                    평가에서 제척합니다.
+                  </div>
                 </td>
               </tr>
             </tfoot>
@@ -400,8 +406,10 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
             <tfoot>
               <tr>
                 <td colSpan={10}>
-                  같은 학위 구분 안에서 학교·학과(전공)·지도교수 3개가 모두 일치하는 경우만 추출합니다. 검토를 실행할 때의 제척 기준 정보와 대조한 결과이며
-                  위 전체 목록에 반영됩니다.
+                  <div className="tf-in">
+                    같은 학위 구분 안에서 학교·학과(전공)·지도교수 3개가 모두 일치하는 경우만 추출합니다. 검토를 실행할 때의 제척 기준 정보와 대조한 결과이며
+                    위 전체 목록에 반영됩니다.
+                  </div>
                 </td>
               </tr>
             </tfoot>
@@ -492,7 +500,9 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
             <tfoot>
               <tr>
                 <td colSpan={5}>
-                  지원정보의 지도교수 성명을 제척 기준 정보의 내부위원 학력정보 성명과 비교합니다. 동명이인일 수 있으니 소속을 확인해 주세요.
+                  <div className="tf-in">
+                    지원정보의 지도교수 성명을 제척 기준 정보의 내부위원 학력정보 성명과 비교합니다. 동명이인일 수 있으니 소속을 확인해 주세요.
+                  </div>
                 </td>
               </tr>
             </tfoot>

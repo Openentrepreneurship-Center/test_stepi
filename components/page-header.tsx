@@ -33,7 +33,7 @@ export default function PageHeader({ eyebrow, icon: Icon, title, description, wi
           {eyebrow && (
             <div className="flex items-center gap-2.5 mb-3">
               <span className="h-4 w-[3px] rounded-full bg-[var(--secondary)]" />
-              {Icon && <Icon size={15} strokeWidth={2} className="text-[var(--secondary-2)]" />}
+              {Icon && <Icon size={15} strokeWidth={2} className="text-[var(--s-600)]" />}
               <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-[var(--ink-muted)]">
                 {eyebrow}
               </span>

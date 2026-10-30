@@ -11,7 +11,7 @@ const LABEL: Record<JobStatus, string> = {
 // 색을 채운 배지는 봐야 할 상태, 회색 테두리는 멈춘 상태
 const TONE: Record<JobStatus, string> = {
   pending: "border-[var(--line-mid)] bg-white text-[var(--ink-muted)]",
-  running: "border-[var(--secondary)] bg-[var(--secondary)] text-white",
+  running: "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--p-900)]",
   done: "border-[var(--primary)] bg-[var(--primary)] text-white",
   failed: "border-[var(--bad)] bg-[var(--bad)] text-white",
   cancelled: "border-[var(--line-mid)] bg-white text-[var(--ink-muted)]",

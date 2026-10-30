@@ -68,7 +68,7 @@ export function UpBtn({
       <input
         type="file"
         accept=".xlsx,.csv"
-        hidden
+        className="sr-only"
         disabled={busy}
         onChange={(e) => {
           const f = e.target.files?.[0];

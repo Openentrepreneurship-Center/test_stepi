@@ -141,7 +141,7 @@ export default function TalentSelectModal({
 
   return createPortal(
     // 배경 - 뒤 화면은 흐리게 깐다. 클릭으로는 닫지 않는다 (이름 드래그가 밖에서 끝나면 닫혀버림)
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(27,26,64,0.32)] p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(27,26,64,0.32)] p-4">
       {/* 본체 */}
       <div
         ref={dialogRef}

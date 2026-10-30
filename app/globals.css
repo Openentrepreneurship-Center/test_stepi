@@ -35,13 +35,13 @@
   --line-mid: #A9A9B1;        /* line-strong 과 ink-soft 의 중간. 안내선용 */
   --line-ink: rgba(27, 26, 64, 0.18);
   --ink-muted: #5A5A66;       /* AA contrast on white */
-  --ink-soft: #8B8B96;        /* tertiary, captions only */
+  --ink-soft: var(--ink-muted); /* #8B8B96 은 흰 바탕 3.37:1 이라 AA 미달 */
 
   --ink: var(--p-700);
   --ink-2: var(--p-600);
   --primary: var(--p-700);
   --secondary: var(--s-500);
-  --secondary-2: var(--s-600);
+  --secondary-2: var(--s-700);
 
   --gold: var(--secondary);
   --gold-2: var(--secondary-2);
@@ -257,6 +257,11 @@ html { scrollbar-gutter: stable; }
   color: var(--ink);
   transition: border-color 0.15s ease;
 }
+/* 키보드 초점선 한 모양: 바깥 2px 남색. base 층이라 화면별 focus 유틸리티가 이긴다 */
+@layer base {
+  :focus-visible { outline: 2px solid var(--p-700); outline-offset: 2px; }
+}
+
 .input:focus {
   outline: none;
   border-color: var(--ink);

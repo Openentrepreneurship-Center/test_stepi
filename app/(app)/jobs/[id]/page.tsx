@@ -59,7 +59,7 @@ export default async function JobDetailPage({
           <h2 className="text-[22px] font-bold mb-2">
             {isNotFound(statusRes) ? "작업을 찾을 수 없습니다." : "분석 정보를 불러오지 못했습니다."}
           </h2>
-          <p className="text-[14px] text-[var(--ink-muted)] font-mono">
+          <p className="text-[14px] text-[var(--ink-muted)] tabular-nums">
             {isNotFound(statusRes) ? id : `잠시 뒤 새로고침해 주세요. ${id}`}
           </p>
         </div>

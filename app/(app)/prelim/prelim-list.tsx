@@ -19,7 +19,7 @@ const ACTIVE = ["uploading", "queued", "scanning"];
 // 지원자 분석 상태 배지(components/job-status-badge.tsx)와 같은 모양·색
 const TONE = {
   pending: "border-[var(--line-mid)] bg-white text-[var(--ink-muted)]",
-  running: "border-[var(--secondary)] bg-[var(--secondary)] text-white",
+  running: "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--p-900)]",
   done: "border-[var(--primary)] bg-[var(--primary)] text-white",
   failed: "border-[var(--bad)] bg-[var(--bad)] text-white",
 };
@@ -161,7 +161,7 @@ export default function PrelimList({ trashed, tabs }: { trashed: boolean; tabs?:
               <div key={r.ticket} className={`${TRASH_GRID} px-4 py-4 border-b border-[var(--line)] last:border-b-0`}>
                 <div className="col-span-5 min-w-0">
                   <div className="text-[16px] font-medium text-[var(--ink-muted)] truncate">{name(r)}</div>
-                  <div className="mt-0.5 font-mono text-[13px] text-[var(--ink-soft)]">{r.ticket}</div>
+                  <div className="mt-0.5 tabular-nums text-[13px] text-[var(--ink-soft)]">{r.ticket}</div>
                 </div>
                 <div className="col-span-2 text-[15px] tabular-nums text-[var(--ink-muted)]">{r.eval_date || "-"}</div>
                 <div className="col-span-2 text-right text-[15px] tabular-nums text-[var(--ink-muted)]">{people(r)}</div>

@@ -1094,7 +1094,7 @@ function ImportDialog({
   const when = preview.downloaded_at ? preview.downloaded_at.slice(0, 16).replace("T", " ") : null;
   return (
     // 배경을 눌러도 닫지 않는다. 닫기·취소·Escape 로만 닫는다
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(27,26,64,0.32)] p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(27,26,64,0.32)] p-4">
       <div ref={boxRef} tabIndex={-1} className="imp-box" role="dialog" aria-modal="true" aria-labelledby="imp-title">
         <header className="imp-head">
           <div>

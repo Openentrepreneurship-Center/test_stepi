@@ -170,8 +170,8 @@ export default function TuringMonitor() {
                 className="grid grid-cols-12 gap-4 px-4 py-4 border-b border-[var(--line)] last:border-b-0 hover:bg-[var(--bg-2)] transition"
               >
                 <div className="col-span-12 lg:col-span-3 min-w-0">
-                  <div className="font-mono text-[14px] text-[var(--ink)] truncate">{item.applicant_id}</div>
-                  <div className="font-mono text-[12px] text-[var(--ink-soft)] truncate">{item.request_id || item.job_id}</div>
+                  <div className="tabular-nums text-[14px] text-[var(--ink)] truncate">{item.applicant_id}</div>
+                  <div className="tabular-nums text-[12px] text-[var(--ink-soft)] truncate">{item.request_id || item.job_id}</div>
                 </div>
                 <div className="col-span-4 lg:col-span-2 tabular-nums text-[14px]">{riskLabel(item)}</div>
                 <div className="col-span-8 lg:col-span-3 text-[13px] text-[var(--bad)] min-w-0">
@@ -228,8 +228,8 @@ export default function TuringMonitor() {
               className="grid grid-cols-12 gap-4 items-center px-4 py-4 border-b border-[var(--line)] last:border-b-0 hover:bg-[var(--bg-2)] transition"
             >
               <div className="col-span-3 min-w-0">
-                <div className="font-mono text-[14px] truncate text-[var(--ink)]">{row.request_id || row.job_id}</div>
-                <div className="font-mono text-[12px] truncate text-[var(--ink-soft)]">{row.job_id}</div>
+                <div className="tabular-nums text-[14px] truncate text-[var(--ink)]">{row.request_id || row.job_id}</div>
+                <div className="tabular-nums text-[12px] truncate text-[var(--ink-soft)]">{row.job_id}</div>
               </div>
               <div className="col-span-1 text-center text-[13px] text-[var(--ink-muted)]">{statusLabel(row.status)}</div>
               <div className="col-span-2 text-right tabular-nums">{percent(row.hallucination_prevention_rate)}</div>
@@ -286,7 +286,7 @@ function MetricPanel({ icon, label, hint, value, empty, suffix, detail, decimals
 
 function StatusItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="leader"><span className="text-[var(--ink-muted)]">{label}</span><span /><b className="font-mono text-[var(--ink)] truncate">{value}</b></div>
+    <div className="leader"><span className="text-[var(--ink-muted)]">{label}</span><span /><b className="tabular-nums text-[var(--ink)] truncate">{value}</b></div>
   );
 }
 
