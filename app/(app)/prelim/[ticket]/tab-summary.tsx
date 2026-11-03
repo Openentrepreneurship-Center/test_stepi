@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { XBtn } from "./parts";
+import { XBtn, shownNo } from "./parts";
 import type { Ctx, TabKey } from "./result-view";
 
 const CELL_TITLE: Record<string, string> = {
@@ -228,7 +228,7 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
                     }}
                   >
                     <td className="who">
-                      <span className="mono">{p.no}</span>
+                      <span className="mono">{shownNo(p.no)}</span>
                       <small>{p.name}</small>
                     </td>
                     <td>{cell(p.essay, "b", p.no, "essay")}</td>

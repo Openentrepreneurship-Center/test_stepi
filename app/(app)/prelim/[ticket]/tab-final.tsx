@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { PrelimFinal, PrelimFinalRow } from "@/lib/api";
-import { BLABEL, XBtn } from "./parts";
+import { BLABEL, XBtn, shownNo } from "./parts";
 import type { Ctx } from "./result-view";
 
 type Filter = "all" | PrelimFinalRow["st"];
@@ -70,7 +70,7 @@ export default function FinalTab({ ctx, final }: { ctx: Ctx; final: PrelimFinal 
                     if (e.key === "Enter" && e.target === e.currentTarget) jump(r);
                   }}
                 >
-                  <td className="mono">{r.no}</td>
+                  <td className="mono">{shownNo(r.no)}</td>
                   <td>{r.kind}</td>
                   <td>{r.cat}</td>
                   <td>
@@ -98,7 +98,7 @@ export default function FinalTab({ ctx, final }: { ctx: Ctx; final: PrelimFinal 
         {final.penalty.length ? (
           final.penalty.map((p) => (
             <span className="chip" key={p.no}>
-              <span className="mono">{p.no}</span>&nbsp;위배 확정 {p.count}건
+              <span className="mono">{shownNo(p.no)}</span>&nbsp;위배 확정 {p.count}건
             </span>
           ))
         ) : (

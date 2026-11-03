@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { downloadUrl, type PrelimAttachItem, type PrelimVerdict } from "@/lib/api";
-import { XBtn } from "./parts";
+import { XBtn, shownNo } from "./parts";
 import type { Ctx } from "./result-view";
 
 export const pageLabel = (a: PrelimAttachItem) =>
@@ -83,7 +83,7 @@ export function Viewer({
           <div>
             <h2 id="vw-title">{item.file}</h2>
             <div className="hint">
-              수험번호 <span className="mono">{item.no}</span> · {item.name} · {item.cat} · 매칭 {pageLabel(item)} ({item.lang})
+              수험번호 <span className="mono">{shownNo(item.no)}</span> · {item.name} · {item.cat} · 매칭 {pageLabel(item)} ({item.lang})
             </div>
           </div>
           <div className="vw-tools">
@@ -309,7 +309,7 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
                   );
                   return (
                     <tr key={a.id} data-no={a.no} className={focusNo === a.no ? "focus" : undefined}>
-                      <td className="mono">{a.no}</td>
+                      <td className="mono">{shownNo(a.no)}</td>
                       <td className="nm">{a.name}</td>
                       <td>{a.cat}</td>
                       <td>

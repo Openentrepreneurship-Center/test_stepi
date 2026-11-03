@@ -291,12 +291,28 @@ export default function ResultView({ ticket }: { ticket: string }) {
   );
 
   if (error) {
+    // 삭제 항목에 있는 검토는 410 과 한글 안내(detail)로 온다. 원문 대신 안내와 삭제 항목 링크를 보여 준다
+    let gone: string | null = null;
+    if (error.startsWith("410 ")) {
+      try {
+        const detail: unknown = JSON.parse(error.slice(error.indexOf("{"))).detail;
+        if (typeof detail === "string") gone = detail;
+      } catch {}
+      gone ??= "삭제 항목에 있는 검토입니다. 검토 삭제 항목에서 복구한 뒤에 열 수 있습니다.";
+    }
     return (
       <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
         {head()}
         <div className="prelim result">
           <div className="empty" role="alert">
-            {error.startsWith("404 ") ? "검토를 찾을 수 없습니다." : `검토 결과를 불러오지 못했습니다. ${error}`}
+            {gone ? (
+              <>
+                {gone}{" "}
+                <Link href="/prelim/trash" className="underline underline-offset-4">
+                  삭제 항목으로 가기
+                </Link>
+              </>
+            ) : error.startsWith("404 ") ? "검토를 찾을 수 없습니다." : `검토 결과를 불러오지 못했습니다. ${error}`}
           </div>
         </div>
       </div>

@@ -6,6 +6,11 @@ export const BLABEL: Record<string, string> = { confirm: "위배 확정", dismis
 export const STAGES = ["서류", "필기", "면접"] as const;
 export const OUT_STAGES = ["서류", "필기"] as const;
 
+/** 수험번호가 없던 지원자의 내부 키(번호없음-N행·임시-N행)는 화면에 '번호 없음'으로만 보인다. 키·링크는 원래 값 */
+export function shownNo(no: string): string {
+  return no.startsWith("번호없음-") || no.startsWith("임시-") ? "번호 없음" : no;
+}
+
 export function Dash({ v, mono }: { v: string | null | undefined; mono?: boolean }) {
   return v ? <span className={mono ? "mono" : undefined}>{v}</span> : <span className="no2">-</span>;
 }

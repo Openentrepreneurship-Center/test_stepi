@@ -1,7 +1,7 @@
 "use client";
 
 import type { PrelimCommittee } from "@/lib/api";
-import { Dash, OUT_STAGES, STAGES, XBtn, Y2 } from "./parts";
+import { Dash, OUT_STAGES, STAGES, XBtn, Y2, shownNo } from "./parts";
 import type { Ctx } from "./result-view";
 
 const SRC_CLS: Record<string, string> = { 직전공고: "src-prev", "동일직군 최근공고": "src-same" };
@@ -172,7 +172,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
               {advisor.length ? (
                 advisor.map((a) => (
                   <tr key={a.id} data-no={a.no} className={focusNo === a.no ? "focus" : undefined}>
-                    <td className="mono">{a.no}</td>
+                    <td className="mono">{shownNo(a.no)}</td>
                     <td className="nm">{a.name}</td>
                     <td className="nm yes2">{a.advisor}</td>
                     <td>지도교수 성명이 제척 기준 정보의 섭외 심사위원과 같음</td>
@@ -289,7 +289,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
                     .join(" ") || undefined;
                 return (
                   <tr key={f.id} data-no={f.no} className={cls}>
-                    <td className="mono">{f.no}</td>
+                    <td className="mono">{shownNo(f.no)}</td>
                     <td className="nm">{f.name}</td>
                     <td>{f.org}</td>
                     <td className="mono">

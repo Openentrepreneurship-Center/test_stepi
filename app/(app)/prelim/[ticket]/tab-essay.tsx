@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { PrelimEssayItem } from "@/lib/api";
-import { BLABEL, XBtn } from "./parts";
+import { BLABEL, XBtn, shownNo } from "./parts";
 import type { Ctx } from "./result-view";
 
 export default function EssayTab({ ctx }: { ctx: Ctx }) {
@@ -108,7 +108,7 @@ export default function EssayTab({ ctx }: { ctx: Ctx }) {
                 const d = cur(b.id);
                 return (
                   <tr key={b.id}>
-                    <td className="mono">{b.no}</td>
+                    <td className="mono">{shownNo(b.no)}</td>
                     <td>{b.type}</td>
                     <td>
                       <mark>{b.hit}</mark>
@@ -135,7 +135,7 @@ export default function EssayTab({ ctx }: { ctx: Ctx }) {
             <article className={`bcard ${p.essay_done ? "done" : ""} ${focusNo === p.no ? "focus" : ""}`} data-no={p.no} key={p.no}>
               <div className="b-side">
                 <h3>
-                  <span className="mono">{p.no}</span>
+                  <span className="mono">{shownNo(p.no)}</span>
                   <small>{p.name}</small>
                 </h3>
                 <div className="b-type">

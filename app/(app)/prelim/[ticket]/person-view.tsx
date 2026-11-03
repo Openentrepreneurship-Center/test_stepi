@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BLABEL, Dash, Y2 } from "./parts";
+import { BLABEL, Dash, Y2, shownNo } from "./parts";
 import type { Ctx } from "./result-view";
 import { Viewer, attText, attachFileUrl, attachState, langLabel, pageLabel } from "./tab-attach";
 
@@ -47,7 +47,7 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
         <div>
           <div className="eyebrow">개인별 위배·제척 정리</div>
           <h2>
-            <b>{p.no}</b> {p.name}
+            <b>{shownNo(p.no)}</b> {p.name}
           </h2>
         </div>
         <div className="pstat">

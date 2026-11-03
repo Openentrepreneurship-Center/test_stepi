@@ -1,10 +1,10 @@
 "use client";
 
 import type { PrelimDegreeAiRow } from "@/lib/api";
-import { Dash, UpBtn, XBtn, Y2 } from "./parts";
+import { Dash, UpBtn, XBtn, Y2, shownNo } from "./parts";
 import type { Ctx } from "./result-view";
 
-const REASON_CLS: Record<string, string> = { 연구책임자: "r-pi", 소속부서장: "r-hd", 동일학력: "r-dg", 지도교수: "r-dg" };
+const REASON_CLS: Record<string, string> = { 연구책임자: "r-pi", 상급결재권자: "r-pi", 소속부서장: "r-hd", 동일학력: "r-dg", 지도교수: "r-dg" };
 const STEPI = "과학기술정책연구원";
 
 const AI_CLS: Record<string, string> = {
@@ -30,7 +30,7 @@ function AiRow({ d, cls, judge, busy }: { d: PrelimDegreeAiRow; cls?: string; ju
   );
   return (
     <tr data-no={d.no} className={cls}>
-      <td className="mono">{d.no}</td>
+      <td className="mono">{shownNo(d.no)}</td>
       <td className="nm">{d.name}</td>
       <td>{d.deg}</td>
       <td>{d.school}</td>
@@ -148,7 +148,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
                       <div className="nos">
                         {r.nos.map((n) => (
                           <span className="chip mono" key={n}>
-                            {n}
+                            {shownNo(n)}
                           </span>
                         ))}
                         <span className="hint">{r.nos.length}명</span>
@@ -168,7 +168,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
               <tr>
                 <td colSpan={5}>
                   <div className="tf-in">
-                    제척사유 · <b>연구책임자</b>(참여과제 연구책임자·상급결재권자) / <b>소속부서장</b>(근무부서 부서장·상위부서장) / <b>동일학력</b>(학위별
+                    제척사유 · <b>연구책임자</b>(참여과제 연구책임자) / <b>상급결재권자</b>(참여과제 상급결재권자) / <b>소속부서장</b>(근무부서 부서장·상위부서장) / <b>동일학력</b>(학위별
                     학교·학과·지도교수 일치) / <b>지도교수</b>(지원자 지도교수가 내부직원). 아래 종류별 표의 2년 기준 해당 건만 집계합니다.
                   </div>
                 </td>
@@ -224,7 +224,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
             <tbody>
               {internal.map((f) => (
                 <tr key={f.id} data-no={f.no} className={fcls(f.no)}>
-                  <td className="mono">{f.no}</td>
+                  <td className="mono">{shownNo(f.no)}</td>
                   <td className="nm">{f.name}</td>
                   <td>{f.project}</td>
                   <td className="mono">
@@ -308,7 +308,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
             <tbody>
               {work.map((w) => (
                 <tr key={w.id} data-no={w.no} className={fcls(w.no)}>
-                  <td className="mono">{w.no}</td>
+                  <td className="mono">{shownNo(w.no)}</td>
                   <td className="nm">{w.name}</td>
                   <td>{w.dept}</td>
                   <td className="mono">
@@ -388,7 +388,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
             <tbody>
               {degree.map((d) => (
                 <tr key={d.id} data-no={d.no} className={fcls(d.no)}>
-                  <td className="mono">{d.no}</td>
+                  <td className="mono">{shownNo(d.no)}</td>
                   <td className="nm">{d.name}</td>
                   <td>{d.deg}</td>
                   <td>{d.school}</td>
@@ -480,7 +480,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
               {advisor.length ? (
                 advisor.map((a) => (
                   <tr key={a.id} data-no={a.no} className={fcls(a.no)}>
-                    <td className="mono">{a.no}</td>
+                    <td className="mono">{shownNo(a.no)}</td>
                     <td className="nm">{a.name}</td>
                     <td>{a.advisor}</td>
                     <td className="nm">{a.advisor}</td>
