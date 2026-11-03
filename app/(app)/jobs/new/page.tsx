@@ -28,6 +28,7 @@ export default function NewJobPage() {
   const [zipErrors, setZipErrors] = useState<string[]>([]);
   const [unmatchedApplicants, setUnmatchedApplicants] = useState<string[]>([]);
   const [createdJobId, setCreatedJobId] = useState<string | null>(null);
+  const [createWarnings, setCreateWarnings] = useState<string[]>([]);
   const submitting = useRef(false);
   const [sheets, setSheets] = useState<string[]>([]);
   const [sheetName, setSheetName] = useState<string>("");
@@ -104,6 +105,7 @@ export default function NewJobPage() {
         });
         jobId = r.job_id;
         setCreatedJobId(jobId);
+        setCreateWarnings(r.warnings ?? []);
       }
       if (!jobId) return;
       if (pdfZip) {
@@ -147,6 +149,14 @@ export default function NewJobPage() {
         <form onSubmit={submit} className="space-y-6 mt-6 panel">
           {busy && <p role="status">{busyMsg}</p>}
           {err && <p role="alert" className="text-[var(--bad)] break-words">{err}</p>}
+          {createWarnings.length > 0 && (
+            <section aria-label="입력 안내">
+              <h2 className="font-semibold">입력 안내 {createWarnings.length}건</h2>
+              <ul className="list-disc pl-5 mt-2 space-y-1 break-words">
+                {createWarnings.map((message, index) => <li key={index}>{message}</li>)}
+              </ul>
+            </section>
+          )}
           {zipSummary && <p role="status">{zipSummary}</p>}
           {zipErrors.length > 0 && (
             <section aria-label="처리하지 못한 논문">

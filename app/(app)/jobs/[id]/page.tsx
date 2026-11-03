@@ -113,6 +113,15 @@ export default async function JobDetailPage({
         }
       />
 
+      {!!status.warnings?.length && (
+        <div role="note" className="mt-8 border-l-2 border-[var(--gold)] pl-4 py-2">
+          <div className="text-[15px] text-[var(--ink)] font-bold mb-1">입력 안내</div>
+          <ul className="text-[16px] text-[var(--ink-muted)] space-y-1 break-words">
+            {status.warnings.map((w, i) => <li key={i}>{w}</li>)}
+          </ul>
+        </div>
+      )}
+
       {showFailure && (
         <div className="mt-8 border-l-2 border-[var(--bad)] pl-4 py-2 flex items-start justify-between gap-4">
           <div>

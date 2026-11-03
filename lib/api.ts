@@ -108,6 +108,8 @@ export interface JobStatusResponse {
   created_at: string;
   updated_at: string;
   error?: string | null;
+  /** 생성 때 남긴 입력 경고(분석에서 뺀 지원자, 연결 안 된 지원정보 등). 옛 서버 응답에는 없음 */
+  warnings?: string[];
 }
 
 export interface JobResultResponse {
@@ -561,7 +563,7 @@ export const api = {
       const text = await res.text().catch(() => "");
       throw new Error(`${res.status}: ${text}`);
     }
-    return res.json() as Promise<{ job_id: string; status: string; created_at: string }>;
+    return res.json() as Promise<{ job_id: string; status: string; created_at: string; warnings?: string[] }>;
   },
   deleteApplicant: (id: string, applicantId: string) =>
     http<void>(
