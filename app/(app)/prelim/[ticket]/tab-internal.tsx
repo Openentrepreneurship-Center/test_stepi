@@ -14,7 +14,7 @@ const AI_CLS: Record<string, string> = {
   different: "ai-diff",
 };
 
-/** 전공명 AI 비교 한 줄. 근거는 서버가 만든 문장(전공별 한 줄), 확정하면 동일학력 제척에 들어간다 */
+/** 전공명 AI 비교 한 줄. 근거는 서버가 만든 문장(전공별 한 줄), 확정하면 동일학력 제척에 들어감 */
 function AiRow({ d, cls, judge, busy }: { d: PrelimDegreeAiRow; cls?: string; judge: Ctx["judge"]; busy: string | null }) {
   const v = d.verdict ?? null;
   const btn = (val: "confirm" | "dismiss", c: string, label: string) => (
@@ -55,7 +55,7 @@ function AiRow({ d, cls, judge, busy }: { d: PrelimDegreeAiRow; cls?: string; ju
   );
 }
 
-/** 올린 연구 목록·인사기록 파일에서 빠진 열·빈 칸 알림. 열 이름의 **굵게** 를 반영한다 */
+/** 올린 연구 목록·인사기록 파일에서 빠진 열·빈 칸 알림. 열 이름의 굵게 표시를 반영함 */
 function UpWarn({ list }: { list?: string[] }) {
   if (!list?.length) return null;
   return (

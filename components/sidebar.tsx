@@ -40,9 +40,9 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
-  // 분석작업 안에 있을 때만 인재상 메뉴를 띄운다.
-  //   /jobs/{id}...  → 분석 ID
-  //   /jobs/new      → 새 분석 만들기이므로 제외
+  // 분석작업 안에 있을 때만 인재상 메뉴를 띄움
+  //   /jobs/{id}...  -> 분석 ID
+  //   /jobs/new      -> 새 분석 만들기이므로 제외
   const jobMatch = pathname.match(/^\/jobs\/([^/]+)/);
   const jobId = jobMatch && jobMatch[1] !== "new" ? jobMatch[1] : null;
   const [talentOpen, setTalentOpen] = useState(false);
@@ -58,7 +58,7 @@ export default function Sidebar() {
     if (hydrated) localStorage.setItem(STORAGE_KEY, collapsed ? "1" : "0");
   }, [collapsed, hydrated]);
 
-  // 세 개의 동급 기능. 「사전스크리닝검토」와 「지원자 분석」은 하위 탭을 가진다.
+  // 세 개의 동급 기능. 「사전스크리닝검토」와 「지원자 분석」은 하위 탭을 가짐
   const features: Feature[] = [
     {
       key: "prelim",
@@ -149,13 +149,13 @@ export default function Sidebar() {
       data-print-hide
       className={`hidden md:flex ${widthClass} shrink-0 flex-col md:sticky md:top-0 md:h-screen border-r border-[var(--line-strong)] bg-[var(--bg)] transition-[width] duration-200`}
     >
-      {/* 헤더 — 로고 + 접기 토글 */}
+      {/* 헤더: 로고, 접기 토글 */}
       <div
         className={`${collapsed ? "px-2 pt-4 pb-4 flex flex-col items-center gap-3" : "px-4 lg:px-5 pt-5 pb-5 flex items-start justify-between gap-2"} border-b border-[var(--line-strong)]`}
       >
         {!collapsed && (
           <Link href="/prelim" className="block min-w-0 flex-1" title="사전스크리닝 검토">
-            {/* 접기 버튼을 뺀 남은 폭을 다 쓴다 (md 약 188px, lg 약 212px) */}
+            {/* 접기 버튼을 뺀 남은 폭을 다 씀 (md 약 188px, lg 약 212px) */}
             <StepiLogo size={44} className="h-auto w-full" />
             <div className="mt-2.5 text-[12.5px] font-medium text-[var(--ink-muted)]">
               AI 채용지원 시스템
@@ -203,7 +203,7 @@ export default function Sidebar() {
             const groupActive = f.match(pathname);
             return (
               <div key={f.key} className={idx > 0 ? "mt-2 pt-4 border-t border-[var(--line)]" : ""}>
-                {/* 기능 헤더 — 단일 기능은 링크, 「지원자 분석」은 섹션 라벨 */}
+                {/* 기능 헤더: 단일 기능은 링크, 「지원자 분석」은 섹션 라벨 */}
                 {f.href ? (
                   <Link
                     href={f.href}
@@ -249,8 +249,8 @@ export default function Sidebar() {
           })
         )}
 
-        {/* 이 분석 — 분석작업 안에서만 나타나는 상황별 메뉴.
-            링크가 아니라 팝업을 여는 버튼이라 features/allLeaves 배열에 못 넣는다. */}
+        {/* 이 분석: 분석작업 안에서만 나타나는 상황별 메뉴.
+            링크가 아니라 팝업을 여는 버튼이라 features/allLeaves 배열에 못 넣음 */}
         {jobId && (
           <div className={collapsed ? "" : "mt-2 pt-4 border-t border-[var(--line)]"}>
             {!collapsed && (
@@ -258,9 +258,9 @@ export default function Sidebar() {
                 이 분석
               </div>
             )}
-            {/* 불러오기 전에는 못 열게 막는다.
+            {/* 불러오기 전에는 못 열게 막음.
                 이때 화면에 보이는 건 서버값이 아니라 기본 세트인데, 그대로 저장하면
-                서버에 있던 진짜 값을 덮어쓴다. 실패했을 때도 같은 이유로 막는다. */}
+                서버에 있던 진짜 값을 덮어씀. 실패했을 때도 같은 이유로 막음 */}
             <button
               onClick={() => setTalentOpen(true)}
               disabled={talentStatus !== "ready"}
@@ -298,7 +298,7 @@ export default function Sidebar() {
               )}
             </button>
             {/* 실패했을 때 새로고침 없이 다시 시도할 길.
-                loadOnce 는 한 분석에 한 번만 요청하므로 이 버튼이 유일한 출구다. */}
+                loadOnce 는 한 분석에 한 번만 요청하므로 이 버튼이 유일한 출구임 */}
             {!collapsed && talentStatus === "error" && (
               <button
                 onClick={() => retryTalentSets(jobId)}
@@ -311,7 +311,7 @@ export default function Sidebar() {
         )}
       </nav>
 
-      {/* 팝업 — 열림 상태는 사이드바가 들고 있다 */}
+      {/* 팝업: 열림 상태는 사이드바가 들고 있음 */}
       {jobId && talentOpen && (
         <TalentSelectModal
           jobId={jobId}
@@ -320,7 +320,7 @@ export default function Sidebar() {
         />
       )}
 
-      {/* 하단 — 관리 메뉴 + 로그아웃 */}
+      {/* 하단: 관리 메뉴 + 로그아웃 */}
       <div className={`${collapsed ? "px-2 py-4 flex flex-col items-center gap-2" : "px-3 lg:px-4 py-4"} border-t border-[var(--line-strong)]`}>
         {collapsed ? (
           <button

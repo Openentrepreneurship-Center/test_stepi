@@ -3,17 +3,17 @@ import { SESSION_COOKIE, sessionExp, signApiToken, verifySession } from "./auth"
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
-// 키가 없으면 토큰 없이 보낸다(백엔드 off/observe). exp 는 이 컴퓨터 시계 기준으로 바꿔 둔다(시계 어긋남 대비)
+// 키가 없으면 토큰 없이 보냄(백엔드 off/observe). exp 는 이 컴퓨터 시계 기준으로 바꿔 둠(시계 어긋남 대비)
 let browserToken: { token: string | null; exp: number } | null = null;
 let browserTokenReq: Promise<string | null> | null = null;
 
-/** minLeft: 남은 수명이 이보다 짧으면 새로 받는다. nginx 가 본문을 다 받은 뒤 넘기는 업로드는 길게 */
+/** minLeft: 남은 수명이 이보다 짧으면 새로 받음. nginx 가 본문을 다 받은 뒤 넘기는 업로드는 길게 */
 async function apiToken(minLeft = 60): Promise<string | null> {
   const now = Math.floor(Date.now() / 1000);
   if (typeof window === "undefined") {
     const secret = process.env.API_AUTH_SECRET ?? "";
     if (!secret) return null;
-    // proxy.ts 를 건너뛴 요청(예: 확장자로 끝나는 주소)이어도 로그인 안 된 요청에는 서명하지 않는다
+    // proxy.ts 를 건너뛴 요청(예: 확장자로 끝나는 주소)이어도 로그인 안 된 요청에는 서명하지 않음
     const { cookies } = await import("next/headers");
     const session = (await cookies()).get(SESSION_COOKIE)?.value ?? "";
     if (!(await verifySession(session, process.env.SESSION_SECRET ?? ""))) return null;
@@ -37,12 +37,12 @@ async function apiToken(minLeft = 60): Promise<string | null> {
   return browserTokenReq;
 }
 
-/** 로그아웃 때 메모리의 토큰을 버린다 */
+/** 로그아웃 때 메모리의 토큰을 버림 */
 export const clearApiToken = () => {
   browserToken = null;
 };
 
-/** 백엔드 호출은 모두 이것으로 한다. FormData 의 Content-Type 은 건드리지 않는다 */
+/** 백엔드 호출은 모두 이것으로 함. FormData 의 Content-Type 은 건드리지 않음 */
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const upload = init.body instanceof FormData || init.body instanceof Blob;
   const token = await apiToken(upload ? 540 : 60);
@@ -53,10 +53,10 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   return res;
 }
 
-/** <a href>·<img src> 용. 프론트 서버가 로그인을 확인하고 서명한 API 주소로 넘겨 준다 */
+/** <a href>·<img src> 용. 프론트 서버가 로그인을 확인하고 서명한 API 주소로 넘겨 줌 */
 export const downloadUrl = (path: string) => `/api/dl?u=${encodeURIComponent(path)}`;
 
-/** AbortSignal.timeout 이 없는 옛 Safari 에서는 시간 제한 없이 보낸다 */
+/** AbortSignal.timeout 이 없는 옛 Safari 에서는 시간 제한 없이 보냄 */
 const timeoutSignal = (ms: number) =>
   typeof AbortSignal.timeout === "function" ? AbortSignal.timeout(ms) : undefined;
 
@@ -88,7 +88,7 @@ export type JobStatus = "pending" | "running" | "done" | "failed" | "cancelled";
 export interface JobProgress {
   total: number;
   done: number;
-  /** 오류 횟수 누적. 같은 지원자가 재시도에서 또 실패하면 여러 번 센다 */
+  /** 오류 횟수 누적. 같은 지원자가 재시도에서 또 실패하면 여러 번 셈 */
   failed: number;
   /** 실패한 지원자 수 */
   failed_applicants: number;
@@ -119,7 +119,7 @@ export interface JobResultResponse {
   error?: string | null;
 }
 
-// ─── 실패 원인 보기 ────────────────────────────────────────────────────────
+// --- 실패 원인 보기 ---
 
 export type FailureCauseCode =
   | "enqueue_failed"
@@ -225,7 +225,7 @@ export interface ApplicantResult {
   metadata?: Record<string, unknown>;
 }
 
-// ─── 논문 첨부 분석 / 직군 적합도 v2 ────────────────────────────────────────
+// --- 논문 첨부 분석 / 직군 적합도 v2 ---
 
 export type PaperStatus =
   | "uploaded"
@@ -403,14 +403,14 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-/** 서버 컴포넌트에서 실패를 빈 값과 구별해 받는다. `.catch(asError)` 뒤 `instanceof Error` 로 가른다 */
+/** 서버 컴포넌트에서 실패를 빈 값과 구별해 받음. `.catch(asError)` 뒤 `instanceof Error` 로 가름 */
 export const asError = (e: unknown): Error => (e instanceof Error ? e : new Error(String(e)));
-/** http() 가 던진 404 인지. 오류 문구가 "404 Not Found: ..." 로 시작한다 */
+/** http() 가 던진 404 인지. 오류 문구가 "404 Not Found: ..." 로 시작함 */
 export const isNotFound = (e: unknown): boolean => e instanceof Error && e.message.startsWith("404 ");
 
 export const api = {
-  // 분석별 선정 인재상 세트 (lib/talent-selection.ts 가 쓴다).
-  // id 를 인코딩하지 않으면 "../" 가 든 값이 전송 전에 정규화돼 다른 엔드포인트를 때린다.
+  // 분석별 선정 인재상 세트 (lib/talent-selection.ts 가 씀).
+  // id 를 인코딩하지 않으면 "../" 가 든 값이 전송 전에 정규화돼 다른 엔드포인트를 때림
   getTalentSelection: (id: string) =>
     http<TalentSelectionResponse>(`/analysis-jobs/${encodeURIComponent(id)}/talent-selection`),
   putTalentSelection: (id: string, sets: TalentSetPayload[]) =>
@@ -638,7 +638,7 @@ export interface RecusalHit {
   rule: string;
   verdict: string;
   matched: Record<string, unknown>;
-  /** 백엔드가 규칙별 템플릿으로 만든 제척사유 문장. 옛 결과에는 없을 수 있다 */
+  /** 백엔드가 규칙별 템플릿으로 만든 제척사유 문장. 옛 결과에는 없을 수 있음 */
   reason?: string;
 }
 export interface PrelimCounts {
@@ -647,7 +647,7 @@ export interface PrelimCounts {
   blind_total: number;
   recusal_by_rule: Record<string, number>;
   recusal_total: number;
-  /** 수험번호가 빈 줄 수 — 대시보드 지원자 번호와 연결되지 않는 줄 */
+  /** 수험번호가 빈 줄 수: 대시보드 지원자 번호와 연결되지 않는 줄 */
   no_id_rows?: number;
   /** 읽지 못해 건너뛴 파일·시트 안내 */
   skipped?: string[];
@@ -710,7 +710,7 @@ export interface PrelimRunResponse {
   truncated_recusal: boolean;
   warnings?: string[];
 }
-// ---- 사전스크리닝 결과 화면(담당자 HTML v1). 계산은 서버 derive.py 한 곳, 화면은 받은 값을 그리기만 한다 ----
+// --- 사전스크리닝 결과 화면(담당자 HTML v1). 계산은 서버 derive.py 한 곳, 화면은 받은 값을 그리기만 함 ---
 export type PrelimStage = "서류" | "필기" | "면접";
 export type PrelimVerdictValue = "confirm" | "dismiss" | "hold";
 export interface PrelimEssayItem {
@@ -727,7 +727,7 @@ export interface PrelimAttachItem {
   is_image?: boolean;
   /** 매칭된 쪽의 발췌. 키는 쪽 번호 */
   excerpts?: Record<string, string>;
-  /** 쪽 번호 → 검출 위치 상자 [x0, y0, x1, y1] (쪽 크기 대비 0~1 비율). 위치를 못 잡은 쪽은 없다 */
+  /** 쪽 번호별 검출 위치 상자 [x0, y0, x1, y1] (쪽 크기 대비 0~1 비율). 위치를 못 잡은 쪽은 없음 */
   boxes?: Record<string, number[][]>;
   in_filename?: boolean;
   ocr_limited?: boolean;
@@ -835,11 +835,11 @@ export interface PrelimDerived {
     pending_count: number;
     internal: PrelimInternalRow[]; work: PrelimWorkRow[]; degree: PrelimDegreeRow[];
     advisor?: PrelimAdvisorRow[];
-    /** api 재시작 전 응답에는 없고, M1 이전에 실행한 검토는 null */
+    /** api 재시작 전 응답에는 없고, 해당 기능 이전에 실행한 검토는 null */
     degree_ai?: PrelimDegreeAiRow[] | null;
     degree_ai_counts?: Record<PrelimAiRelation, number>;
   };
-  /** api 재시작 전 응답에는 없다 */
+  /** api 재시작 전 응답에는 없음 */
   final?: PrelimFinal;
   exx: Record<PrelimStage, {
     org_rows: PrelimOrgRow[]; limited_org_rows: PrelimOrgRow[]; limited_org_count: number;
@@ -855,7 +855,7 @@ export interface PrelimVerdicts {
   essay: Record<string, PrelimVerdict>;
   attach: Record<string, PrelimVerdict>;
   out: Record<string, PrelimVerdict>;
-  /** 전공명 AI 비교 줄 확정·제외. api 재시작 전 응답에는 없다 */
+  /** 전공명 AI 비교 줄 확정·제외. api 재시작 전 응답에는 없음 */
   deg_ai?: Record<string, PrelimVerdict>;
 }
 export type PrelimUploadKind = "inx" | "work";
@@ -917,7 +917,7 @@ export const prelim = {
       body: form,
     });
     if (!res.ok) {
-      // 서버가 detail 에 담아 보낸 한글 안내(예: 암호 걸린 엑셀)는 그대로 보여 준다
+      // 서버가 detail 에 담아 보낸 한글 안내(예: 암호 걸린 엑셀)는 그대로 보여 줌
       const text = await res.text();
       let detail: unknown;
       try {
@@ -935,7 +935,7 @@ export const prelim = {
     http<{ ticket: string }>(`/prelim/results/${encodeURIComponent(ticket)}${hard ? "?hard=1" : ""}`, { method: "DELETE" }),
   restore: (ticket: string) =>
     http<{ ticket: string }>(`/prelim/results/${encodeURIComponent(ticket)}/restore`, { method: "POST" }),
-  /** 제척 기준 정보(내부위원 학력정보, 섭외 심사위원 목록, 연구기관 목록). 검토 실행 때 서버가 이 표를 읽는다 */
+  /** 제척 기준 정보(내부위원 학력정보, 섭외 심사위원 목록, 연구기관 목록). 검토 실행 때 서버가 이 표를 읽음 */
   reference: {
     summary: () => http<PrelimRefSummary>(`/prelim/reference/summary`),
     list: (kind: PrelimRefKind) => http<{ items: PrelimRefRow[] }>(`/prelim/reference/${kind}`),
@@ -998,13 +998,13 @@ export const prelim = {
   },
   result: (ticket: string) => http<PrelimResult>(`/prelim/results/${encodeURIComponent(ticket)}`),
   verdict: {
-    /** value 가 null 이면 판정 취소. 화면은 응답의 verdicts·derived 로만 갱신한다 */
+    /** value 가 null 이면 판정 취소. 화면은 응답의 verdicts·derived 로만 갱신함 */
     async put(ticket: string, body: { kind: "essay" | "attach" | "out" | "deg_ai"; item_id: string; value: string | null; reason?: string | null }) {
       const res = await apiFetch(`/prelim/results/${encodeURIComponent(ticket)}/verdicts`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
-        // 저장은 한 줄로 차례대로 가므로, 멈춘 요청 하나가 뒤의 저장을 붙잡지 않게 끊는다
+        // 저장은 한 줄로 차례대로 가므로, 멈춘 요청 하나가 뒤의 저장을 붙잡지 않게 끊음
         signal: timeoutSignal(30_000),
       });
       return prelimJson<{ verdicts: PrelimVerdicts; derived: PrelimDerived }>(res, "판정 저장 실패");
@@ -1024,7 +1024,7 @@ export const prelim = {
   },
   attach: {
     status: () => http<{ enabled: boolean; max_bytes: number }>(`/prelim/attach/status`),
-    /** 크기·디스크 검사를 먼저 하고, 통과하면 zip 본문을 그대로 보낸다. 진행률 때문에 XHR 을 쓴다 */
+    /** 크기·디스크 검사를 먼저 하고, 통과하면 zip 본문을 그대로 보냄. 진행률 때문에 XHR 을 씀 */
     async send(ticket: string, file: File, onProgress: (ratio: number) => void): Promise<void> {
       const base = `/prelim/results/${encodeURIComponent(ticket)}/attach`;
       const pre = await apiFetch(`${base}/prepare`, {
@@ -1033,7 +1033,7 @@ export const prelim = {
         body: JSON.stringify({ size_bytes: file.size, file_name: file.name }),
       });
       await prelimJson<unknown>(pre, "첨부 실적 업로드 준비 실패");
-      // 본문 전송 시작 때 한 번만 검사하므로, 긴 전송 중에 토큰이 만료돼도 끊기지 않는다
+      // 본문 전송 시작 때 한 번만 검사하므로, 긴 전송 중에 토큰이 만료돼도 끊기지 않음
       const token = await apiToken(540);
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -1054,7 +1054,7 @@ export const prelim = {
       });
     },
   },
-  /** 표별 xlsx. stage 는 exx-com 에만 쓴다 */
+  /** 표별 xlsx. stage 는 exx-com 에만 씀 */
   exportKeyUrl: (ticket: string, key: string, stage?: PrelimStage) =>
     downloadUrl(
       `/prelim/results/${encodeURIComponent(ticket)}/export/${encodeURIComponent(key)}` +
@@ -1062,7 +1062,7 @@ export const prelim = {
     ),
 };
 
-/** 외부위원 섭외 회차 정리. 기준일·경계일·대상은 서버가 계산한 값을 그대로 쓴다 */
+/** 외부위원 섭외 회차 정리. 기준일·경계일·대상은 서버가 계산한 값을 그대로 씀 */
 export interface PrelimRetentionPreview {
   base_date: string;
   cutoff: string;

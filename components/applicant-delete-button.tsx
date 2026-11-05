@@ -15,7 +15,7 @@ export default function ApplicantDeleteButton({ jobId, applicantId }: Props) {
   const [busy, setBusy] = useState(false);
 
   const click = async (e: MouseEvent) => {
-    // Job 목록 row 가 Link 라 row 클릭 시 페이지 이동되니 여기서 막음.
+    // Job 목록 row 가 Link 라 row 클릭 시 페이지 이동되니 여기서 막음
     e.preventDefault();
     e.stopPropagation();
     if (busy) return;

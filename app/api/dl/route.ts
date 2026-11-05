@@ -4,10 +4,10 @@ import { SESSION_COOKIE, sessionExp, signApiToken, verifySession } from "@/lib/a
 
 export const runtime = "nodejs";
 
-// 제안값(시험용). 브라우저 PDF 보기의 이어받기 요청까지 덮을 만큼만 둔다
+// 제안값(시험용). 브라우저 PDF 보기의 이어받기 요청까지 덮을 만큼만 둠
 const TTL_SECONDS = 300;
 
-// <a href>·<img src> 로 여는 백엔드 주소만. 새 다운로드를 만들면 여기에 추가한다
+// <a href>·<img src> 로 여는 백엔드 주소만. 새 다운로드를 만들면 여기에 추가
 const ALLOWED = [
   /^\/analysis-jobs\/[^/]+\/(report\.pdf|result\.csv)$/,
   /^\/analysis-jobs\/[^/]+\/applicants\/[^/]+\/papers\/\d+\/pdf$/,
@@ -17,7 +17,7 @@ const ALLOWED = [
   /^\/prelim\/results\/[^/]+\/attach\/[^/]+(\/page\/\d+)?$/,
 ];
 
-/** 로그인을 확인한 뒤, 이 경로 하나에만 쓸 수 있는 서명을 붙여 백엔드로 넘긴다 */
+/** 로그인을 확인한 뒤, 이 경로 하나에만 쓸 수 있는 서명을 붙여 백엔드로 넘김 */
 export async function GET(req: NextRequest) {
   const noStore = { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" };
   const session = req.cookies.get(SESSION_COOKIE)?.value ?? "";
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401, headers: noStore });
   }
   const raw = req.nextUrl.searchParams.get("u") ?? "";
-  // 브라우저가 실제로 보낼 인코딩 형태로 맞춘 뒤 서명한다 (백엔드는 받은 경로 그대로 대조)
+  // 브라우저가 실제로 보낼 인코딩 형태로 맞춘 뒤 서명함 (백엔드는 받은 경로 그대로 대조)
   const parsed = raw.startsWith("/") && !raw.startsWith("//") && !raw.includes("..") ? new URL(raw, "http://x") : null;
   const query = parsed?.search.slice(1) ?? "";
   if (!parsed || !ALLOWED.some((re) => re.test(parsed.pathname)) || /(^|&)_t=/.test(query)) {

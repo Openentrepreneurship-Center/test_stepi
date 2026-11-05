@@ -11,7 +11,7 @@ const TEXT: Record<NotUploadedKind, string> = {
   blind: "이 검토에는 자기소개서와 첨부 실적을 올리지 않았습니다",
 };
 
-/** 파일을 올리지 않아 비는 탭이면 그 파일 종류, 아니면 null. 올린 파일 기록이 없는 옛 검토는 안내하지 않는다 */
+/** 파일을 올리지 않아 비는 탭이면 그 파일 종류, 아니면 null. 올린 파일 기록이 없는 옛 검토는 안내하지 않음 */
 export function notUploadedKind(data: PrelimResult, tab: string): NotUploadedKind | null {
   const f = data.files_used;
   if (!f) return null;
@@ -22,7 +22,7 @@ export function notUploadedKind(data: PrelimResult, tab: string): NotUploadedKin
   return null;
 }
 
-/** 비는 탭은 보이되 내용 대신 이 안내만 보여 준다(9/30 결정) */
+/** 비는 탭은 보이되 내용 대신 이 안내만 보여 줌 */
 export default function NotUploaded({ kind }: { kind: NotUploadedKind }) {
   return <div className="empty">{TEXT[kind]}</div>;
 }

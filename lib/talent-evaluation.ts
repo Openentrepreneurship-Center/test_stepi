@@ -58,11 +58,11 @@ export interface AxisResult {
   o_count: number;
   x_count: number;
   n_count: number;
-  /** 10 − n_count */
+  /** 10 - n_count */
   effective_total: number;
-  /** 유효 문항이 충분한가. 적으면 점수를 그대로 비교하면 안 된다 */
+  /** 유효 문항이 충분한가. 적으면 점수를 그대로 비교하면 안 됨 */
   enough: boolean;
-  /** 사양서에 문항표가 있는 인재상인지. false 면 문항 자체가 목업이다 */
+  /** 사양서에 문항표가 있는 인재상인지. false 면 문항 자체가 목업임 */
   defined: boolean;
   items: ItemResult[];
 }
@@ -72,7 +72,7 @@ export interface ApplicantEvaluation {
   catalog_version: string;
   catalog_hash: string;
   reference_date: string | null;
-  /** 사양서 계약 필드. 재현성 추적용이며 아직 화면에 쓰지 않는다 */
+  /** 사양서 계약 필드. 재현성 추적용이며 아직 화면에 쓰지 않음 */
   evaluated_at: string;
   prompt_version: string;
   axes: AxisResult[];

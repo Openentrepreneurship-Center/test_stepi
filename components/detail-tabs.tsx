@@ -16,11 +16,11 @@ export default function DetailTabs({
   talentContent,
 }: Props) {
   const [tab, setTab] = useState<Tab>("essay");
-  // 한 번이라도 연 탭만 그린다.
+  // 한 번이라도 연 탭만 그림
   //
-  // 전에는 세 탭을 다 그려 놓고 CSS 로 숨겼다. 그러면 인재상 탭을 열지 않는 사람도
-  // 34유형 채점과 오각형 계산을 매 지원자 페이지마다 지불한다.
-  // 한 번 연 뒤에는 숨기기만 해서, 다시 돌아왔을 때 펼침 상태가 남아 있게 한다.
+  // 전에는 세 탭을 다 그려 놓고 CSS 로 숨겼음. 그러면 인재상 탭을 열지 않는 사람도
+  // 34유형 채점과 오각형 계산을 매 지원자 페이지마다 지불함
+  // 한 번 연 뒤에는 숨기기만 해서, 다시 돌아왔을 때 펼침 상태가 남아 있게 함
   const [visited, setVisited] = useState<Tab[]>(["essay"]);
 
   const show = (next: Tab) => {

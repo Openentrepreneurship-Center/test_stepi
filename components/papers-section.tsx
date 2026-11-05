@@ -14,7 +14,7 @@ export default function PapersSection({
   jobId: string;
   applicantId: string;
 }) {
-  // null 이면 목록을 한 번도 받지 못한 것. 빈 배열(이력 없음)과 구별한다
+  // null 이면 목록을 한 번도 받지 못한 것. 빈 배열(이력 없음)과 구별함
   const [files, setFiles] = useState<PaperFile[] | null>(null);
   const [details, setDetails] = useState<Record<number, PaperDetail | null>>({});
   const [loading, setLoading] = useState(true);
@@ -25,8 +25,8 @@ export default function PapersSection({
   const refresh = useCallback(async () => {
     try {
       const list = await api.listPapers(jobId, applicantId);
-      // 분석 완료된 파일은 detail 미리 가져오기 (카드 렌더용). meta_only 는 file_id null → 제외.
-      // 실패해 null 로 둔 것은 다시 부르지 않는다. details 가 바뀔 때마다 refresh 가 돌아 끝없이 요청하게 된다
+      // 분석 완료된 파일은 detail 미리 가져오기 (카드 렌더용). meta_only 는 file_id null 이라 제외
+      // 실패해 null 로 둔 것은 다시 부르지 않음. details 가 바뀔 때마다 refresh 가 돌아 끝없이 요청하게 됨
       const needDetail = list.filter(
         (f): f is PaperFile & { file_id: number } =>
           f.file_id != null && f.status === "analyzed" && details[f.file_id] === undefined,
@@ -45,7 +45,7 @@ export default function PapersSection({
           return next;
         });
       }
-      // 상세를 받은 뒤에 목록을 바꿔야 카드가 상세 조회 전 상태를 실패로 그리지 않는다
+      // 상세를 받은 뒤에 목록을 바꿔야 카드가 상세 조회 전 상태를 실패로 그리지 않음
       setFiles(list);
       setListError(null);
     } catch (e) {

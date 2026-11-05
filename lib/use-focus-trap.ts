@@ -3,13 +3,13 @@
 import { useEffect, type RefObject } from "react";
 
 /**
- * 팝업 안에 Tab 순환을 가둔다.
+ * 팝업 안에 Tab 순환을 가둠
  *
  * aria-modal="true" 를 선언해 놓고 초점만 옮기면, 마지막 요소에서 Tab 을 누르는 순간
- * 초점이 뒤쪽 페이지로 빠져나간다. 그 요소들은 오버레이에 가려 보이지 않으므로
- * 키보드 사용자는 자기가 어디에 있는지 알 수 없게 된다.
+ * 초점이 뒤쪽 페이지로 빠져나감. 그 요소들은 오버레이에 가려 보이지 않으므로
+ * 키보드 사용자는 자기가 어디에 있는지 알 수 없게 됨.
  *
- * 열릴 때 팝업 안으로 초점을 옮기고, 닫힐 때 눌렀던 자리로 되돌린다.
+ * 열릴 때 팝업 안으로 초점을 옮기고, 닫힐 때 눌렀던 자리로 되돌림
  */
 const FOCUSABLE = [
   "a[href]",
@@ -25,7 +25,7 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>): void {
     const root = ref.current;
     if (!root) return;
 
-    // 닫힐 때 돌아갈 자리. 트리거가 사라졌으면 억지로 되돌리지 않는다
+    // 닫힐 때 돌아갈 자리. 트리거가 사라졌으면 억지로 되돌리지 않음
     const opener = document.activeElement as HTMLElement | null;
     root.focus();
 

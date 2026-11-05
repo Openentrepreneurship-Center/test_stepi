@@ -14,7 +14,7 @@ export const attachPageUrl = (ticket: string, id: string, n: number) =>
   downloadUrl(`/prelim/results/${encodeURIComponent(ticket)}/attach/${encodeURIComponent(id)}/page/${n}`);
 export const langLabel = (a: PrelimAttachItem) => `${a.lang}(${a.match})`;
 
-/** 담당자가 누른 판정이 없으면 시스템 제안 판정을 보여 준다 */
+/** 담당자가 누른 판정이 없으면 시스템 제안 판정을 보여 줌 */
 export function attachState(a: PrelimAttachItem, v: Record<string, PrelimVerdict>): { value?: string; reason?: string | null } {
   const mine = v[a.id];
   // none: 시스템 제안을 담당자가 미판정으로 되돌린 것
@@ -173,12 +173,12 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
   const current = viewing ? attach.find((a) => a.id === viewing.id) : null;
   const status = data.attach_status;
 
-  // 사유는 입력 즉시 화면에 반영하고, 입력이 멈추거나 칸을 벗어나면 저장한다
+  // 사유는 입력 즉시 화면에 반영하고, 입력이 멈추거나 칸을 벗어나면 저장함
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const timers = useRef<Record<string, { t: ReturnType<typeof setTimeout>; save: () => void }>>({});
-  // id 별로 마지막으로 보낸 사유. 응답 전 다시 고친 값도 이것과 비교해야 저장을 건너뛰지 않는다
+  // id 별로 마지막으로 보낸 사유. 응답 전 다시 고친 값도 이것과 비교해야 저장을 건너뛰지 않음
   const sent = useRef<Record<string, string>>({});
-  // 사유 저장 상태 표시. 입력 중 → 저장 중 → 저장됨(시각) 또는 실패
+  // 사유 저장 상태 표시. 입력 중 -> 저장 중 -> 저장됨(시각) 또는 실패
   const [saveState, setSaveState] = useState<
     Record<string, { s: "typing" | "saving" | "saved" | "error"; at?: string }>
   >({});
@@ -209,23 +209,23 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
     if (prev) clearTimeout(prev.t);
     const save = () => {
       if (text === (sent.current[id] ?? saved)) {
-        // 고쳤다가 원래대로 돌아왔으면 저장할 것이 없다
+        // 고쳤다가 원래대로 돌아왔으면 저장할 것이 없음
         if (sent.current[id] === undefined) markSave(id, null);
         return;
       }
       sent.current[id] = text;
       markSave(id, "saving");
       void judge("attach", id, "dismiss", text || null).then((ok) => {
-        if (sent.current[id] !== text) return; // 그사이 더 고쳤으면 그 저장 결과를 따른다
+        if (sent.current[id] !== text) return; // 그사이 더 고쳤으면 그 저장 결과를 따름
         delete sent.current[id];
         if (!timers.current[id]) markSave(id, ok ? "saved" : "error");
-        // 입력이 멈춘 뒤에만 비운다. 성공이면 서버 값과 같고, 실패면 서버 값으로 되돌아간다
+        // 입력이 멈춘 뒤에만 비움. 성공이면 서버 값과 같고, 실패면 서버 값으로 되돌아감
         if (!timers.current[id]) dropDraft(id);
       });
     };
     timers.current[id] = { t: setTimeout(() => flushReason(id), 600), save };
   };
-  // 탭을 옮겨도 입력 중이던 사유를 잃지 않게 남은 저장을 보낸다
+  // 탭을 옮겨도 입력 중이던 사유를 잃지 않게 남은 저장을 보냄
   useEffect(() => {
     const pending = timers.current;
     return () => {
@@ -290,7 +290,7 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
                   const draft = drafts[a.id];
                   const st = saved.value === "dismiss" && draft !== undefined ? { ...saved, reason: draft } : saved;
                   const t = attText(st);
-                  // 같은 버튼을 다시 누르면 미판정. 시스템 제안이 있는 건은 none 을 저장해야 제안이 되살아나지 않는다
+                  // 같은 버튼을 다시 누르면 미판정. 시스템 제안이 있는 건은 none 을 저장해야 제안이 되살아나지 않음
                   const press = (val: "confirm" | "dismiss" | "hold") => {
                     flushReason(a.id);
                     dropDraft(a.id);

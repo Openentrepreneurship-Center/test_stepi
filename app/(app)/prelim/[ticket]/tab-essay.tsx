@@ -9,7 +9,7 @@ export default function EssayTab({ ctx }: { ctx: Ctx }) {
   const { data, derived, verdicts, busy, judge, focusNo, exportUrl } = ctx;
   const kpi = derived.summary_fixed.kpi;
   const [picked, setPicked] = useState<string[]>([]);
-  // 서버 집계(derive.py)와 같게: 목록에 없는 유형은 기타로 센다
+  // 서버 집계(derive.py)와 같게: 목록에 없는 유형은 기타로 셈
   const known = kpi.essay_by_type.map(([t]) => t);
   const typesOf = (b: PrelimEssayItem) =>
     (b.types?.length ? b.types : [b.type]).map((t) => (known.includes(t) ? t : "기타"));
@@ -126,7 +126,7 @@ export default function EssayTab({ ctx }: { ctx: Ctx }) {
       <div className="bcards">
         {people.map((p) => {
           const mine = essay.filter((b) => b.no === p.no);
-          // 거르는 중이면 왼쪽 위배 유형·건수도 켜진 유형만 센다
+          // 거르는 중이면 왼쪽 위배 유형·건수도 켜진 유형만 셈
           const types = (picked.length
             ? mine.flatMap(typesOf).filter((t) => picked.includes(t))
             : mine.flatMap((b) => b.types ?? [b.type])

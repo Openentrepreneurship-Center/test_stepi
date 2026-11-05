@@ -1,7 +1,7 @@
 import type { DeptFitItem } from "@/lib/api";
 import { cleanReason } from "@/lib/clean-reason";
 
-/** 직군 적합도 순위 목록 — 화면(dept-fit-v2-section)과 인쇄 화면이 같이 쓴다 */
+/** 직군 적합도 순위 목록: 화면(dept-fit-v2-section)과 인쇄 화면이 같이 씀 */
 export default function DeptFitList({
   items,
   computedAt,

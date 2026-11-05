@@ -22,8 +22,8 @@ export const PAPER_STATUS_TONE: Record<PaperStatus, string> = {
 };
 
 /**
- * 논문 카드 한 장 — 화면(papers-section)과 인쇄 화면이 같이 쓴다.
- * onDelete 를 넘기지 않으면 삭제 버튼이 빠져 읽기 전용이 된다.
+ * 논문 카드 한 장: 화면(papers-section)과 인쇄 화면이 같이 씀
+ * onDelete 를 넘기지 않으면 삭제 버튼이 빠져 읽기 전용이 됨
  */
 export default function PaperCard({
   file,

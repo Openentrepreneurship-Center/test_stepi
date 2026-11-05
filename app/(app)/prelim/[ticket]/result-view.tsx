@@ -42,7 +42,7 @@ const BADGE_CLS: Record<string, string> = {
   exx: "red",
   final: "red",
 };
-// 전체 엑셀은 담당자 HTML 과 같은 순서로 따로 내려받는다. 전공명 AI 비교는 학위별 동일학력 다음
+// 전체 엑셀은 담당자 HTML 과 같은 순서로 따로 내려받음. 전공명 AI 비교는 학위별 동일학력 다음
 const ALL_KEYS = [
   "essay",
   "attach",
@@ -63,7 +63,7 @@ const FILE_LABELS: [string, string][] = [
   ["reference", "제척 기준 정보"],
 ];
 
-/** 경고문을 문장 단위로 나눈다. 괄호 안이나 파일 이름 안의 마침표는 문장 끝으로 보지 않는다 */
+/** 경고문을 문장 단위로 나눔. 괄호 안이나 파일 이름 안의 마침표는 문장 끝으로 보지 않음 */
 function splitSentences(text: string): string[] {
   const out: string[] = [];
   let buf = "";
@@ -82,7 +82,7 @@ function splitSentences(text: string): string[] {
   return out.length ? out : [text];
 }
 
-/** 경고문의 **굵게** 표시를 반영한다 */
+/** 경고문의 굵게 표시를 반영함 */
 function withBold(text: string) {
   return text.split(/\*\*(.+?)\*\*/g).map((part, i) => (i % 2 ? <strong key={i}>{part}</strong> : part));
 }
@@ -126,7 +126,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const paneRef = useRef<HTMLDivElement>(null);
-  // 판정·업로드 저장은 한 줄로 차례대로 보내고, 그사이 끝난 조회 결과는 버린다
+  // 판정·업로드 저장은 한 줄로 차례대로 보내고, 그사이 끝난 조회 결과는 버림
   const writeChain = useRef<Promise<void>>(Promise.resolve());
   const writeSeq = useRef(0);
   const writesPending = useRef(0);
@@ -151,7 +151,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
     void load();
   }, [load]);
 
-  // 첨부 검사 중에는 5초마다 다시 읽는다
+  // 첨부 검사 중에는 5초마다 다시 읽음
   const scanning =
     data && ["uploading", "queued", "scanning"].includes(data.attach_status);
   useEffect(() => {
@@ -218,7 +218,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
         );
         return false;
       } finally {
-        // 저장 중에 출발한 조회도 옛 판정을 읽었을 수 있으니 끝날 때 한 번 더 올린다
+        // 저장 중에 출발한 조회도 옛 판정을 읽었을 수 있으니 끝날 때 한 번 더 올림
         writeSeq.current += 1;
         writesPending.current -= 1;
         setBusy(null);
@@ -265,7 +265,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
 
   async function downloadAll() {
     setDownloading(true);
-    // api 재시작 전 응답에는 최종 결과가 없다
+    // api 재시작 전 응답에는 최종 결과가 없음
     for (const key of ALL_KEYS.filter((k) => (k !== "final" || derived?.final) && (k !== "degree-ai" || derived?.inx.degree_ai))) {
       const a = document.createElement("a");
       a.href = exportUrl(key);
@@ -291,7 +291,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
   );
 
   if (error) {
-    // 삭제 항목에 있는 검토는 410 과 한글 안내(detail)로 온다. 원문 대신 안내와 삭제 항목 링크를 보여 준다
+    // 삭제 항목에 있는 검토는 410 과 한글 안내(detail)로 옴. 원문 대신 안내와 삭제 항목 링크를 보여 줌
     let gone: string | null = null;
     if (error.startsWith("410 ")) {
       try {
@@ -411,7 +411,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
     </div>
   );
 
-  // 첨부 검사가 끝나기 전에는 탭 대신 대기 화면. 결과는 끝난 뒤 한 번에 보여 준다
+  // 첨부 검사가 끝나기 전에는 탭 대신 대기 화면. 결과는 끝난 뒤 한 번에 보여 줌
   if (scanning) {
     const done = data.attach_done ?? 0;
     const total = data.attach_total ?? 0;

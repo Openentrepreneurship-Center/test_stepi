@@ -42,7 +42,7 @@ export default function PageHeader({ eyebrow, icon: Icon, title, description, wi
           <h1 className="text-[clamp(27px,3.1vw,34px)] font-bold tracking-[-0.02em] leading-[1.12] text-[var(--ink)]">
             {title}
           </h1>
-          {/* whitespace-pre-line — 설명문의 줄바꿈을 요청서에 지정된 위치 그대로 보여준다 */}
+          {/* whitespace-pre-line: 설명문의 줄바꿈을 요청서에 지정된 위치 그대로 보여줌 */}
           {description && (
             <p className={`mt-3 whitespace-pre-line text-[15px] leading-[1.7] text-[var(--ink-muted)] ${wideDescription ? "" : "max-w-[64ch]"}`}>
               {description}
@@ -53,7 +53,7 @@ export default function PageHeader({ eyebrow, icon: Icon, title, description, wi
         {aside && <div className="shrink-0 flex flex-col items-end gap-3">{aside}</div>}
       </div>
 
-      {/* 시그니처 베이스라인 — 골드 세그먼트 + 풀폭 라인 */}
+      {/* 시그니처 베이스라인: 골드 세그먼트 + 풀폭 라인 */}
       <div className="relative h-[3px] w-full bg-[var(--line)]">
         <span className="absolute left-0 top-0 h-[3px] w-20 bg-[var(--secondary)]" />
       </div>

@@ -7,8 +7,8 @@ import PageHeader from "@/components/page-header";
 import { SkeletonTable } from "@/components/page-skeleton";
 import { prelim, type PrelimSummary } from "@/lib/api";
 
-// 지원자 분석의 분석 현황·삭제 항목과 같은 틀을 쓴다
-// 상태 열을 넣으면서 숫자 칸과 간격을 줄여 공고명 칸이 전보다 좁아지지 않게 한다
+// 지원자 분석의 분석 현황·삭제 항목과 같은 틀을 씀
+// 상태 열을 넣으면서 숫자 칸과 간격을 줄여 공고명 칸이 전보다 좁아지지 않게 함
 const ROW_GRID =
   "grid grid-cols-[minmax(0,1fr)_100px_56px_72px_84px_40px] xl:grid-cols-[minmax(0,1fr)_100px_84px_56px_64px_56px_60px_60px_72px_84px_40px] items-center gap-3";
 const TRASH_GRID = "grid grid-cols-12 items-center gap-4";
@@ -67,7 +67,7 @@ export default function PrelimList({ trashed, tabs }: { trashed: boolean; tabs?:
     void load();
   }, [load]);
 
-  // 첨부 검사 중인 검토가 있으면 5초마다 다시 읽는다
+  // 첨부 검사 중인 검토가 있으면 5초마다 다시 읽음
   const active = !trashed && !!items?.some((r) => ACTIVE.includes(r.attach_status ?? ""));
   useEffect(() => {
     if (!active) return;

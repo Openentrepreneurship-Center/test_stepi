@@ -280,7 +280,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
             <tbody>
               {detail.map((f, i) => {
                 const out = verdicts.out[f.no]?.value;
-                // 한 지원자의 여러 줄은 전형 결과 칸이 세로로 합쳐져 있어, 줄마다 테두리를 치지 않고 묶음 전체를 한 상자로 강조한다
+                // 한 지원자의 여러 줄은 전형 결과 칸이 세로로 합쳐져 있어, 줄마다 테두리를 치지 않고 묶음 전체를 한 상자로 강조함
                 const focused = focusNo === f.no;
                 const last = detail[i + 1]?.no !== f.no;
                 const cls =

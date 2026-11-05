@@ -21,7 +21,7 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // 확장자로 거르지 않는다: /jobs/<id>/applicants/x.png 처럼 화면 주소 끝에 확장자를 붙여 로그인을 건너뛸 수 있었다.
-  // public/ 의 그림은 import 로 쓰여 /_next/ 아래로 나간다
+  // 확장자로 거르지 않음: /jobs/<id>/applicants/x.png 처럼 화면 주소 끝에 확장자를 붙여 로그인을 건너뛸 수 있었음
+  // public/ 의 그림은 import 로 쓰여 /_next/ 아래로 나감
   matcher: ["/((?!_next/|favicon.ico).*)"],
 };

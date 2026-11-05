@@ -1,4 +1,4 @@
-# 예시. 운영 compose 는 nginx·백엔드 통합 spec 에서 정한다 (spec 009 결정 1번)
+# 예시. 운영 compose 는 nginx, 백엔드 통합 쪽에서 정함
 services:
   frontend:
     build:

@@ -12,18 +12,18 @@ import {
 } from "recharts";
 
 interface Props {
-  /** value 가 null 이면 그 꼭짓점은 그리지 않는다 (판정 불가와 0점은 다르다) */
+  /** value 가 null 이면 그 꼭짓점은 그리지 않음 (판정 불가와 0점은 다름) */
   data: Array<{ axis: string; value: number | null }>;
   color?: string;
   max?: number;
-  /** 비교 기준선 (예: 합격자 평균) — 축 이름 → 값. 연한 음영으로 함께 표시 */
+  /** 비교 기준선 (예: 합격자 평균). 축 이름 -> 값. 연한 음영으로 함께 표시 */
   baseline?: Record<string, number> | null;
   /** 본 시리즈 / 기준선 범례 라벨 */
   valueLabel?: string;
   baselineLabel?: string;
-  /** 그림 높이(px). 좁은 칸에 여러 개를 나란히 놓을 때만 줄인다 */
+  /** 그림 높이(px). 좁은 칸에 여러 개를 나란히 놓을 때만 줄임 */
   height?: number;
-  /** 꼭짓점 라벨 크기(px). 칸이 좁아지면 라벨끼리 붙어 읽기 어렵다 */
+  /** 꼭짓점 라벨 크기(px). 칸이 좁아지면 라벨끼리 붙어 읽기 어려움 */
   labelSize?: number;
 }
 
@@ -50,7 +50,7 @@ export default function RadarCard({
           <PolarGrid stroke="var(--line)" />
           <PolarAngleAxis dataKey="axis" tick={{ fill: "var(--ink)", fontSize: labelSize, fontWeight: 600 }} />
           <PolarRadiusAxis domain={[0, max]} tick={false} axisLine={false} />
-          {/* 합격자 평균 — 연한 음영(아래쪽에 먼저 그려 지원자 라인이 위로) */}
+          {/* 합격자 평균: 연한 음영(아래쪽에 먼저 그려 지원자 라인이 위로) */}
           {hasBaseline && (
             <Radar
               name={baselineLabel}

@@ -50,7 +50,7 @@ export default function TimelineSection({
 }: {
   education: EducationItem[] | null | undefined;
   career: CareerItem[] | null | undefined;
-  /** 최신순으로 이만큼만 그린다. 인쇄물처럼 높이가 정해진 자리에서 쓴다 */
+  /** 최신순으로 이만큼만 그림. 인쇄물처럼 높이가 정해진 자리에서 씀 */
   limit?: number;
 }) {
   const entries: TimelineEntry[] = [

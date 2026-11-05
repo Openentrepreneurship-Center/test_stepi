@@ -15,7 +15,7 @@ const errorText = (err: unknown, fallback: string) => (err instanceof Error ? er
 const clock = (d: Date) => d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
 export default function TuringMonitor() {
-  // 두 요청을 따로 들고 있어야 한쪽만 실패해도 다른 쪽 결과를 정상처럼 섞어 보이지 않는다
+  // 두 요청을 따로 들고 있어야 한쪽만 실패해도 다른 쪽 결과를 정상처럼 섞어 보이지 않음
   const [m, setM] = useState<Slot<TuringMetricsResponse>>(EMPTY_SLOT);
   const [r, setR] = useState<Slot<TuringRiskItem[]>>(EMPTY_SLOT);
   const [loading, setLoading] = useState(true);
@@ -54,9 +54,9 @@ export default function TuringMonitor() {
   const data = m.data;
   const risks = r.data;
   const metrics = data?.metrics;
-  // 성공한 지표가 없을 때는 0·빈 목록 대신 지금 상태를 쓴다
+  // 성공한 지표가 없을 때는 0·빈 목록 대신 지금 상태를 씀
   const metricState = data ? null : m.error ? "불러오지 못했습니다" : "불러오는 중";
-  // duration_seconds 가 없는 행의 1명당 시간은 백엔드가 대표값으로 채운 추정값이라(routers/turing.py) 평균·표에서 미측정으로 둔다
+  // duration_seconds 가 없는 행의 1명당 시간은 백엔드가 대표값으로 채운 추정값이라(routers/turing.py) 평균·표에서 미측정으로 둠
   const perAppTimes = (data?.jobs ?? [])
     .filter((j) => j.duration_seconds != null)
     .map((j) => j.avg_seconds_per_applicant)

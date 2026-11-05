@@ -12,15 +12,15 @@ import { useFocusTrap } from "@/lib/use-focus-trap";
 
 type Msg = { ok: boolean; text: string } | null;
 
-// 서버가 준 "2026-10-15T10:20:30" 을 "2026-10-15 10:20" 으로만 바꿔 보인다
+// 서버가 준 "2026-10-15T10:20:30" 을 "2026-10-15 10:20" 으로만 바꿔 보임
 const stamp = (s: string) => s.replace("T", " ").slice(0, 16);
 
-/** 영구 삭제 확인 창. 엑셀 업로드 미리보기 창과 같은 모양, 배경을 눌러도 닫지 않는다 */
+/** 영구 삭제 확인 창. 엑셀 업로드 미리보기 창과 같은 모양, 배경을 눌러도 닫지 않음 */
 function ConfirmDelete({ count, onCancel, onConfirm }: { count: number; onCancel: () => void; onConfirm: () => void }) {
   const boxRef = useRef<HTMLDivElement>(null);
   useFocusTrap(boxRef);
   useEffect(() => {
-    // 엑셀 업로드 미리보기 창처럼 뒤 화면 스크롤을 잠그고, 스크롤바 폭만큼 채워 화면이 밀리지 않게 한다
+    // 엑셀 업로드 미리보기 창처럼 뒤 화면 스크롤을 잠그고, 스크롤바 폭만큼 채워 화면이 밀리지 않게 함
     const body = document.body.style;
     const prev = { overflow: body.overflow, paddingRight: body.paddingRight };
     const width = document.body.getBoundingClientRect().width;
@@ -140,7 +140,7 @@ export default function RetentionPanel() {
     } finally {
       setRunning(false);
       await Promise.all([loadPreview(), loadHistory()]);
-      // 확인 창이 닫힐 때 삭제 버튼이 비활성이라 초점이 빠지므로 결과 문구로 옮긴다
+      // 확인 창이 닫힐 때 삭제 버튼이 비활성이라 초점이 빠지므로 결과 문구로 옮김
       msgRef.current?.focus();
     }
   }

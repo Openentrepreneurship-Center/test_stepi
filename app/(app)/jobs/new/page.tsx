@@ -124,7 +124,7 @@ export default function NewJobPage() {
             }`,
           );
         }
-        // 생성된 분석은 유지하고 ZIP 결과를 확인·재시도한 뒤 이동한다.
+        // 생성된 분석은 유지하고 ZIP 결과를 확인, 재시도한 뒤 이동함
         return;
       }
 

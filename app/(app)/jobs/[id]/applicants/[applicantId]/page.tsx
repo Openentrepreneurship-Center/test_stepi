@@ -47,7 +47,7 @@ export default async function ApplicantDetailPage({
     ? undefined
     : sourceInputRes.applicants.find((a) => a.applicant_id === decodedAppId);
 
-  // 404 가 아닌 조회 실패를 "찾을 수 없습니다"로 보이면 담당자가 지원자가 지워졌다고 오해한다
+  // 404 가 아닌 조회 실패를 "찾을 수 없습니다"로 보이면 담당자가 지원자가 지워졌다고 오해함
   if (resultRes instanceof Error && !isNotFound(resultRes)) {
     return (
       <div className="px-8 lg:px-12 py-9 max-w-3xl mx-auto">
@@ -93,7 +93,7 @@ export default async function ApplicantDetailPage({
 
   const aiUsageHead = aiUsageHeadline(applicant.ai_detection);
   const fitVals = Object.values(applicant.scores?.job_fit ?? {});
-  // LLM 채점은 1-10 scale 로 들어오지만 UI 는 /100 로 표시 (직군적합도 v2 와 통일).
+  // LLM 채점은 1-10 scale 로 들어오지만 UI 는 /100 로 표시 (직군적합도 v2 와 통일)
   const fitAvg100 =
     fitVals.length > 0
       ? (fitVals.reduce((s, v) => s + v.score, 0) / fitVals.length) * 10
@@ -111,10 +111,10 @@ export default async function ApplicantDetailPage({
   const deptFit = deptFitRes instanceof Error ? null : deptFitRes;
   const topDeptV2 = deptFit?.items?.[0];
 
-  // 학술지 게재 요약 — meta_only(PDF 없음) 도 게재 건수에 포함 (상세는 연구실적 탭)
+  // 학술지 게재 요약: meta_only(PDF 없음) 도 게재 건수에 포함 (상세는 연구실적 탭)
   const analyzedPapers = papers.filter((p) => p.status === "analyzed");
 
-  // 채점 전·조회 실패를 "논문 미첨부"로 단정하지 않는다
+  // 채점 전·조회 실패를 "논문 미첨부"로 단정하지 않음
   const deptStat = topDeptV2
     ? { value: topDeptV2.dept_name, sub: `${topDeptV2.score.toFixed(0)}점` }
     : !deptFit
@@ -136,7 +136,7 @@ export default async function ApplicantDetailPage({
         <ApplicantPdfButton jobId={id} applicantId={decodedAppId} variant="button" />
       </div>
 
-      {/* ── Highlights 헤더 카드 (Salesforce record highlights: 식별정보 + 핵심 지표 상시 노출) ── */}
+      {/* --- Highlights 헤더 카드 (Salesforce record highlights: 식별정보 + 핵심 지표 상시 노출) --- */}
       <header className="panel">
         <div className="flex flex-wrap items-center justify-between gap-x-10 gap-y-5">
           <div className="min-w-0">
@@ -184,7 +184,7 @@ export default async function ApplicantDetailPage({
           essayContent={
             <>
               <div className="mt-6">
-                {/* ── 단일 컬럼 — 학력·이력이 가운데로 들어오며 우측 레일 폐지 ── */}
+                {/* --- 단일 컬럼: 학력·이력이 가운데로 들어오며 우측 레일 폐지 --- */}
                 <div className="min-w-0 flex flex-col gap-5">
                 {/* 종합 요약 */}
                 <Card
@@ -224,7 +224,7 @@ export default async function ApplicantDetailPage({
                   )}
                 </Card>
 
-                {/* 학력 · 이력 — 연혁 바 + 상세 목록 (우측 레일에서 이동) */}
+                {/* 학력 · 이력: 연혁 바 + 상세 목록 (우측 레일에서 이동) */}
                 <Card title="학력 · 이력">
                   {sourceFailed ? (
                     <p className="text-[15px] text-[var(--ink-muted)]">학력·이력을 불러오지 못했습니다. 잠시 뒤 새로고침해 주세요.</p>
@@ -242,9 +242,9 @@ export default async function ApplicantDetailPage({
                   )}
                 </Card>
 
-                {/* 역량 진단 — radar 2개 나란히 (동일 높이) */}
+                {/* 역량 진단: radar 2개 나란히 (동일 높이) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* 핵심인재 유사도. 점수가 없어도 카드를 남겨 빠진 이유를 적는다 */}
+                {/* 핵심인재 유사도. 점수가 없어도 카드를 남겨 빠진 이유를 적음 */}
                 {coreData.length > 0 ? (
                   <Card
                     title="핵심인재 유사도"
@@ -339,10 +339,10 @@ export default async function ApplicantDetailPage({
                   <DeptFitV2Section jobId={id} applicantId={decodedAppId} />
                 </Card>
 
-                {/* AI 사용 의심도 근거 — 헤더 통계줄의 숫자를 풀어서 설명한다.
-                    「자기소개서 핵심」 **바로 위**에 둔다. 이건 자소서를 얼마나 믿고 읽을지
-                    알려주는 정보라 대상보다 먼저 와야 한다. 문항별 점수를 먼저 보고
-                    바로 아래에서 그 문항 내용을 확인하는 동선이 이어진다. */}
+                {/* AI 사용 의심도 근거: 헤더 통계줄의 숫자를 풀어서 설명함.
+                    「자기소개서 핵심」 바로 위에 둠. 이건 자소서를 얼마나 믿고 읽을지
+                    알려주는 정보라 대상보다 먼저 와야 함. 문항별 점수를 먼저 보고
+                    바로 아래에서 그 문항 내용을 확인하는 동선이 이어짐 */}
                 <Card
                   title="AI 사용 의심도 근거"
                   badge={<ExperimentalBadge />}
@@ -352,7 +352,7 @@ export default async function ApplicantDetailPage({
                   <AiUsageSection detection={applicant.ai_detection} />
                 </Card>
 
-                {/* 자기소개서 핵심 — 문항별로 묶어 정리 */}
+                {/* 자기소개서 핵심: 문항별로 묶어 정리 */}
                 {applicant.summary?.by_question && applicant.summary.by_question.length > 0 && (
                   <Card title="자기소개서 핵심">
                     <div className="space-y-7">
@@ -388,7 +388,7 @@ export default async function ApplicantDetailPage({
                                 {g.question}
                               </p>
                             </div>
-                            {/* 항목 — 문항 아래 들여쓰기 + 좌측 라인으로 그룹화 */}
+                            {/* 항목: 문항 아래 들여쓰기 + 좌측 라인으로 그룹화 */}
                             <div className="space-y-4 pl-3.5 border-l-2 border-[var(--line)]">
                               {g.items.map((item) => {
                                 const itemKey = `${item.question_id}-${item.item_index ?? 0}`;
@@ -424,7 +424,7 @@ export default async function ApplicantDetailPage({
                   </Card>
                 )}
 
-                {/* 추천 면접 질문 — 표시 설정에 따라 토글 (메인 컬럼 하단) */}
+                {/* 추천 면접 질문: 표시 설정에 따라 토글 (메인 컬럼 하단) */}
                 {applicant.interview_questions && applicant.interview_questions.length > 0 && (
                   <InterviewQuestionsToggle>
                     <Card title="추천 면접 질문">
@@ -489,7 +489,7 @@ export default async function ApplicantDetailPage({
             </Card>
           }
           talentContent={
-            // 자기소개서 탭처럼 카드를 나란히 쌓는다. 카드는 TalentTypesSection 안에 있다
+            // 자기소개서 탭처럼 카드를 나란히 쌓음. 카드는 TalentTypesSection 안에 있음
             <div className="mt-6">
               <TalentTypesSection jobId={id} applicantId={decodedAppId} />
             </div>
@@ -500,7 +500,7 @@ export default async function ApplicantDetailPage({
   );
 }
 
-/** 카드 — 흰 surface + 액센트 바 마커 헤더 (번호 없이 섹션 구분) */
+/** 카드: 흰 surface + 액센트 바 마커 헤더 (번호 없이 섹션 구분) */
 function Card({
   title,
   badge,
@@ -539,7 +539,7 @@ function Card({
   );
 }
 
-/** 핵심인재 레이더의 연한 음영 설명. 기준선이 없으면 있는 것처럼 적지 않는다 */
+/** 핵심인재 레이더의 연한 음영 설명. 기준선이 없으면 있는 것처럼 적지 않음 */
 function baselineNote(hasBaseline: boolean, failed: boolean): string {
   if (hasBaseline) return "연한 음영은 역대 합격자 평균입니다.";
   return failed ? "역대 합격자 평균을 불러오지 못해 음영 없이 표시합니다." : "비교할 역대 합격자 평균이 없어 음영 없이 표시합니다.";
@@ -580,7 +580,7 @@ function HeaderStat({
         }`}
         title={value}
       >
-        {/* 빈 받침이 칸마다 기준선을 위에서 26px 에 묶어, 글자 크기가 달라도 값과 보조 문구 줄이 맞는다 */}
+        {/* 빈 받침이 칸마다 기준선을 위에서 26px 에 묶어, 글자 크기가 달라도 값과 보조 문구 줄이 맞음 */}
         <span aria-hidden className="inline-block h-[26px] w-0" />
         {value}
         {unit && <span className="text-[13px] font-semibold text-[var(--ink-muted)] ml-1">{unit}</span>}

@@ -1,12 +1,12 @@
 /**
- * 인재상 문항표 — 무엇을 묻고, 무엇을 근거로 판정하는가.
+ * 인재상 문항표: 무엇을 묻고, 무엇을 근거로 판정하는가
  *
- * 「STEPI 인재상 평가기준 구현 사양」 10절의 표를 그대로 옮겼다.
- * 판정 결과와 목 데이터는 talent-evaluation.ts 가 만든다. 여기는 정의만 둔다.
+ * 「STEPI 인재상 평가기준 구현 사양」 10절의 표를 그대로 옮김.
+ * 판정 결과와 목 데이터는 talent-evaluation.ts 가 만듦. 여기는 정의만 둠.
  *
- * `pending: true` 는 표의 「( 작성 필요 )」 칸이다. 근거로 쓸 DB 필드가 없어
- * 아직 문항을 만들지 못했고, 화면에는 N(문항 미확정)으로 나온다.
- * 이 상태가 그대로 보이는 것이 확정 논의의 자료가 되므로 감추지 않는다.
+ * `pending: true` 는 표의 「( 작성 필요 )」 칸임. 근거로 쓸 DB 필드가 없어
+ * 아직 문항을 만들지 못했고, 화면에는 N(문항 미확정)으로 나옴.
+ * 이 상태가 그대로 보이는 것이 확정 논의의 자료가 되므로 감추지 않음
  */
 
 export type JudgedBy = "code" | "llm";
@@ -21,7 +21,7 @@ export type CriterionDef = {
   rule: string;
   x_example?: string;
   source_fields: SourceField[];
-  /** "논문-2" = 논문 계단의 두 번째 단. 판정 기준은 LADDER_RULES 가 갖는다 */
+  /** "논문-2" = 논문 계단의 두 번째 단. 판정 기준은 LADDER_RULES 가 가짐 */
   ladder?: string;
   flags?: ItemFlag[];
   /** 문항 미확정 자리 */
@@ -31,9 +31,9 @@ export type CriterionDef = {
 /**
  * 계단 문항의 판정 기준.
  *
- * 계단은 같은 사실을 난이도로 나눈 것이라, 판정도 **같은 값 하나**를 봐야 한다.
- * 단마다 따로 판정하면 "3편은 X 인데 5편은 O" 같은 모순이 생긴다.
- * need[step-1] 이 그 단을 넘기는 데 필요한 값이다.
+ * 계단은 같은 사실을 난이도로 나눈 것이라, 판정도 같은 값 하나를 봐야 함.
+ * 단마다 따로 판정하면 "3편은 X 인데 5편은 O" 같은 모순이 생김.
+ * need[step-1] 이 그 단을 넘기는 데 필요한 값임
  */
 export type LadderSource =
   | "paper_count"
@@ -51,7 +51,7 @@ export const LADDER_RULES: Record<string, { source: LadderSource; need: number[]
   재직: { source: "tenure_months", need: [36, 60] },      // 3년 / 5년
 };
 
-/** 계단 문자열을 그룹과 단으로 나눈다. 형식이 어긋나면 null */
+/** 계단 문자열을 그룹과 단으로 나눔. 형식이 어긋나면 null */
 export function parseLadder(ladder: string): { group: string; step: number } | null {
   const [group, stepText] = ladder.split("-");
   const step = Number(stepText);
@@ -199,8 +199,8 @@ export const AXIS_CRITERIA: Record<string, CriterionDef[]> = {
 /**
  * 문항표가 없는 유형에 쓰는 목업 문항.
  *
- * 근거 필드를 각 문항에 직접 적는다. 예전에는 인덱스 산술로 배정했는데,
- * 그 결과 「학력 근거」 문항에 논문이 붙는 어긋남이 24개 유형 전부에서 났다.
+ * 근거 필드를 각 문항에 직접 적음. 예전에는 인덱스 산술로 배정했는데,
+ * 그 결과 「학력 근거」 문항에 논문이 붙는 어긋남이 24개 유형 전부에서 났음
  */
 const TEMPLATE_SHAPES: Array<{
   name: string;
@@ -221,7 +221,7 @@ const TEMPLATE_SHAPES: Array<{
   { name: "자기 평가", question: (n) => `${n}에 대한 스스로의 한계를 함께 기술하였는가?`, judged_by: "llm", rule: "한계 서술이 존재하는 경우", field: "essays" },
 ];
 
-/** 유형 이름마다 한 번만 만들어 재사용한다 */
+/** 유형 이름마다 한 번만 만들어 재사용함 */
 const templateCache = new Map<string, CriterionDef[]>();
 
 function buildTemplate(name: string): CriterionDef[] {
@@ -241,7 +241,7 @@ export function hasCriteria(name: string): boolean {
   return Object.prototype.hasOwnProperty.call(AXIS_CRITERIA, name);
 }
 
-/** 문항표가 있으면 그것을, 없으면 목업 문항을 돌려준다 */
+/** 문항표가 있으면 그것을, 없으면 목업 문항을 돌려줌 */
 export function criteriaOf(name: string): CriterionDef[] {
   if (hasCriteria(name)) return AXIS_CRITERIA[name];
   let cached = templateCache.get(name);

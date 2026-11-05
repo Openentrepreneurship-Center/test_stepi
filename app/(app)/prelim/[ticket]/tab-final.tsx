@@ -16,7 +16,7 @@ const FILTERS: [Filter, string][] = [
 ];
 const JCLS: Record<string, string> = { confirm: "v", hold: "h", dismiss: "ok" };
 
-/** 블라인드 최종 결과. 판정은 표시만 하고 바꾸는 곳은 자기소개서·첨부 탭이다 */
+/** 블라인드 최종 결과. 판정은 표시만 하고 바꾸는 곳은 자기소개서·첨부 탭임 */
 export default function FinalTab({ ctx, final }: { ctx: Ctx; final: PrelimFinal }) {
   const { exportUrl, focusNo, go } = ctx;
   const [filter, setFilter] = useState<Filter>("all");

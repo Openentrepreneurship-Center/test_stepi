@@ -3,7 +3,7 @@ import ci from "@/public/stepi-ci-wide.png";
 import mark from "@/public/stepi-mark.png";
 
 interface Props {
-  /** 그림 높이(px). 폭은 원본 비율로 따라간다 */
+  /** 그림 높이(px). 폭은 원본 비율로 따라감 */
   size?: number;
   variant?: "full" | "mark";
   /** 어두운 배경용 흰색 */

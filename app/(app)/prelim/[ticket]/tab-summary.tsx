@@ -18,7 +18,7 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
   const exCom = derived.exx[stage].restricted_committee;
   const inStaff = s.internal_staff;
   const restMissing = kpi.missing.count - kpi.missing.rows.length;
-  // api 재시작 전 응답에는 감점 값이 없다
+  // api 재시작 전 응답에는 감점 값이 없음
   const hasPen = !!derived.final;
   const pen = hasPen ? (kpi.penalty_people ?? 0) : null;
 

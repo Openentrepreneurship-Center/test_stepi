@@ -14,7 +14,7 @@ import {
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import "../prelim.css";
 
-/** 엑셀 올리기 버튼을 보일지. 문제가 생기면 false 로 끈다(내려받기는 그대로) */
+/** 엑셀 올리기 버튼을 보일지. 문제가 생기면 false 로 끔(내려받기는 그대로) */
 const IMPORT_ENABLED = true;
 
 type Field = {
@@ -151,7 +151,7 @@ const splitJobs = (v: unknown) =>
 
 const recruitmentOf = (r: PrelimRefRow) => str(r.recruitment) || "채용명 없음";
 
-/** 행정직이 없는 채용의 필기 위원은 보이지 않는다(D9). 채용명으로 묶고 직군을 합쳐 판단.
+/** 행정직이 없는 채용의 필기 위원은 보이지 않음. 채용명으로 묶고 직군을 합쳐 판단.
  * 엑셀 내려받기도 같은 규칙(prelim_reference.py hidden_written_ids) */
 function hiddenWritten(rows: PrelimRefRow[]) {
   const groups = new Map<string, PrelimRefRow[]>();
@@ -208,7 +208,7 @@ export default function ReferenceView() {
     return () => clearTimeout(t);
   }, [savedId]);
 
-  // 고치던 내용이 있으면 버릴지 묻는다
+  // 고치던 내용이 있으면 버릴지 물음
   const leaveDrawer = () =>
     !drawer?.dirty || window.confirm("저장하지 않은 수정 내용이 있습니다. 버리고 닫을까요?");
 
@@ -268,7 +268,7 @@ export default function ReferenceView() {
         drawer.id === "new"
           ? await prelim.reference.create(drawer.kind, body)
           : await prelim.reference.update(drawer.kind, drawer.id, body);
-      // 서버 정렬 자리에 보이도록 목록을 다시 받는다
+      // 서버 정렬 자리에 보이도록 목록을 다시 받음
       const items = (await prelim.reference.list(drawer.kind)).items;
       setRows((prev) => ({ ...prev, [drawer.kind]: items }));
       setDrawer(null);
@@ -311,7 +311,7 @@ export default function ReferenceView() {
   }
 
   function closePreview() {
-    // 못 지워도 서버가 하루 뒤 지운다
+    // 못 지워도 서버가 하루 뒤 지움
     if (preview) prelim.reference.importCancel(preview.token).catch(() => {});
     setPreview(null);
   }
@@ -623,7 +623,7 @@ function RefGroup({
           <button
             type="button"
             onClick={(e) => {
-              // 버튼이 사라지므로 새로 보이는 첫 줄로 포커스를 옮긴다
+              // 버튼이 사라지므로 새로 보이는 첫 줄로 포커스를 옮김
               const card = e.currentTarget.closest("section");
               onExpand();
               requestAnimationFrame(() => card?.querySelectorAll<HTMLElement>(".ref-row")[FOLD]?.focus());
@@ -678,7 +678,7 @@ function RefRow({
   );
 }
 
-/** 방금 저장한 줄이 접힌 자리에 있으면 그 묶음을 펼친다 */
+/** 방금 저장한 줄이 접힌 자리에 있으면 그 묶음을 펼침 */
 function useExpanded(savedKey: string | null) {
   const [open, setOpen] = useState<string[]>([]);
   if (savedKey !== null && !open.includes(savedKey)) setOpen([...open, savedKey]);
@@ -784,7 +784,7 @@ function OrgGroups({
 }) {
   const saved = rows.find((r) => r.id === savedId);
   const [open, expand] = useExpanded(saved ? str(saved.kind) : null);
-  // 연구기관은 기관명으로만 찾는다
+  // 연구기관은 기관명으로만 찾음
   const shown = rows.filter((r) => !query || str(r.name).toLowerCase().includes(query));
   const cards = ORG_KINDS.filter((k) => !kinds.length || kinds.includes(k)).flatMap((kind) => {
     const all = rows.filter((r) => r.kind === kind);
@@ -835,7 +835,7 @@ function OrgGroups({
   );
 }
 
-/** 채용 머리에 적는 전형별 진행 날짜. 서류 → 필기 → 면접 순서 */
+/** 채용 머리에 적는 전형별 진행 날짜. 서류, 필기, 면접 순서 */
 function stageDates(rows: PrelimRefRow[]) {
   const by = new Map<string, string[]>();
   for (const r of rows) {
@@ -849,7 +849,7 @@ function stageDates(rows: PrelimRefRow[]) {
   return order.map((st) => `${st} ${by.get(st)!.join(", ")}`).join(" · ");
 }
 
-/** 일자 칸. 크롬 날짜 칸은 숫자가 오른쪽에서 밀려 들어와(0002 → 2005) 글자 칸으로 받고, 달력 버튼은 숨긴 날짜 칸을 연다 */
+/** 일자 칸. 크롬 날짜 칸은 숫자가 오른쪽에서 밀려 들어와(0002 -> 2005) 글자 칸으로 받고, 달력 버튼은 숨긴 날짜 칸을 엶 */
 function DateField({ title, value, onChange }: { title: ReactNode; value: string; onChange: (v: string) => void }) {
   const pickerRef = useRef<HTMLInputElement>(null);
   const [typing, setTyping] = useState(false);
@@ -1042,14 +1042,14 @@ function ImportDialog({
     const back = returnFocus.current;
     const body = document.body.style;
     const prev = { overflow: body.overflow, paddingRight: body.paddingRight };
-    // 루트 scrollbar-gutter 자리는 clientWidth 에 안 잡혀 body 폭 차이로 스크롤바 폭을 잰다
+    // 루트 scrollbar-gutter 자리는 clientWidth 에 안 잡혀 body 폭 차이로 스크롤바 폭을 잼
     const width = document.body.getBoundingClientRect().width;
     body.overflow = "hidden";
     const gap = document.body.getBoundingClientRect().width - width;
     if (gap > 0) body.paddingRight = `${gap}px`;
     return () => {
       Object.assign(body, prev);
-      // 파일 선택창을 거치며 원래 초점이 사라지므로 엑셀 업로드 버튼으로 직접 돌려보낸다
+      // 파일 선택창을 거치며 원래 초점이 사라지므로 엑셀 업로드 버튼으로 직접 돌려보냄
       back?.focus();
     };
   }, [returnFocus]);
@@ -1062,7 +1062,7 @@ function ImportDialog({
 
   async function apply() {
     if (busy) return;
-    // 한 시트에서 많이 지우면 한 번 더 묻는다(서버도 같은 기준으로 막음)
+    // 한 시트에서 많이 지우면 한 번 더 물음(서버도 같은 기준으로 막음)
     const bulk = preview.sheets
       .filter((s) => s.bulk_delete)
       .map((s) => ({
@@ -1077,7 +1077,7 @@ function ImportDialog({
       )
     )
       return;
-    // 반영 버튼이 잠기면 초점이 배경으로 빠지므로 팝업에 붙잡아 둔다
+    // 반영 버튼이 잠기면 초점이 배경으로 빠지므로 팝업에 붙잡아 둠
     boxRef.current?.focus();
     setBusy(true);
     setError(null);
@@ -1093,7 +1093,7 @@ function ImportDialog({
 
   const when = preview.downloaded_at ? preview.downloaded_at.slice(0, 16).replace("T", " ") : null;
   return (
-    // 배경을 눌러도 닫지 않는다. 닫기·취소·Escape 로만 닫는다
+    // 배경을 눌러도 닫지 않음. 닫기·취소·Escape 로만 닫음
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(27,26,64,0.32)] p-4">
       <div ref={boxRef} tabIndex={-1} className="imp-box" role="dialog" aria-modal="true" aria-labelledby="imp-title">
         <header className="imp-head">

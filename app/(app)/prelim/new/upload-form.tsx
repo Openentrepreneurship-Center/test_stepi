@@ -28,7 +28,7 @@ function toIsoDate(text: string): string | null {
   return iso >= EVAL_MIN && iso <= EVAL_MAX ? iso : null;
 }
 
-// 암호를 건 xlsx·xlsm 은 zip 이 아니라 OLE 문서(D0 CF 11 E0)로 저장된다
+// 암호를 건 xlsx·xlsm 은 zip 이 아니라 OLE 문서(D0 CF 11 E0)로 저장됨
 async function isLockedExcel(f: File): Promise<boolean> {
   if (!/\.xls[xm]$/i.test(f.name)) return false;
   const b = new Uint8Array(await f.slice(0, 4).arrayBuffer());
@@ -68,7 +68,7 @@ function DropBox({
         aria-label={label}
         onChange={async (e) => {
           const input = e.currentTarget;
-          // 거절한 파일은 입력칸에서도 비워 같은 파일을 다시 골라도 반응하게 한다
+          // 거절한 파일은 입력칸에서도 비워 같은 파일을 다시 골라도 반응하게 함
           if (!(await onPick(input.files?.[0] ?? null))) input.value = "";
         }}
       />
@@ -100,7 +100,7 @@ export default function UploadForm() {
       .summary()
       .then((r) => alive && setRef(r))
       .catch(() => {});
-    // 첨부 상한은 서버 설정값(ATTACH_MAX_GB)을 그대로 보여 준다
+    // 첨부 상한은 서버 설정값(ATTACH_MAX_GB)을 그대로 보여 줌
     prelim.attach
       .status()
       .then((s) => alive && setAttachMaxGb(Math.round(s.max_bytes / 1024 ** 3)))
@@ -124,7 +124,7 @@ export default function UploadForm() {
   };
   const evalIso = toIsoDate(evalDate);
   const evalBad = evalDate.trim() !== "" && evalIso === null;
-  // 치는 도중에는 빨간 안내를 숨긴다
+  // 치는 도중에는 빨간 안내를 숨김
   const [evalTyping, setEvalTyping] = useState(false);
   const evalShowBad = evalBad && !evalTyping;
   const ready = !!(files.essay || files.attach || files.origin) && !evalBad;
@@ -138,7 +138,7 @@ export default function UploadForm() {
       const form = new FormData();
       if (files.essay) form.append("apply_xlsx", files.essay);
       if (files.origin) form.append("raw_xlsm", files.origin);
-      // zip 은 검토를 만든 뒤 따로 올린다. 첨부만 올려도 검토를 만들 수 있게 알린다
+      // zip 은 검토를 만든 뒤 따로 올림. 첨부만 올려도 검토를 만들 수 있게 알림
       if (files.attach) form.append("has_attach", "true");
       if (evalIso) form.append("eval_date", evalIso);
       if (saveName.trim()) form.append("label", saveName.trim());
@@ -148,7 +148,7 @@ export default function UploadForm() {
         try {
           await prelim.attach.send(res.ticket, files.attach, setProgress);
         } catch (err) {
-          // 검토는 이미 만들어졌다. 결과 화면은 열어 주고 첨부 실패만 알린다(첨부 탭에도 실패 안내가 남는다)
+          // 검토는 이미 만들어졌음. 결과 화면은 열어 주고 첨부 실패만 알림(첨부 탭에도 실패 안내가 남음)
           window.alert(
             `첨부 실적은 올리지 못했습니다. ${err instanceof Error ? err.message : String(err)}`,
           );
@@ -306,7 +306,7 @@ export default function UploadForm() {
                     >
                       <CalendarDays size={20} aria-hidden />
                     </button>
-                    {/* 달력 버튼이 여는 날짜 선택 창. 칸 자체는 글자 칸이라 지우고 고치기 쉽다 */}
+                    {/* 달력 버튼이 여는 날짜 선택 창. 칸 자체는 글자 칸이라 지우고 고치기 쉬움 */}
                     <input
                       ref={pickerRef}
                       type="date"

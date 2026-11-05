@@ -16,20 +16,20 @@ import { useFocusTrap } from "@/lib/use-focus-trap";
 /**
  * 인재상 하나의 문항별 판정과 근거를 보여주는 오른쪽 패널.
  *
- * ── 왜 패널인가
- *    "점수는 왠만하면 다 근거가 있어야 한다"가 이 기능의 목적이다.
- *    점수만 크게 띄우고 근거를 감추면 만들 이유가 없다. 목록을 뒤에 남겨 두고
- *    오른쪽에서 밀려 나오므로, 인재상을 이어서 눌러 비교할 수 있다.
+ * --- 왜 패널인가 ---
+ *    "점수는 왠만하면 다 근거가 있어야 한다"가 이 기능의 목적임.
+ *    점수만 크게 띄우고 근거를 감추면 만들 이유가 없음. 목록을 뒤에 남겨 두고
+ *    오른쪽에서 밀려 나오므로, 인재상을 이어서 눌러 비교할 수 있음
  *
- * ── createPortal 이 필요한 이유
- *    sidebar.tsx 의 <aside> 가 md:sticky 라 자체 stacking context 를 만든다.
+ * --- createPortal 이 필요한 이유 ---
+ *    sidebar.tsx 의 <aside> 가 md:sticky 라 자체 stacking context 를 만듦.
  *    그 안에서 z-50 을 줘도 사이드바 내부에서만 통하고, layout.tsx 에서
- *    <main> 이 <aside> 뒤에 오므로 본문 글자가 패널 위로 올라온다.
- *    talent-select-modal.tsx 가 같은 이유로 포털을 쓴다.
+ *    <main> 이 <aside> 뒤에 오므로 본문 글자가 패널 위로 올라옴.
+ *    talent-select-modal.tsx 가 같은 이유로 포털을 씀
  *
- * ── N(판정 불가) 를 X 와 다르게 그리는 이유
- *    N 은 분모에서 빠진다. 미충족이 아니라 판정 자체를 못 한 것이다.
- *    회색으로 X 옆에 두면 둘이 섞여 보여, 점수가 왜 소수점인지 설명되지 않는다.
+ * --- N(판정 불가) 를 X 와 다르게 그리는 이유 ---
+ *    N 은 분모에서 빠짐. 미충족이 아니라 판정 자체를 못 한 것임.
+ *    회색으로 X 옆에 두면 둘이 섞여 보여, 점수가 왜 소수점인지 설명되지 않음
  */
 
 export default function TalentEvidenceDrawer({
@@ -42,7 +42,7 @@ export default function TalentEvidenceDrawer({
   onClose: () => void;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
-  // 펼쳐 놓은 문항. 여러 개를 동시에 열어 비교할 수 있어야 한다.
+  // 펼쳐 놓은 문항. 여러 개를 동시에 열어 비교할 수 있어야 함
   const [open, setOpen] = useState<string[]>([]);
 
   const toggle = useCallback((id: string) => {
@@ -58,10 +58,10 @@ export default function TalentEvidenceDrawer({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // 초점을 패널 안에 가두고, 닫힐 때 눌렀던 자리로 돌려준다
+  // 초점을 패널 안에 가두고, 닫힐 때 눌렀던 자리로 돌려줌
   useFocusTrap(dialogRef);
 
-  // 패널이 떠 있는 동안 뒤쪽 페이지 스크롤을 잠근다
+  // 패널이 떠 있는 동안 뒤쪽 페이지 스크롤을 잠금
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -72,8 +72,8 @@ export default function TalentEvidenceDrawer({
 
   if (typeof document === "undefined") return null;
 
-  // 계단 문항은 한 덩어리로 묶는다. 같은 사실을 난이도로 나눈 것이라
-  // 흩어 놓으면 세 문항이 각각 다른 근거인 줄로 읽힌다.
+  // 계단 문항은 한 덩어리로 묶음. 같은 사실을 난이도로 나눈 것이라
+  // 흩어 놓으면 세 문항이 각각 다른 근거인 줄로 읽힘
   const groups = groupByLadder(axis.items);
 
   return createPortal(
@@ -88,12 +88,12 @@ export default function TalentEvidenceDrawer({
         }
       `}</style>
 
-      {/* 배경 - 클릭하면 닫힌다 */}
+      {/* 배경: 클릭하면 닫힘 */}
       <div
         className="fixed inset-0 z-50 flex justify-end bg-[rgba(27,26,64,0.32)]"
         onClick={onClose}
       >
-        {/* 본체 - 배경 클릭이 여기까지 번지지 않게 막는다 */}
+        {/* 본체: 배경 클릭이 여기까지 번지지 않게 막음 */}
         <div
           ref={dialogRef}
           tabIndex={-1}
@@ -104,7 +104,7 @@ export default function TalentEvidenceDrawer({
           className="stepi-drawer-slide flex h-full w-full max-w-[560px] flex-col bg-[var(--paper)] shadow-[-12px_0_40px_rgba(27,26,64,0.28)] outline-none"
           style={{ animation: "stepi-drawer-slide 0.22s cubic-bezier(0.22,0.68,0.28,1) both" }}
         >
-          {/* ── 머리 ── */}
+          {/* --- 머리 --- */}
           <div className="shrink-0 border-b border-[var(--line)] px-5 pt-4 pb-3.5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -142,7 +142,7 @@ export default function TalentEvidenceDrawer({
               </div>
             </div>
 
-            {/* 점수가 왜 이 값인지 한 줄로 밝힌다. 소수점이 붙은 이유가 여기 있다 */}
+            {/* 점수가 왜 이 값인지 한 줄로 밝힘. 소수점이 붙은 이유가 여기 있음 */}
             <p className="mt-2.5 text-[13px] leading-[1.6] text-[var(--ink-muted)]">
               {axis.score === null
                 ? "판정할 수 있는 문항이 없어 점수를 내지 못했습니다."
@@ -158,12 +158,12 @@ export default function TalentEvidenceDrawer({
             )}
           </div>
 
-          {/* ── 문항 목록 ── 서버 판정에 사용된 근거를 표시한다 */}
+          {/* --- 문항 목록: 서버 판정에 사용된 근거를 표시함 --- */}
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
             <ul className="space-y-2.5">
               {groups.map((g) =>
                 g.ladder ? (
-                  // 계단 이름은 떨어져 있으면 겹칠 수 있으므로 첫 문항 id 를 key 로 쓴다
+                  // 계단 이름은 떨어져 있으면 겹칠 수 있으므로 첫 문항 id 를 key 로 씀
                   <li key={g.items[0].item_id}>
                     <div className="rounded-lg border border-[var(--line)] px-2.5 pt-2 pb-1">
                       <div className="mb-1 px-1 text-[12px] font-medium tracking-wide text-[var(--ink-soft)]">
@@ -206,7 +206,7 @@ export default function TalentEvidenceDrawer({
   );
 }
 
-/** 계단(ladder) 이 같은 문항끼리 묶는다. 원래 순서는 유지한다 */
+/** 계단(ladder) 이 같은 문항끼리 묶음. 원래 순서는 유지함 */
 function groupByLadder(items: ItemResult[]): Array<{ ladder: string | null; items: ItemResult[] }> {
   const out: Array<{ ladder: string | null; items: ItemResult[] }> = [];
   for (const item of items) {
@@ -230,7 +230,7 @@ function VerdictBadge({ verdict }: { verdict: ItemResult["verdict"] }) {
         ? "text-[var(--bad)]"
         : "text-[var(--s-700)]";
   return (
-    // role 없는 span 의 aria-label 은 스크린리더가 무시하고 "O" 를 그대로 읽는다
+    // role 없는 span 의 aria-label 은 스크린리더가 무시하고 "O" 를 그대로 읽음
     <span
       role="img"
       aria-label={verdict === "O" ? "충족" : verdict === "X" ? "미충족" : "판정 불가"}
@@ -253,7 +253,7 @@ function ItemRow({
   onToggle: () => void;
 }) {
   const review = item.flags.includes("judgment_boundary");
-  // 근거는 펼칠 때만 만든다. 34유형 전부를 미리 만들면 대부분 버려진다
+  // 근거는 펼칠 때만 만듦. 34유형 전부를 미리 만들면 대부분 버려짐
   const evidence = useMemo(
     () => (open ? evidenceFor(applicantId, item) : []),
     [open, applicantId, item],
@@ -341,8 +341,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 /**
- * 근거는 종류마다 다르게 보여준다.
- * 자소서 인용은 papers-section.tsx 의 관례를 그대로 따랐다
+ * 근거는 종류마다 다르게 보여줌.
+ * 자소서 인용은 papers-section.tsx 의 관례를 그대로 따름
  * (좌측 세로선 + italic + 곡선 따옴표).
  */
 function EvidenceView({ ev }: { ev: Evidence }) {
@@ -365,7 +365,7 @@ function EvidenceView({ ev }: { ev: Evidence }) {
         <div className="flex items-start justify-between gap-2">
           <p className="text-[13.5px] leading-[1.55] text-[var(--ink)]">{ev.title}</p>
           {ev.match_status !== "matched" && (
-            // 자기보고 서지 메타일 뿐 원문으로 확인된 게 아니다. 1022건 중 1010건이 여기 해당한다
+            // 자기보고 서지 메타일 뿐 원문으로 확인된 게 아님. 1022건 중 1010건이 여기 해당함
             <span className="shrink-0 rounded-full border border-[var(--line-strong)] px-1.5 py-[1px] text-[11.5px] text-[var(--ink-soft)]">
               미검증
             </span>

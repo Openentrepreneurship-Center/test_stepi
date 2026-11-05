@@ -1,7 +1,7 @@
 import PaperCard from "@/components/paper-card";
 import type { PaperDetail, PaperFile } from "@/lib/api";
 
-/** 인쇄용 논문 목록 — 업로드·삭제 없이 카드만 쌓는다 */
+/** 인쇄용 논문 목록: 업로드, 삭제 없이 카드만 쌓음 */
 export default function PapersPrintList({
   files,
   details,

@@ -1,4 +1,4 @@
-// 서버에서 데이터를 받는 동안 보여 주는 화면 뼈대. 각 화면의 loading.tsx 가 쓴다.
+// 서버에서 데이터를 받는 동안 보여 주는 화면 뼈대. 각 화면의 loading.tsx 가 씀
 
 interface Props {
   /** 제목 위 작은 이름 (예: 지원자 분석). 알면 글자로, 모르면 회색 막대 */
@@ -14,7 +14,7 @@ interface Props {
 }
 
 export function Bar({ className = "" }: { className?: string }) {
-  // span 이라 <p> 안(PageHeader 설명 자리)에도 둘 수 있다
+  // span 이라 <p> 안(PageHeader 설명 자리)에도 둘 수 있음
   return <span className={`block rounded-[3px] bg-[var(--bg-2)] ${className}`} />;
 }
 

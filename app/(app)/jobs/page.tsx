@@ -8,12 +8,12 @@ import JobAutoRefresh from "./[id]/auto-refresh";
 
 export const dynamic = "force-dynamic";
 
-// 좁은 화면(xl 미만)에서는 생성일, 시작시간 칸을 숨겨 분석명과 종료시간이 잘리지 않게 한다.
+// 좁은 화면(xl 미만)에서는 생성일, 시작시간 칸을 숨겨 분석명과 종료시간이 잘리지 않게 함
 const ROW_GRID =
   "grid grid-cols-[minmax(0,1fr)_110px_100px_120px_40px] xl:grid-cols-[minmax(0,1fr)_110px_100px_110px_110px_120px_40px] items-center gap-5";
 const WIDE_ONLY = "hidden xl:block";
 
-// 백엔드가 KST 벽시계 시각을 시간대 없이 내려주므로 파싱과 출력을 같은 기준으로 맞춘다.
+// 백엔드가 KST 벽시계 시각을 시간대 없이 내려주므로 파싱과 출력을 같은 기준으로 맞춤
 function formatTime(value?: string | null) {
   if (!value) return "-";
   const d = new Date(value);
@@ -22,7 +22,7 @@ function formatTime(value?: string | null) {
   return `${p(d.getMonth() + 1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-// 요청 양식대로 시:분:초만 쓰되, 밤을 넘기는 분석은 날짜를 앞에 붙인다.
+// 요청 양식대로 시:분:초만 쓰되, 밤을 넘기는 분석은 날짜를 앞에 붙임
 function formatEta(value: string, startedAt?: string | null) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "-";

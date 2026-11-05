@@ -54,7 +54,7 @@ export default function DeptFitV2Section({
     );
   }
 
-  // 받은 결과가 없는데 실패했으면 "채점 결과 없음"이 아니라 실패로 알린다
+  // 받은 결과가 없는데 실패했으면 "채점 결과 없음"이 아니라 실패로 알림
   if (error && !data) {
     return (
       <div>

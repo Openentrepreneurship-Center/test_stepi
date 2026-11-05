@@ -15,7 +15,7 @@ type Status = {
 const POLL_MS = 2000;
 const STORAGE_PREFIX = "stepi:bulk-pdf:";
 
-/** 비공개 모드 등에서 localStorage 접근 자체가 막힐 수 있다 */
+/** 비공개 모드 등에서 localStorage 접근 자체가 막힐 수 있음 */
 function readTaskId(jobId: string): string | null {
   try {
     return localStorage.getItem(STORAGE_PREFIX + jobId);
@@ -29,19 +29,19 @@ function saveTaskId(jobId: string, taskId: string | null): void {
     if (taskId) localStorage.setItem(STORAGE_PREFIX + jobId, taskId);
     else localStorage.removeItem(STORAGE_PREFIX + jobId);
   } catch {
-    /* 저장 못 해도 이번 화면에서는 그대로 진행된다 */
+    /* 저장 못 해도 이번 화면에서는 그대로 진행됨 */
   }
 }
 
 /**
- * 전체 지원자 PDF 를 ZIP 으로 받는다.
+ * 전체 지원자 PDF 를 ZIP 으로 받음
  *
- * 한 번의 요청으로 끝내지 않는 이유는 Cloudflare 원본 타임아웃(100초)이다. 지원자가
- * 수백 명이면 동기 요청은 반드시 끊긴다. 그래서 시작 → 진행률 폴링 → 내려받기로 나눈다.
+ * 한 번의 요청으로 끝내지 않는 이유는 Cloudflare 원본 타임아웃(100초) 때문임. 지원자가
+ * 수백 명이면 동기 요청은 반드시 끊김. 그래서 시작, 진행률 폴링, 내려받기로 나눔.
  *
  * task_id 를 localStorage 에 남기는 이유는, 화면을 떠나도 렌더러는 계속 만들고 결과를
- * 6시간 보관하기 때문이다. 열쇠를 안 들고 있으면 다 만들어진 ZIP 을 못 받고 처음부터
- * 다시 만들게 된다. 담당자가 다른 지원자를 보러 다녀오는 건 자연스러운 동작이다.
+ * 6시간 보관하기 때문임. 열쇠를 안 들고 있으면 다 만들어진 ZIP 을 못 받고 처음부터
+ * 다시 만들게 됨. 담당자가 다른 지원자를 보러 다녀오는 건 자연스러운 동작임
  */
 export default function BulkPdfButton({ jobId }: { jobId: string }) {
   const [taskId, setTaskId] = useState<string | null>(null);
@@ -50,7 +50,7 @@ export default function BulkPdfButton({ jobId }: { jobId: string }) {
   const [error, setError] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 서버 렌더에는 localStorage 가 없으므로 첫 그림 뒤에 읽는다
+  // 서버 렌더에는 localStorage 가 없으므로 첫 그림 뒤에 읽음
   useEffect(() => {
     const saved = readTaskId(jobId);
     if (!saved) return;
@@ -68,7 +68,7 @@ export default function BulkPdfButton({ jobId }: { jobId: string }) {
           `/analysis-jobs/${encodeURIComponent(jobId)}/applicants-report/${taskId}`,
           { cache: "no-store" },
         );
-        // 렌더러가 재기동됐거나 보관 기한이 지났다. 없는 작업을 붙들지 말고 처음으로 돌린다
+        // 렌더러가 재기동됐거나 보관 기한이 지났음. 없는 작업을 붙들지 말고 처음으로 돌림
         if (res.status === 404) {
           saveTaskId(jobId, null);
           if (cancelled) return;
@@ -88,7 +88,7 @@ export default function BulkPdfButton({ jobId }: { jobId: string }) {
           setError(next.error ?? "생성에 실패했습니다.");
           setBusy(false);
         } else {
-          // 완료분은 열쇠를 남겨 둔다. 보관 기한 안에는 다시 들어와도 받을 수 있다
+          // 완료분은 열쇠를 남겨 둠. 보관 기한 안에는 다시 들어와도 받을 수 있음
           setBusy(false);
         }
       } catch (e) {
@@ -133,7 +133,7 @@ export default function BulkPdfButton({ jobId }: { jobId: string }) {
 
   return (
     <div className="relative flex flex-col items-end">
-      {/* 상태 줄은 버튼 위에 띄운다. 자리를 차지하면 옆 버튼들과 높이가 어긋난다 */}
+      {/* 상태 줄은 버튼 위에 띄움. 자리를 차지하면 옆 버튼들과 높이가 어긋남 */}
       {(showProgress || showFailed || error) && (
         <div className="absolute bottom-full right-0 mb-1 flex flex-col items-end gap-0.5">
           {showProgress && (

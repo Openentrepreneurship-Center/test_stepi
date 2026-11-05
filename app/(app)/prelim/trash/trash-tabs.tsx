@@ -18,7 +18,7 @@ export default function TrashTabs({ initial }: { initial: Tab }) {
 
   function pick(t: Tab) {
     setTab(t);
-    // 새로고침해도 같은 탭이 열리게 주소에 남긴다
+    // 새로고침해도 같은 탭이 열리게 주소에 남김
     window.history.replaceState(null, "", t === "retention" ? "?tab=retention" : window.location.pathname);
   }
 

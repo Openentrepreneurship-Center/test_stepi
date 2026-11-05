@@ -20,7 +20,7 @@ export default async function JobDetailPage({
   const { id } = await params;
   const statusRes = await api.getStatus(id).catch(asError);
   const status = statusRes instanceof Error ? null : statusRes;
-  // 진행 중(running/pending)이어도 그때까지 끝난 지원자 부분 결과를 같이 가져온다
+  // 진행 중(running/pending)이어도 그때까지 끝난 지원자 부분 결과를 같이 가져옴
   const resultRes =
     status && (status.progress.done > 0 || status.status === "done" || status.status === "failed")
       ? await api.getResult(id).catch(asError)
@@ -28,7 +28,7 @@ export default async function JobDetailPage({
   const resultFailed = resultRes instanceof Error;
   const result = resultFailed ? null : resultRes;
 
-  // 첫 지원자 전에 크래시하거나 등록에 실패하면 failed_count 는 0 이지만 error 는 있다
+  // 첫 지원자 전에 크래시하거나 등록에 실패하면 failed_count 는 0 이지만 error 는 있음
   const showFailure =
     !!status &&
     (status.progress.failed > 0 || status.status === "failed" || !!status.error);

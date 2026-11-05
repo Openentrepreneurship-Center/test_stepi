@@ -29,7 +29,7 @@ export default function RegenerateSummaryButton({ jobId, applicantId }: Props) {
         throw new Error(`${res.status}: ${t || "재생성 요청 실패"}`);
       }
       setMsg("재생성 큐잉 완료 — 잠시 후 새로고침");
-      // 2분 후 자동 새로고침; 그 전에 사용자가 직접 새로고침해도 됨.
+      // 2분 후 자동 새로고침; 그 전에 사용자가 직접 새로고침해도 됨
       setTimeout(() => router.refresh(), 90_000);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "오류");
