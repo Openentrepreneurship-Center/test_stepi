@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { X, RotateCcw, Plus, Trash2 } from "lucide-react";
 import { TALENT_TYPES } from "@/lib/talent-types";
 import { useFocusTrap } from "@/lib/use-focus-trap";
+import { failText } from "@/lib/api";
 import {
   saveTalentSets,
   newTalentSetId,
@@ -129,7 +130,7 @@ export default function TalentSelectModal({
       onClose();
     } catch (e) {
       // 닫지 않음. 닫으면 저장된 줄 알고 나갔다가 값이 되돌아가 있음
-      setSaveError(e instanceof Error ? e.message : "잠시 후 다시 시도해 주십시오.");
+      setSaveError(failText(e, "저장에 실패하였습니다."));
     } finally {
       setSaving(false);
     }

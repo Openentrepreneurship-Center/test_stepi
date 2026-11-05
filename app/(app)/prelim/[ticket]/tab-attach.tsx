@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { downloadUrl, type PrelimAttachItem, type PrelimVerdict } from "@/lib/api";
+import { hasHangul, downloadUrl, type PrelimAttachItem, type PrelimVerdict } from "@/lib/api";
 import { XBtn, shownNo } from "./parts";
 import type { Ctx } from "./result-view";
 
@@ -264,7 +264,7 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
           <div className="empty">첨부 실적 zip 파일을 업로드하지 않았습니다.</div>
         ) : status === "failed" ? (
           <div className="empty" role="alert">
-            첨부 실적 검사에 실패하였습니다.{data.attach_error ? ` 사유: ${data.attach_error}` : ""}
+            첨부 실적 검사에 실패하였습니다.{hasHangul(data.attach_error) ? ` ${data.attach_error}` : ""}
           </div>
         ) : status !== "done" && attach.length === 0 ? (
           <div className="empty">

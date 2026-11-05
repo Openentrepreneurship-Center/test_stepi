@@ -77,7 +77,7 @@ export default async function ApplicantPrintPage({
       <div className="px-8 py-9 max-w-3xl mx-auto">
         <div className="panel text-center py-16">
           <h2 className="text-[22px] font-bold mb-2">
-            {resultFailed ? "지원자 정보를 불러오지 못했습니다." : "지원자를 찾을 수 없습니다."}
+            {resultFailed ? "지원자 정보를 불러오지 못하였습니다." : "지원자를 찾을 수 없습니다."}
           </h2>
           <p className="text-[14px] text-[var(--ink-muted)]">{decodedAppId}</p>
         </div>
@@ -123,7 +123,7 @@ export default async function ApplicantPrintPage({
   const deptStat = topDeptV2
     ? { value: topDeptV2.dept_name, sub: `${topDeptV2.score.toFixed(0)}점` }
     : !deptFit
-      ? { value: "불러오지 못했습니다", muted: true }
+      ? { value: "불러오지 못하였습니다", muted: true }
       : deptFit.skipped
         ? { value: "미산출", sub: "행정직 미산출", muted: true }
         : { value: "미산출", sub: "채점 결과가 없습니다", muted: true };
@@ -194,7 +194,7 @@ export default async function ApplicantPrintPage({
             />
             <HeaderStat label="상위 부서" text {...deptStat} />
             {papersFailed ? (
-              <HeaderStat label="학술지 게재" value="불러오지 못했습니다" muted />
+              <HeaderStat label="학술지 게재" value="불러오지 못하였습니다" muted />
             ) : (
               <HeaderStat
                 label="학술지 게재"
@@ -234,7 +234,7 @@ export default async function ApplicantPrintPage({
 
         {/* 학력, 이력 */}
         {sourceFailed ? (
-          <EmptyRow title="학력 · 이력">불러오지 못했습니다.</EmptyRow>
+          <EmptyRow title="학력 · 이력">불러오지 못하였습니다.</EmptyRow>
         ) : timelineTotal === 0 ? (
           <EmptyRow title="학력 · 이력">기재된 내용이 없습니다.</EmptyRow>
         ) : (
@@ -301,7 +301,7 @@ export default async function ApplicantPrintPage({
 
         {/* 직군 적합도 */}
         {!deptFit ? (
-          <EmptyRow title="직군 적합도">불러오지 못했습니다.</EmptyRow>
+          <EmptyRow title="직군 적합도">불러오지 못하였습니다.</EmptyRow>
         ) : deptFit.skipped ? (
           <EmptyRow title="직군 적합도">
             {deptFit.skipped_reason ?? "행정직은 직군 적합도 산출 대상이 아닙니다."}
@@ -416,7 +416,7 @@ export default async function ApplicantPrintPage({
 
         {/* 학술지 게재 이력: 화면에서는 별도 탭 */}
         {papersFailed ? (
-          <EmptyRow title="학술지 게재 이력">불러오지 못했습니다.</EmptyRow>
+          <EmptyRow title="학술지 게재 이력">불러오지 못하였습니다.</EmptyRow>
         ) : papers.length === 0 ? (
           <EmptyRow title="학술지 게재 이력">기재된 내용이 없습니다.</EmptyRow>
         ) : (

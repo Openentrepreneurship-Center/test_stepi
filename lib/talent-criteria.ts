@@ -67,7 +67,7 @@ function pending(no: number): CriterionDef {
     name: "문항 미확정",
     question: "아직 문항이 확정되지 않았습니다.",
     judged_by: "code",
-    rule: "근거로 쓸 데이터 필드가 없어 문항을 만들지 못했습니다.",
+    rule: "근거로 쓸 데이터 필드가 없어 문항을 만들지 못하였습니다.",
     source_fields: [],
     pending: true,
   };

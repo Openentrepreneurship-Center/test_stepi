@@ -31,8 +31,8 @@ function LoginInner() {
         return;
       }
       router.replace(next);
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주십시오.");
+    } catch {
+      setErr("서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주십시오.");
       setLoading(false);
     }
   };

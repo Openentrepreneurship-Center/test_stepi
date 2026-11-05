@@ -5,6 +5,7 @@ import { CalendarDays, ChevronRight, CircleCheck, Database, Download, Plus, Uplo
 import PageHeader from "@/components/page-header";
 import { Bar } from "@/components/page-skeleton";
 import {
+  failText,
   prelim,
   type PrelimRefImportApplied,
   type PrelimRefImportPreview,
@@ -276,7 +277,7 @@ export default function ReferenceView() {
       if (drawer.kind === "reviewers" && hiddenWritten(items).has(saved.id))
         setInfo("행정직이 없는 채용의 필기 위원이므로 목록에는 표시되지 않으며, 제척 검토에는 사용됩니다.");
     } catch (e) {
-      setDrawerError(e instanceof Error ? e.message : "저장에 실패하였습니다.");
+      setDrawerError(failText(e, "저장에 실패하였습니다."));
     } finally {
       setSaving(false);
     }
@@ -291,7 +292,7 @@ export default function ReferenceView() {
       setRows((prev) => ({ ...prev, [kind]: (prev[kind] ?? []).filter((r) => r.id !== row.id) }));
       return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "삭제에 실패하였습니다.");
+      setError(failText(e, "삭제에 실패하였습니다."));
       return false;
     }
   }
@@ -304,7 +305,7 @@ export default function ReferenceView() {
     try {
       setPreview(await prelim.reference.importPreview(file));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "엑셀 파일을 읽을 수 없습니다.");
+      setError(failText(e, "엑셀 파일을 읽을 수 없습니다."));
     } finally {
       setReading(false);
     }
@@ -1086,7 +1087,7 @@ function ImportDialog({
         await prelim.reference.importApply({ token: preview.token, choices, confirm_bulk_delete: bulk.length > 0 }),
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : "반영에 실패하였습니다.");
+      setError(failText(e, "반영에 실패하였습니다."));
       setBusy(false);
     }
   }

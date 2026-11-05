@@ -4,14 +4,13 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Activity, AlertTriangle, Clock3, RefreshCcw, ShieldCheck } from "lucide-react";
 import PageHeader from "@/components/page-header";
-import { api, type TuringMetricsResponse, type TuringRiskItem } from "@/lib/api";
+import { failReason, api, type TuringMetricsResponse, type TuringRiskItem } from "@/lib/api";
 
 const REFRESH_MS = 10000;
 
 type Slot<T> = { data: T | null; error: string | null; at: Date | null };
 const EMPTY_SLOT = { data: null, error: null, at: null };
 
-const errorText = (err: unknown, fallback: string) => (err instanceof Error ? err.message : fallback);
 const clock = (d: Date) => d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
 export default function TuringMonitor() {
@@ -29,12 +28,12 @@ export default function TuringMonitor() {
     setM((prev) =>
       metricsRes.status === "fulfilled"
         ? { data: metricsRes.value, error: null, at }
-        : { ...prev, error: errorText(metricsRes.reason, "turing. 지표를 불러오지 못했습니다.") },
+        : { ...prev, error: failReason(metricsRes.reason) },
     );
     setR((prev) =>
       risksRes.status === "fulfilled"
         ? { data: risksRes.value.items, error: null, at }
-        : { ...prev, error: errorText(risksRes.reason, "검수 권장 목록을 불러오지 못했습니다.") },
+        : { ...prev, error: failReason(risksRes.reason) },
     );
     setLoading(false);
   };
@@ -55,7 +54,7 @@ export default function TuringMonitor() {
   const risks = r.data;
   const metrics = data?.metrics;
   // 성공한 지표가 없을 때는 0·빈 목록 대신 지금 상태를 씀
-  const metricState = data ? null : m.error ? "불러오지 못했습니다" : "불러오는 중";
+  const metricState = data ? null : m.error ? "불러오지 못하였습니다" : "불러오는 중";
   // duration_seconds 가 없는 행의 1명당 시간은 백엔드가 대표값으로 채운 추정값이라(routers/turing.py) 평균·표에서 미측정으로 둠
   const perAppTimes = (data?.jobs ?? [])
     .filter((j) => j.duration_seconds != null)
@@ -99,7 +98,7 @@ export default function TuringMonitor() {
         <div className="mt-8 border-l-2 border-[var(--bad)] pl-4 py-2 text-[14px] text-[var(--bad)] space-y-1.5">
           {failures.map(({ label, slot }) => (
             <div key={label}>
-              {label} 불러오지 못했습니다.
+              {label} 불러오지 못하였습니다.
               {slot.data != null && slot.at && ` ${clock(slot.at)}에 조회한 이전 결과를 표시합니다.`}
               <div className="text-[12.5px] text-[var(--ink-muted)] break-all">{slot.error}</div>
             </div>
@@ -146,7 +145,7 @@ export default function TuringMonitor() {
         <div className="bg-[var(--paper)] border border-[var(--line-strong)] rounded-xl overflow-hidden">
           {risks === null ? (
             <div className="py-10 px-4 text-[14px] text-[var(--ink-muted)]">
-              {r.error ? "검수 권장 목록을 불러오지 못했습니다." : "불러오는 중"}
+              {r.error ? "검수 권장 목록을 불러오지 못하였습니다." : "불러오는 중"}
             </div>
           ) : risks.length === 0 ? (
             <div className="py-10 px-4 text-[14px] text-[var(--ink-muted)]">검수가 필요한 항목이 없습니다.</div>
@@ -215,7 +214,7 @@ export default function TuringMonitor() {
           </div>
           {metricState ? (
             <div className="py-16 text-center text-[15px] text-[var(--ink-muted)]">
-              {metricState === "불러오는 중" ? metricState : "최근 분석 점검 내역을 불러오지 못했습니다."}
+              {metricState === "불러오는 중" ? metricState : "최근 분석 점검 내역을 불러오지 못하였습니다."}
             </div>
           ) : latestRows.length === 0 ? (
             <div className="py-16 text-center text-[15px] text-[var(--ink-muted)]">

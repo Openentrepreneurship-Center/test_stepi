@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
+import { failText } from "@/lib/api";
 
 interface Props {
   jobId: string;
@@ -31,7 +32,7 @@ export default function RegenerateSummaryButton({ jobId, applicantId }: Props) {
       // 2분 후 자동 새로고침; 그 전에 사용자가 직접 새로고침해도 됨
       setTimeout(() => router.refresh(), 90_000);
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : "요청 중 오류가 발생하였습니다.");
+      setMsg(failText(e, "요약 재생성 요청에 실패하였습니다."));
       setBusy(false);
     }
   };

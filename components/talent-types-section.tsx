@@ -106,7 +106,7 @@ export default function TalentTypesSection({
     const controller = new AbortController();
     getEvaluation(jobId, applicantId, controller.signal).then(
       (data) => { if (!controller.signal.aborted) setResult({ key: requestKey, data }); },
-      () => { if (!controller.signal.aborted) setResult({ key: requestKey, error: "인재상 판정 결과를 불러오지 못했습니다." }); },
+      () => { if (!controller.signal.aborted) setResult({ key: requestKey, error: "인재상 판정 결과를 불러오지 못하였습니다." }); },
     );
     return () => controller.abort();
   }, [jobId, applicantId, requestKey]);
@@ -212,7 +212,7 @@ export default function TalentTypesSection({
           <>
             {status === "error" && (
               <p className="mb-4 text-[14px] leading-[1.6] text-[var(--bad)]">
-                선정 인재상을 불러오지 못했습니다. 아래는 저장된 값이 아니라 기본 예시입니다. 왼쪽 메뉴에서 다시 시도해 주십시오.
+                선정 인재상을 불러오지 못하였습니다. 아래는 저장된 값이 아니라 기본 예시입니다. 왼쪽 메뉴에서 다시 시도해 주십시오.
               </p>
             )}
             <div

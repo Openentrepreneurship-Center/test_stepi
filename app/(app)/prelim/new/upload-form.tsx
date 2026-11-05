@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays, ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/page-header";
-import { prelim, type PrelimRefSummary } from "@/lib/api";
+import { failText, prelim, type PrelimRefSummary } from "@/lib/api";
 import "../prelim.css";
 
 type Slot = "essay" | "attach" | "origin";
@@ -149,14 +149,12 @@ export default function UploadForm() {
           await prelim.attach.send(res.ticket, files.attach, setProgress);
         } catch (err) {
           // 검토는 이미 만들어졌음. 결과 화면은 열어 주고 첨부 실패만 알림(첨부 탭에도 실패 안내가 남음)
-          window.alert(
-            `첨부 실적 업로드에 실패하였습니다. 사유: ${err instanceof Error ? err.message : String(err)}`,
-          );
+          window.alert(failText(err, "첨부 실적 업로드에 실패하였습니다."));
         }
       }
       router.push(`/prelim/${encodeURIComponent(res.ticket)}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(failText(err, "사전스크리닝 실행에 실패하였습니다."));
       setRunning(false);
     }
   }

@@ -58,7 +58,7 @@ export default async function ApplicantDetailPage({
           <ChevronLeft size={15} /> 분석 보고로 돌아가기
         </Link>
         <div className="panel text-center py-16">
-          <h2 className="text-[22px] font-bold mb-2">지원자 정보를 불러오지 못했습니다.</h2>
+          <h2 className="text-[22px] font-bold mb-2">지원자 정보를 불러오지 못하였습니다.</h2>
           <p className="text-[14px] text-[var(--ink-muted)]">잠시 후 새로고침해 주십시오. 지원자 번호: {decodedAppId}</p>
         </div>
       </div>
@@ -118,7 +118,7 @@ export default async function ApplicantDetailPage({
   const deptStat = topDeptV2
     ? { value: topDeptV2.dept_name, sub: `${topDeptV2.score.toFixed(0)}점` }
     : !deptFit
-      ? { value: "불러오지 못했습니다", muted: true }
+      ? { value: "불러오지 못하였습니다", muted: true }
       : deptFit.skipped
         ? { value: "미산출", sub: "행정직 미산출", muted: true }
         : { value: "미산출", sub: "채점 결과가 없습니다", muted: true };
@@ -166,7 +166,7 @@ export default async function ApplicantDetailPage({
             />
             <HeaderStat label="상위 부서" text {...deptStat} />
             {papersFailed ? (
-              <HeaderStat label="학술지 게재" value="불러오지 못했습니다" muted />
+              <HeaderStat label="학술지 게재" value="불러오지 못하였습니다" muted />
             ) : (
               <HeaderStat
                 label="학술지 게재"

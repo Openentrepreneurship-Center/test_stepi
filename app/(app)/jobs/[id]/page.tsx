@@ -57,7 +57,7 @@ export default async function JobDetailPage({
         <PageHeader back={{ href: "/jobs", label: "분석 목록" }} eyebrow="지원자 분석" title="분석 보고" />
         <div className="mt-10 panel text-center py-16">
           <h2 className="text-[22px] font-bold mb-2">
-            {isNotFound(statusRes) ? "분석을 찾을 수 없습니다." : "분석 정보를 불러오지 못했습니다."}
+            {isNotFound(statusRes) ? "분석을 찾을 수 없습니다." : "분석 정보를 불러오지 못하였습니다."}
           </h2>
           <p className="text-[14px] text-[var(--ink-muted)] tabular-nums">
             {isNotFound(statusRes) ? id : `잠시 후 새로고침해 주십시오. 분석 번호: ${id}`}
@@ -163,7 +163,7 @@ export default async function JobDetailPage({
 
       {resultFailed && (
         <div className="mt-10 panel text-center py-12">
-          <p className="text-[17px] font-bold mb-2">지원자 명부를 불러오지 못했습니다.</p>
+          <p className="text-[17px] font-bold mb-2">지원자 명부를 불러오지 못하였습니다.</p>
           <p className="text-[13.5px] text-[var(--ink-muted)]">잠시 후 새로고침해 주십시오.</p>
         </div>
       )}
@@ -243,7 +243,7 @@ export default async function JobDetailPage({
                   </div>
                   <div className="col-span-1 text-center text-[13.5px] tabular-nums">
                     {summaryFailed ? (
-                      <span className="text-[var(--ink-soft)]" title="게재 현황을 불러오지 못했습니다">확인 불가</span>
+                      <span className="text-[var(--ink-soft)]" title="게재 현황을 불러오지 못하였습니다">확인 불가</span>
                     ) : meta && meta.totalPapers > 0 ? (
                       <span className="text-[var(--ink)]">
                         {meta.analyzed}/{meta.totalPapers}
@@ -277,7 +277,7 @@ export default async function JobDetailPage({
 }
 
 function failureSummaryLine(failures: JobFailuresResponse | null): string {
-  if (!failures) return "분석 중 오류가 발생했습니다.";
+  if (!failures) return "분석 중 오류가 발생하였습니다.";
   if (failures.job_cause) {
     return `${failures.job_cause.title}. ${failures.job_cause.description}`;
   }
@@ -288,7 +288,7 @@ function failureSummaryLine(failures: JobFailuresResponse | null): string {
   if (failures.legacy) {
     return `상세 원인이 기록되지 않은 지원자 ${failures.legacy_count}명`;
   }
-  return "분석 중 오류가 발생했습니다.";
+  return "분석 중 오류가 발생하였습니다.";
 }
 
 function Stat({

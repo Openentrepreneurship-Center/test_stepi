@@ -268,7 +268,7 @@ export default function Sidebar() {
                 talentStatus === "loading"
                   ? "인재상을 불러오는 중입니다"
                   : talentStatus === "error"
-                    ? "인재상을 불러오지 못했습니다"
+                    ? "인재상을 불러오지 못하였습니다"
                     : "인재상 선택"
               }
               className={

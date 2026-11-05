@@ -90,6 +90,6 @@ export function evidenceFor(_applicantId: string, item: ItemResult): Evidence[] 
 }
 export async function getEvaluation(jobId: string, applicantId: string, signal?: AbortSignal): Promise<ApplicantEvaluation> {
   const res = await apiFetch(`/analysis-jobs/${encodeURIComponent(jobId)}/applicants/${encodeURIComponent(applicantId)}/talent-evaluation`, { cache: "no-store", signal });
-  if (!res.ok) throw new Error("인재상 판정 결과를 불러오지 못했습니다.");
+  if (!res.ok) throw new Error("인재상 판정 결과를 불러오지 못하였습니다.");
   return res.json();
 }

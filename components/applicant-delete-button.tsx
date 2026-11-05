@@ -3,7 +3,7 @@
 import { useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
-import { api } from "@/lib/api";
+import { failText, api } from "@/lib/api";
 
 interface Props {
   jobId: string;
@@ -30,7 +30,7 @@ export default function ApplicantDeleteButton({ jobId, applicantId }: Props) {
       await api.deleteApplicant(jobId, applicantId);
       router.refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "삭제에 실패하였습니다.");
+      alert(failText(err, "삭제에 실패하였습니다."));
       setBusy(false);
     }
   };

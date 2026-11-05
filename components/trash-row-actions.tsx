@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Undo2 } from "lucide-react";
-import { api } from "@/lib/api";
+import { failText, api } from "@/lib/api";
 
 export default function TrashRowActions({ jobId }: { jobId: string }) {
   const router = useRouter();
@@ -17,7 +17,7 @@ export default function TrashRowActions({ jobId }: { jobId: string }) {
         await api.restoreJob(jobId);
         router.refresh();
       } catch (e) {
-        setErr(e instanceof Error ? e.message : "복구에 실패하였습니다.");
+        setErr(failText(e, "복구에 실패하였습니다."));
       }
     });
   };
@@ -35,7 +35,7 @@ export default function TrashRowActions({ jobId }: { jobId: string }) {
         await api.hardDeleteJob(jobId);
         router.refresh();
       } catch (e) {
-        setErr(e instanceof Error ? e.message : "영구 삭제에 실패하였습니다.");
+        setErr(failText(e, "영구 삭제에 실패하였습니다."));
       }
     });
   };

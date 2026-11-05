@@ -395,18 +395,69 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
     cache: "no-store",
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
   });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`${res.status} ${res.statusText}: ${text || path}`);
-  }
+  if (!res.ok) throw await readApiError(res, path);
   if (res.status === 204) return undefined as unknown as T;
   return res.json() as Promise<T>;
 }
 
+/** 서버 요청 실패. reason 은 화면에 그대로 붙일 한글 문장(서버의 한글 사유 또는 상태별 안내) */
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    public reason: string,
+  ) {
+    super(reason);
+    this.name = "ApiError";
+  }
+}
+
+const HANGUL = /[가-힣]/;
+export const hasHangul = (s: unknown): s is string => typeof s === "string" && HANGUL.test(s);
+const withPeriod = (s: string) => (/[.?!]$/.test(s) ? s : `${s}.`);
+const NETWORK_REASON = "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주십시오.";
+const STATUS_REASON: Record<number, string> = {
+  400: "입력한 내용이나 파일을 확인해 주십시오.",
+  401: "로그인이 필요합니다. 다시 로그인해 주십시오.",
+  403: "이 작업을 할 권한이 없습니다.",
+  404: "이미 삭제되었거나 찾을 수 없는 항목입니다.",
+  409: "현재 상태에서는 처리할 수 없으니 화면을 새로고침해 주십시오.",
+  413: "파일 용량이 허용 범위를 넘었습니다.",
+  422: "입력한 내용이나 파일을 확인해 주십시오.",
+};
+const statusReason = (status: number) =>
+  STATUS_REASON[status] ??
+  (status >= 500 ? "서버 오류가 발생하였습니다. 잠시 후 다시 시도해 주십시오." : "잠시 후 다시 시도해 주십시오.");
+
+/** 실패 응답 본문을 ApiError 로. 서버 원문(영어·JSON)은 화면 대신 콘솔에 남김 */
+export function apiError(status: number, body: string, where = ""): ApiError {
+  let detail: unknown;
+  try {
+    detail = JSON.parse(body).detail;
+  } catch {}
+  console.warn(`API ${status} ${where}`, body);
+  return new ApiError(status, hasHangul(detail) ? withPeriod(detail.trim()) : statusReason(status));
+}
+export const readApiError = async (res: Response, where = res.url) =>
+  apiError(res.status, await res.text().catch(() => ""), where);
+
+/** 실패 사유나 다음 할 일 한 문장. 영어·JSON 원문은 내보내지 않음 */
+export function failReason(e: unknown): string {
+  if (e instanceof ApiError) return e.reason;
+  if (!(e instanceof Error)) return "잠시 후 다시 시도해 주십시오.";
+  if (e.name === "TimeoutError") return "응답이 지연되었으니 새로고침한 후 다시 시도해 주십시오.";
+  // fetch 가 서버에 닿지 못하면 브라우저마다 다른 영어 문구의 TypeError 를 던짐
+  if (e instanceof TypeError && /fetch|network|load failed/i.test(e.message)) return NETWORK_REASON;
+  return hasHangul(e.message) && !/[{}]/.test(e.message) ? withPeriod(e.message.trim()) : "잠시 후 다시 시도해 주십시오.";
+}
+
+/** 화면 오류 문장. "○○에 실패하였습니다." 뒤에 사유나 다음 할 일을 붙임 */
+export const failText = (e: unknown, action: string): string =>
+  e instanceof Error && e.message.startsWith(action) ? e.message : `${action} ${failReason(e)}`;
+
 /** 서버 컴포넌트에서 실패를 빈 값과 구별해 받음. `.catch(asError)` 뒤 `instanceof Error` 로 가름 */
 export const asError = (e: unknown): Error => (e instanceof Error ? e : new Error(String(e)));
-/** http() 가 던진 404 인지. 오류 문구가 "404 Not Found: ..." 로 시작함 */
-export const isNotFound = (e: unknown): boolean => e instanceof Error && e.message.startsWith("404 ");
+/** 서버가 404 를 돌려준 실패인지 */
+export const isNotFound = (e: unknown): boolean => e instanceof ApiError && e.status === 404;
 
 export const api = {
   // 분석별 선정 인재상 세트 (lib/talent-selection.ts 가 씀).
@@ -528,10 +579,7 @@ export const api = {
       method: "POST",
       body: fd,
     });
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`${res.status}: ${text}`);
-    }
+    if (!res.ok) throw await readApiError(res);
     return res.json() as Promise<string[]>;
   },
   uploadExcel: async (
@@ -559,10 +607,7 @@ export const api = {
       method: "POST",
       body: fd,
     });
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`${res.status}: ${text}`);
-    }
+    if (!res.ok) throw await readApiError(res);
     return res.json() as Promise<{ job_id: string; status: string; created_at: string; warnings?: string[] }>;
   },
   deleteApplicant: (id: string, applicantId: string) =>
@@ -584,7 +629,7 @@ export const api = {
       unmatched_applicants: string[];
       errors: string[];
       queued_file_ids: number[];
-    }>(res, "논문 PDF ZIP을 업로드하지 못했습니다");
+    }>(res);
   },
   reportPdfUrl: (id: string) => downloadUrl(`/analysis-jobs/${id}/report.pdf`),
   resultCsvUrl: (id: string) => downloadUrl(`/analysis-jobs/${id}/result.csv`),
@@ -600,10 +645,7 @@ export const api = {
     const res = await apiFetch(`/analysis-jobs/${id}/applicants/${encodeURIComponent(applicantId)}/papers`,
       { method: "POST", body: fd },
     );
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`${res.status}: ${text}`);
-    }
+    if (!res.ok) throw await readApiError(res);
     return res.json() as Promise<PaperFile>;
   },
   deletePaper: (id: string, applicantId: string, fileId: number) =>
@@ -879,15 +921,9 @@ export interface PrelimResult extends PrelimRunResponse {
   derived: PrelimDerived;
 }
 
-async function prelimJson<T>(res: Response, fallback: string): Promise<T> {
-  if (!res.ok) {
-    const text = await res.text();
-    let detail: unknown;
-    try {
-      detail = JSON.parse(text).detail;
-    } catch {}
-    throw new Error(typeof detail === "string" ? detail : fallback);
-  }
+/** 사전스크리닝 API 응답. 실패면 ApiError(서버 한글 사유는 그대로 실림) */
+async function prelimJson<T>(res: Response): Promise<T> {
+  if (!res.ok) throw await readApiError(res);
   return res.json() as Promise<T>;
 }
 
@@ -916,15 +952,8 @@ export const prelim = {
       method: "POST",
       body: form,
     });
-    if (!res.ok) {
-      // 서버가 detail 에 담아 보낸 한글 안내(예: 암호 걸린 엑셀)는 그대로 보여 줌
-      const text = await res.text();
-      let detail: unknown;
-      try {
-        detail = JSON.parse(text).detail;
-      } catch {}
-      throw new Error(typeof detail === "string" ? detail : "사전스크리닝 실행에 실패하였습니다.");
-    }
+    // 서버가 detail 에 담아 보낸 한글 안내(예: 암호 걸린 엑셀)는 그대로 보여 줌
+    if (!res.ok) throw await readApiError(res);
     return res.json() as Promise<PrelimRunResponse>;
   },
   list: (opts?: { trashed?: boolean; limit?: number }) =>
@@ -946,7 +975,7 @@ export const prelim = {
         body: JSON.stringify(body),
         signal: timeoutSignal(30_000),
       });
-      return prelimJson<PrelimRefRow>(res, "추가하지 못했습니다");
+      return prelimJson<PrelimRefRow>(res);
     },
     async update(kind: PrelimRefKind, id: number, body: Record<string, string | null>): Promise<PrelimRefRow> {
       const res = await apiFetch(`/prelim/reference/${kind}/${id}`, {
@@ -955,11 +984,11 @@ export const prelim = {
         body: JSON.stringify(body),
         signal: timeoutSignal(30_000),
       });
-      return prelimJson<PrelimRefRow>(res, "저장하지 못했습니다");
+      return prelimJson<PrelimRefRow>(res);
     },
     async remove(kind: PrelimRefKind, id: number): Promise<void> {
       const res = await apiFetch(`/prelim/reference/${kind}/${id}`, { method: "DELETE" });
-      await prelimJson(res, "삭제하지 못했습니다");
+      await prelimJson(res);
     },
     /** empty 면 줄 없는 빈 양식 */
     exportUrl: (empty = false) => downloadUrl(`/prelim/reference/export.xlsx${empty ? "?empty=1" : ""}`),
@@ -971,7 +1000,7 @@ export const prelim = {
         body: fd,
         signal: timeoutSignal(120_000),
       });
-      return prelimJson<PrelimRefImportPreview>(res, "엑셀을 읽지 못했습니다");
+      return prelimJson<PrelimRefImportPreview>(res);
     },
     async importApply(body: {
       token: string;
@@ -984,7 +1013,7 @@ export const prelim = {
         body: JSON.stringify(body),
         signal: timeoutSignal(120_000),
       });
-      return prelimJson<PrelimRefImportApplied>(res, "반영하지 못했습니다");
+      return prelimJson<PrelimRefImportApplied>(res);
     },
     async importCancel(token: string): Promise<void> {
       const res = await apiFetch(`/prelim/reference/import/cancel`, {
@@ -993,7 +1022,7 @@ export const prelim = {
         body: JSON.stringify({ token }),
         signal: timeoutSignal(30_000),
       });
-      await prelimJson(res, "미리보기 삭제에 실패하였습니다.");
+      await prelimJson(res);
     },
   },
   result: (ticket: string) => http<PrelimResult>(`/prelim/results/${encodeURIComponent(ticket)}`),
@@ -1007,7 +1036,7 @@ export const prelim = {
         // 저장은 한 줄로 차례대로 가므로, 멈춘 요청 하나가 뒤의 저장을 붙잡지 않게 끊음
         signal: timeoutSignal(30_000),
       });
-      return prelimJson<{ verdicts: PrelimVerdicts; derived: PrelimDerived }>(res, "판정 저장에 실패하였습니다.");
+      return prelimJson<{ verdicts: PrelimVerdicts; derived: PrelimDerived }>(res);
     },
   },
   upload: {
@@ -1019,7 +1048,7 @@ export const prelim = {
         body: form,
         signal: timeoutSignal(120_000),
       });
-      return prelimJson<{ uploads: PrelimResult["uploads"]; derived: PrelimDerived }>(res, "파일 업로드에 실패하였습니다.");
+      return prelimJson<{ uploads: PrelimResult["uploads"]; derived: PrelimDerived }>(res);
     },
   },
   attach: {
@@ -1032,7 +1061,7 @@ export const prelim = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ size_bytes: file.size, file_name: file.name }),
       });
-      await prelimJson<unknown>(pre, "첨부 실적 업로드 준비에 실패하였습니다.");
+      await prelimJson<unknown>(pre);
       // 본문 전송 시작 때 한 번만 검사하므로, 긴 전송 중에 토큰이 만료돼도 끊기지 않음
       const token = await apiToken(540);
       await new Promise<void>((resolve, reject) => {
@@ -1043,13 +1072,9 @@ export const prelim = {
         xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) return resolve();
-          let detail: unknown;
-          try {
-            detail = JSON.parse(xhr.responseText).detail;
-          } catch {}
-          reject(new Error(typeof detail === "string" ? detail : "첨부 실적 업로드에 실패하였습니다."));
+          reject(apiError(xhr.status, xhr.responseText, base));
         };
-        xhr.onerror = () => reject(new Error("첨부 실적 업로드 중 연결이 끊겼습니다."));
+        xhr.onerror = () => reject(new Error("업로드 중 연결이 끊겼습니다."));
         xhr.send(file);
       });
     },
@@ -1082,13 +1107,6 @@ export interface PrelimRetentionRun {
 /** status 가 409 면 미리보기 갱신 필요, 423 이면 다른 실행 중, 없으면 응답을 못 받음 */
 export type PrelimRetentionError = Error & { status?: number };
 
-async function retentionJson<T>(res: Response, fallback: string): Promise<T> {
-  try {
-    return await prelimJson<T>(res, fallback);
-  } catch (e) {
-    throw Object.assign(e instanceof Error ? e : new Error(fallback), { status: res.status });
-  }
-}
 
 export const prelimRetention = {
   async preview(): Promise<PrelimRetentionPreview> {
@@ -1096,14 +1114,14 @@ export const prelimRetention = {
       cache: "no-store",
       signal: timeoutSignal(30_000),
     });
-    return retentionJson<PrelimRetentionPreview>(res, "대상을 불러오지 못했습니다");
+    return prelimJson<PrelimRetentionPreview>(res);
   },
   async history(limit = 20): Promise<{ items: PrelimRetentionRun[] }> {
     const res = await apiFetch(`/prelim/reference/retention/history?limit=${limit}`, {
       cache: "no-store",
       signal: timeoutSignal(30_000),
     });
-    return retentionJson<{ items: PrelimRetentionRun[] }>(res, "실행 이력을 불러오지 못했습니다");
+    return prelimJson<{ items: PrelimRetentionRun[] }>(res);
   },
   async run(body: { token: string; base_date: string; count: number }): Promise<Omit<PrelimRetentionRun, "id">> {
     const res = await apiFetch(`/prelim/reference/retention/run`, {
@@ -1112,7 +1130,7 @@ export const prelimRetention = {
       body: JSON.stringify(body),
       signal: timeoutSignal(60_000),
     });
-    return retentionJson<Omit<PrelimRetentionRun, "id">>(res, "삭제하지 못했습니다");
+    return prelimJson<Omit<PrelimRetentionRun, "id">>(res);
   },
 };
 

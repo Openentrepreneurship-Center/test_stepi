@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { FileArchive, Loader2 } from "lucide-react";
-import { apiFetch, downloadUrl } from "@/lib/api";
+import { failText, apiFetch, downloadUrl } from "@/lib/api";
 
 type Status = {
   status: "running" | "ready" | "error";
@@ -93,7 +93,7 @@ export default function BulkPdfButton({ jobId }: { jobId: string }) {
         }
       } catch (e) {
         if (cancelled) return;
-        setError(e instanceof Error ? e.message : String(e));
+        setError(failText(e, "PDF 생성 상태 확인에 실패하였습니다."));
         setBusy(false);
       }
     };
@@ -113,12 +113,12 @@ export default function BulkPdfButton({ jobId }: { jobId: string }) {
     try {
       const res = await fetch(`/api/bulk-pdf/${encodeURIComponent(jobId)}`, { method: "POST" });
       const body = await res.json();
-      if (!res.ok) throw new Error(body?.error ?? "요청에 실패하였습니다.");
+      if (!res.ok) throw new Error(body?.error ?? "");
       setTaskId(body.task_id);
       saveTaskId(jobId, body.task_id);
       setState({ status: "running", done: 0, total: body.total ?? 0, failed: [], error: null });
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(failText(e, "PDF 생성 요청에 실패하였습니다."));
       setBusy(false);
     }
   };

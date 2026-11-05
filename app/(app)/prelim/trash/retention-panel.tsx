@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshCw, Trash2 } from "lucide-react";
 import {
+  failReason,
+  failText,
   prelimRetention,
   type PrelimRetentionError,
   type PrelimRetentionPreview,
@@ -134,8 +136,8 @@ export default function RetentionPanel() {
           err.status === undefined
             ? "응답을 받지 못하였습니다. 삭제 여부를 아래 실행 이력과 대상 목록에서 확인해 주십시오."
             : err.status === 409
-              ? `${err.message} 대상을 다시 불러왔습니다.`
-              : err.message,
+              ? `${failReason(err)} 대상을 다시 불러왔습니다.`
+              : failText(err, "삭제에 실패하였습니다."),
       });
     } finally {
       setRunning(false);

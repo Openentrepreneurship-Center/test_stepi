@@ -7,6 +7,9 @@ import { ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { Bar } from "@/components/page-skeleton";
 import {
+  ApiError,
+  failText,
+  isNotFound,
   prelim,
   type PrelimDerived,
   type PrelimResult,
@@ -121,7 +124,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
   const [derived, setDerived] = useState<PrelimDerived | null>(null);
   const [verdicts, setVerdicts] = useState<PrelimVerdicts | null>(null);
   const [uploads, setUploads] = useState<PrelimResult["uploads"]>({});
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
@@ -142,7 +145,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
       setUploads(r.uploads ?? {});
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(e);
     }
   }, [ticket]);
 
@@ -214,7 +217,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
         setNotice(
           e instanceof Error && e.name === "TimeoutError"
             ? "응답이 지연되어 저장에 실패하였습니다. 새로고침한 후 다시 시도해 주십시오."
-            : e instanceof Error ? e.message : String(e),
+            : failText(e, "저장에 실패하였습니다."),
         );
         return false;
       } finally {
@@ -292,14 +295,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
 
   if (error) {
     // 삭제 항목에 있는 검토는 410 과 한글 안내(detail)로 옴. 원문 대신 안내와 삭제 항목 링크를 보여 줌
-    let gone: string | null = null;
-    if (error.startsWith("410 ")) {
-      try {
-        const detail: unknown = JSON.parse(error.slice(error.indexOf("{"))).detail;
-        if (typeof detail === "string") gone = detail;
-      } catch {}
-      gone ??= "삭제 항목에 있는 검토입니다. 삭제 항목에서 복구한 후 열람할 수 있습니다.";
-    }
+    const gone = error instanceof ApiError && error.status === 410 ? error.reason : null;
     return (
       <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
         {head()}
@@ -312,7 +308,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
                   삭제 항목으로 이동
                 </Link>
               </>
-            ) : error.startsWith("404 ") ? "검토를 찾을 수 없습니다." : "검토 결과를 불러오지 못하였습니다. 잠시 후 새로고침해 주십시오."}
+            ) : isNotFound(error) ? "검토를 찾을 수 없습니다." : "검토 결과를 불러오지 못하였습니다. 잠시 후 새로고침해 주십시오."}
           </div>
         </div>
       </div>

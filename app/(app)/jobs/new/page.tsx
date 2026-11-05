@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { UploadCloud, FileSpreadsheet, FilePlus2, FileArchive } from "lucide-react";
-import { api } from "@/lib/api";
+import { failText, api } from "@/lib/api";
 import PageHeader from "@/components/page-header";
 
 const TRACKS = [
@@ -116,11 +116,7 @@ export default function NewJobPage() {
           setZipErrors(bulk.errors);
           setUnmatchedApplicants(bulk.unmatched_applicants);
         } catch (zerr) {
-          setErr(
-            `자기소개서 분석은 시작되었으나 논문 PDF ZIP 업로드에 실패하였습니다. 사유: ${
-              zerr instanceof Error ? zerr.message : String(zerr)
-            }`,
-          );
+          setErr(failText(zerr, "자기소개서 분석은 시작되었으나 논문 PDF ZIP 업로드에 실패하였습니다."));
         }
         // 생성된 분석은 유지하고 ZIP 결과를 확인, 재시도한 뒤 이동함
         return;
@@ -128,7 +124,7 @@ export default function NewJobPage() {
 
       router.push(`/jobs/${encodeURIComponent(jobId)}`);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "업로드에 실패하였습니다.");
+      setErr(failText(e, "업로드에 실패하였습니다."));
     } finally {
       submitting.current = false;
       setBusy(false);

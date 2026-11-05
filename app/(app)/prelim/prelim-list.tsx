@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { ShieldAlert, Trash2, Undo2 } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { SkeletonTable } from "@/components/page-skeleton";
-import { prelim, type PrelimSummary } from "@/lib/api";
+import { failText, prelim, type PrelimSummary } from "@/lib/api";
 
 // 지원자 분석의 분석 현황·삭제 항목과 같은 틀을 씀
 // 상태 열을 넣으면서 숫자 칸과 간격을 줄여 공고명 칸이 전보다 좁아지지 않게 함
@@ -81,7 +81,7 @@ export default function PrelimList({ trashed, tabs }: { trashed: boolean; tabs?:
       await fn();
       await load();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "처리에 실패하였습니다.");
+      alert(failText(e, "처리에 실패하였습니다."));
     } finally {
       setBusy(null);
     }

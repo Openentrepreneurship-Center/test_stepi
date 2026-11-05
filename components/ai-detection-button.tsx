@@ -3,6 +3,7 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { AiDetection } from "@/lib/api";
 import { aiDetectionStatus } from "@/lib/ai-usage";
+import { failText } from "@/lib/api";
 
 export default function AiDetectionButton({ jobId, applicantId, running = false }: { jobId: string; applicantId: string; running?: boolean }) {
   const router = useRouter();
@@ -23,12 +24,12 @@ export default function AiDetectionButton({ jobId, applicantId, running = false 
           503: "AI 검토 기능이 비활성화되어 있거나 계산 서비스에 연결할 수 없습니다.",
           504: "응답 대기 시간이 초과되었습니다. 새로고침하여 저장 상태를 확인해 주십시오.",
         };
-        throw new Error(response.redirected ? "로그인이 필요합니다." : errors[response.status] ?? "검토 요청에 실패했습니다. 이전 저장 결과는 유지됩니다.");
+        throw new Error(response.redirected ? "로그인이 필요합니다." : errors[response.status] ?? "검토 요청에 실패하였습니다. 이전 저장 결과는 유지됩니다.");
       }
       const result = await response.json() as AiDetection;
       setMessage(result.status === "succeeded" ? "" : aiDetectionStatus(result));
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "검토 요청에 실패했습니다.");
+      setMessage(failText(error, "검토 요청에 실패하였습니다."));
     } finally {
       setBusy(false); lock.current = false;
       startTransition(() => router.refresh());

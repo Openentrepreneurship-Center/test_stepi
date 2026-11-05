@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
-import { api, type JobStatus } from "@/lib/api";
+import { failText, api, type JobStatus } from "@/lib/api";
 
 export default function JobControlButtons({
   jobId,
@@ -27,7 +27,7 @@ export default function JobControlButtons({
         await api.cancelJob(jobId);
         router.refresh();
       } catch (e) {
-        setErr(e instanceof Error ? e.message : "중단에 실패하였습니다.");
+        setErr(failText(e, "중단에 실패하였습니다."));
       }
     });
   };
@@ -39,7 +39,7 @@ export default function JobControlButtons({
         await api.resumeJob(jobId);
         router.refresh();
       } catch (e) {
-        setErr(e instanceof Error ? e.message : "재개에 실패하였습니다.");
+        setErr(failText(e, "재개에 실패하였습니다."));
       }
     });
   };
@@ -55,7 +55,7 @@ export default function JobControlButtons({
         await api.softDeleteJob(jobId);
         router.replace("/jobs");
       } catch (e) {
-        setErr(e instanceof Error ? e.message : "삭제에 실패하였습니다.");
+        setErr(failText(e, "삭제에 실패하였습니다."));
       }
     });
   };

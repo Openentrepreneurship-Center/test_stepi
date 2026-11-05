@@ -315,7 +315,7 @@ function ItemRow({
           {item.verdict === "X" && (
             <Field label="판정">
               <p className="text-[13.5px] leading-[1.65] text-[var(--ink-2)]">
-                조건을 충족하는 근거를 찾지 못했습니다.
+                조건을 충족하는 근거를 찾지 못하였습니다.
               </p>
             </Field>
           )}

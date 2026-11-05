@@ -15,7 +15,7 @@ export default async function FailuresPage({ params }: { params: Promise<{ id: s
         <PageHeader back={{ href: `/jobs/${id}`, label: "분석 보고" }} eyebrow="지원자 분석" title="실패 원인" />
         <div className="mt-10 panel text-center py-16">
           <h2 className="text-[22px] font-bold mb-2">
-            {isNotFound(failuresRes) ? "분석을 찾을 수 없습니다." : "실패 원인을 불러오지 못했습니다."}
+            {isNotFound(failuresRes) ? "분석을 찾을 수 없습니다." : "실패 원인을 불러오지 못하였습니다."}
           </h2>
           <p className="text-[16px] text-[var(--ink-muted)] tabular-nums">
             {isNotFound(failuresRes) ? id : `잠시 후 새로고침해 주십시오. 분석 번호: ${id}`}

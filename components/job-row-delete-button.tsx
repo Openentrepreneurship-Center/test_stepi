@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
-import { api } from "@/lib/api";
+import { failText, api } from "@/lib/api";
 
 export default function JobRowDeleteButton({
   jobId,
@@ -31,7 +31,7 @@ export default function JobRowDeleteButton({
         await api.softDeleteJob(jobId);
         router.refresh();
       } catch (err) {
-        alert(err instanceof Error ? err.message : "삭제에 실패하였습니다.");
+        alert(failText(err, "삭제에 실패하였습니다."));
       }
     });
   };

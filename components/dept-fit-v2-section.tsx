@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Loader2, RefreshCw } from "lucide-react";
-import { api, type DeptFitResponse } from "@/lib/api";
+import { failText, api, type DeptFitResponse } from "@/lib/api";
 import DeptFitList from "@/components/dept-fit-list";
 
 export default function DeptFitV2Section({
@@ -23,7 +23,7 @@ export default function DeptFitV2Section({
       setData(res);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(failText(e, "직군 적합도를 불러오지 못하였습니다."));
     } finally {
       setLoading(false);
     }
@@ -40,7 +40,7 @@ export default function DeptFitV2Section({
       // 5초 후 1회 폴링
       setTimeout(refresh, 5000);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(failText(e, "재계산에 실패하였습니다."));
     } finally {
       setEnqueuing(false);
     }
@@ -58,8 +58,7 @@ export default function DeptFitV2Section({
   if (error && !data) {
     return (
       <div>
-        <p className="text-[15px] text-[var(--ink-muted)]">직군 적합도를 불러오지 못하였습니다. 잠시 후 새로고침해 주십시오.</p>
-        <p className="mt-1 text-[12px] text-red-600 break-all">{error}</p>
+        <p className="text-[15px] text-[var(--ink-muted)]">{error}</p>
       </div>
     );
   }

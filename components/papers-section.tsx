@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Loader2, Upload } from "lucide-react";
-import { api, type PaperDetail, type PaperFile, type PaperStatus } from "@/lib/api";
+import { failReason, failText, api, type PaperDetail, type PaperFile, type PaperStatus } from "@/lib/api";
 import PaperCard from "@/components/paper-card";
 
 const PENDING: PaperStatus[] = ["uploaded", "extracted", "extract_partial"];
@@ -49,7 +49,7 @@ export default function PapersSection({
       setFiles(list);
       setListError(null);
     } catch (e) {
-      setListError(e instanceof Error ? e.message : String(e));
+      setListError(failReason(e));
     } finally {
       setLoading(false);
     }
@@ -74,7 +74,7 @@ export default function PapersSection({
       await api.uploadPaper(jobId, applicantId, file);
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(failText(e, "논문 업로드에 실패하였습니다."));
     } finally {
       setUploading(false);
     }
@@ -91,7 +91,7 @@ export default function PapersSection({
       });
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(failText(e, "논문 삭제에 실패하였습니다."));
     }
   };
 

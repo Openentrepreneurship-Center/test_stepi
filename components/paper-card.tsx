@@ -118,7 +118,7 @@ export default function PaperCard({
           {file.status === "extract_fail" || file.status === "analysis_fail"
             ? `처리 실패: ${file.error_message ?? "원인 미상"}`
             : file.status === "analyzed"
-              ? "분석 결과를 불러오지 못했습니다."
+              ? "분석 결과를 불러오지 못하였습니다."
               : "분석 진행 중"}
         </div>
       ) : (
