@@ -341,9 +341,9 @@ export interface TuringRiskItem {
   job_id: string;
   request_id: string | null;
   applicant_id: string;
-  score: number;
-  numeric_rate: number;
-  entity_rate: number;
+  score: number | null;
+  numeric_rate: number | null;
+  entity_rate: number | null;
   nli_entailment_rate: number | null;
   nli_status: string;
   numeric_misses: string[];

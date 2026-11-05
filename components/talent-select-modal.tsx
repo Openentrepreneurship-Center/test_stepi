@@ -311,7 +311,7 @@ export default function TalentSelectModal({
             )}
             {saveError && (
               <span className="text-[12.5px] text-[var(--bad)]">
-                저장에 실패하였습니다. {saveError}
+                {saveError}
               </span>
             )}
             <button onClick={onClose} disabled={saving} className="btn-ghost">
