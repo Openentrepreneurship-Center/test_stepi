@@ -129,7 +129,7 @@ export default function TalentSelectModal({
       onClose();
     } catch (e) {
       // 닫지 않음. 닫으면 저장된 줄 알고 나갔다가 값이 되돌아가 있음
-      setSaveError(e instanceof Error ? e.message : "저장에 실패했습니다");
+      setSaveError(e instanceof Error ? e.message : "잠시 후 다시 시도해 주십시오.");
     } finally {
       setSaving(false);
     }
@@ -164,7 +164,7 @@ export default function TalentSelectModal({
               </span>
             </div>
             <p className="mt-1.5 text-[12.5px] leading-[1.6] text-[var(--ink-muted)]">
-              세트마다 {MIN_TALENT_SELECTION}개에서 {MAX_TALENT_SELECTION}개까지 고릅니다. 이
+              세트별로 {MIN_TALENT_SELECTION}~{MAX_TALENT_SELECTION}개를 선택해 주십시오. 이
               분석에만 적용됩니다.
             </p>
           </div>
@@ -241,7 +241,7 @@ export default function TalentSelectModal({
                 <button
                   onClick={() => removeSet(active.id)}
                   disabled={draft.length <= 1}
-                  title={draft.length <= 1 ? "마지막 세트는 지울 수 없습니다" : "이 세트 삭제"}
+                  title={draft.length <= 1 ? "마지막 세트는 삭제할 수 없습니다." : "이 세트 삭제"}
                   aria-label="이 세트 삭제"
                   className="shrink-0 p-2 text-[var(--ink-muted)] transition hover:bg-[var(--bg-2)] hover:text-[var(--bad)] disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--ink-muted)]"
                 >
@@ -251,13 +251,13 @@ export default function TalentSelectModal({
 
               {active.nos.length < MIN_TALENT_SELECTION ? (
                 <p className="mb-3 text-[12.5px] leading-[1.6] text-[var(--bad)]">
-                  {MIN_TALENT_SELECTION}개 이상 골라주세요.
+                  {MIN_TALENT_SELECTION}개 이상 선택해 주십시오.
                 </p>
               ) : (
                 atLimit && (
                   <p className="mb-3 text-[12.5px] leading-[1.6] text-[var(--secondary-2)]">
-                    한 세트에 최대 {MAX_TALENT_SELECTION}개까지 고를 수 있습니다. 바꾸려면 먼저
-                    해제하세요.
+                    세트당 최대 {MAX_TALENT_SELECTION}개까지 선택할 수 있습니다. 변경하려면 선택한 항목을 먼저
+                    해제해 주십시오.
                   </p>
                 )
               )}
@@ -300,7 +300,7 @@ export default function TalentSelectModal({
             className="inline-flex items-center gap-1.5 text-[13px] text-[var(--ink-muted)] hover:text-[var(--ink)] transition"
           >
             <RotateCcw size={13} />
-            기본값으로
+            기본값 복원
           </button>
           <div className="flex items-center gap-3">
             {short.length > 0 && (
@@ -310,7 +310,7 @@ export default function TalentSelectModal({
             )}
             {saveError && (
               <span className="text-[12.5px] text-[var(--bad)]">
-                저장하지 못했습니다. {saveError}
+                저장에 실패하였습니다. {saveError}
               </span>
             )}
             <button onClick={onClose} disabled={saving} className="btn-ghost">
@@ -321,7 +321,7 @@ export default function TalentSelectModal({
               disabled={short.length > 0 || saving}
               title={
                 short.length > 0
-                  ? `모든 세트에 ${MIN_TALENT_SELECTION}개 이상 골라야 저장할 수 있습니다`
+                  ? `모든 세트에서 ${MIN_TALENT_SELECTION}개 이상 선택해야 저장할 수 있습니다.`
                   : undefined
               }
               className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"

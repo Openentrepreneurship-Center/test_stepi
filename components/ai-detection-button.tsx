@@ -17,11 +17,11 @@ export default function AiDetectionButton({ jobId, applicantId, running = false 
       const response = await fetch(`/api/ai-detection?job=${encodeURIComponent(jobId)}&applicant=${encodeURIComponent(applicantId)}`, { method: "POST" });
       if (!response.ok || response.redirected) {
         const errors: Record<number, string> = {
-          401: "로그인이 필요합니다.", 403: "검토 실행 권한을 확인해 주세요.",
-          404: "작업 또는 지원자를 찾을 수 없습니다.", 409: "분석 완료 상태와 현재 실행 상태를 확인해 주세요.",
-          422: "저장된 문항과 답변을 확인해 주세요.",
+          401: "로그인이 필요합니다.", 403: "검토 실행 권한을 확인해 주십시오.",
+          404: "분석 또는 지원자를 찾을 수 없습니다.", 409: "분석 완료 여부와 현재 실행 상태를 확인해 주십시오.",
+          422: "저장된 문항과 답변을 확인해 주십시오.",
           503: "AI 검토 기능이 비활성화되어 있거나 계산 서비스에 연결할 수 없습니다.",
-          504: "응답 대기 시간이 초과됐습니다. 새로고침으로 저장 상태를 확인해 주세요.",
+          504: "응답 대기 시간이 초과되었습니다. 새로고침하여 저장 상태를 확인해 주십시오.",
         };
         throw new Error(response.redirected ? "로그인이 필요합니다." : errors[response.status] ?? "검토 요청에 실패했습니다. 이전 저장 결과는 유지됩니다.");
       }
@@ -36,10 +36,10 @@ export default function AiDetectionButton({ jobId, applicantId, running = false 
   }
   return <div className="mb-6 space-y-3 print:hidden">
     <button type="button" onClick={run} disabled={busy || refreshing || running} className="rounded-md border border-[var(--line-strong)] px-4 py-2.5 text-base font-semibold disabled:opacity-50">
-      {busy || running ? "AI 검토 중…" : refreshing ? "결과 갱신 중…" : "AI 검토 실행"}
+      {busy || running ? "AI 검토 중" : refreshing ? "결과 갱신 중" : "AI 검토 실행"}
     </button>
     {running && <button type="button" onClick={() => startTransition(() => router.refresh())} disabled={refreshing} className="ml-3 underline">진행 상태 확인</button>}
-    <p className="text-base leading-relaxed text-[var(--ink-muted)]">분석이 완료된 작업의 저장된 자소서로 실행합니다.</p>
+    <p className="text-base leading-relaxed text-[var(--ink-muted)]">분석이 완료된 자기소개서를 대상으로 실행합니다.</p>
     {message && <p role="status" className="rounded-md border border-[var(--line-strong)] p-3 text-base leading-relaxed">{message}</p>}
   </div>;
 }

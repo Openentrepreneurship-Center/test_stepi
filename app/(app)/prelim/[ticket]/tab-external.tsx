@@ -45,18 +45,18 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
           평가기준일 <span className="mono">{derived.end}</span> 기준 최근 2년(<span className="mono">{derived.win}</span> 이후) 재직 이력이 있으면 해당
           기관 소속 외부위원 섭외가 제한됩니다.
           <br />
-          외부위원은 제척 기준 정보의 섭외 심사위원 목록에서 가져오고, 제한 기관 소속이면 표시합니다.
+          외부위원은 제척 기준 정보의 섭외 심사위원 목록에서 불러오며, 제한 기관 소속이면 표시합니다.
           <br />
           지원자의 지도교수가 섭외 심사위원 목록에 있으면 그 지원자를 제척으로 표시합니다.
         </span>
       </div>
       {derived.external_edu_count > 0 && (
-        <div className="hint">학력 기준 기관 일치 {derived.external_edu_count}건은 기간 정보가 없어 표에서 제외했습니다</div>
+        <div className="hint">학력 기준 기관 일치 {derived.external_edu_count}건은 기간 정보가 없어 표에서 제외하였습니다.</div>
       )}
 
       <div className="panel">
         <header>
-          <h2>외부 위원 및 기관 목록</h2>
+          <h2>외부위원 및 기관 목록</h2>
           <div className="hdtools">
             <div className="stageseg" aria-label="전형 선택">
               {STAGES.map((st) => (
@@ -71,8 +71,8 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
         <div className="guide" style={{ background: "#fff", borderBottom: "1px solid var(--line)" }}>
           <span className="hint">
             총괄 · <b>{stage}전형</b> 기준 제척대상 기관 {cur.limited_org_count}개(2년 이내 재직 지원자가 있는 기관) · 제척 외부위원 {restricted.length}명.
-            위원은 제척 기준 정보의 섭외 심사위원 목록에서 가져옵니다.
-            {dropped ? ` 현재 탈락 처리 ${dropped}명${cur.gone_orgs.length ? ` · 이 전형에서 빠진 기관: ${cur.gone_orgs.join(", ")}` : ""}` : ""}
+            위원은 제척 기준 정보의 섭외 심사위원 목록에서 불러옵니다.
+            {dropped ? ` 탈락 처리 ${dropped}명${cur.gone_orgs.length ? ` · 이 전형에서 제외된 기관: ${cur.gone_orgs.join(", ")}` : ""}` : ""}
           </span>
         </div>
         <div className="two" style={{ padding: "20px 24px", alignItems: "start", gridTemplateColumns: "minmax(0,1fr) minmax(0,1.3fr)" }}>
@@ -153,7 +153,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
 
       <div className="panel">
         <header>
-          <h2>지원자 지도교수가 섭외 위원</h2>
+          <h2>지원자 지도교수가 섭외 심사위원</h2>
           <div className="hdtools">
             <span className="hint">제척 {advisor.length}건</span>
           </div>
@@ -175,7 +175,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
                     <td className="mono">{shownNo(a.no)}</td>
                     <td className="nm">{a.name}</td>
                     <td className="nm yes2">{a.advisor}</td>
-                    <td>지도교수 성명이 제척 기준 정보의 섭외 심사위원과 같음</td>
+                    <td>지도교수 성명이 제척 기준 정보의 섭외 심사위원과 일치</td>
                   </tr>
                 ))
               ) : (
@@ -190,7 +190,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
               <tr>
                 <td colSpan={4}>
                   <div className="tf-in">
-                    검토를 실행할 때의 섭외 심사위원 목록과 비교한 결과입니다. 동명이인일 수 있으니 소속을 확인해 주세요.
+                    검토 실행 시점의 섭외 심사위원 목록과 비교한 결과입니다. 동명이인일 수 있으므로 소속을 확인해 주십시오.
                   </div>
                 </td>
               </tr>
@@ -213,7 +213,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
         </header>
         <div className="guide" style={{ background: "#fff", borderBottom: "1px solid var(--line)" }}>
           <span className="hint upfmt">
-            제척 기준 정보 화면의 섭외 심사위원 목록입니다. 위원을 고치려면 제척 기준 정보 화면에서 수정해 주세요.
+            제척 기준 정보 화면의 섭외 심사위원 목록입니다. 위원 정보는 제척 기준 정보 화면에서 수정해 주십시오.
           </span>
         </div>
         {uploaded ? (
@@ -327,7 +327,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
               <tr>
                 <td colSpan={7}>
                   <div className="tf-in">
-                    서류·필기 탈락을 누르면 그 다음 전형의 외부 위원 및 기관 목록에서 해당 지원자가 제외됩니다. 같은 버튼을 다시 누르면 취소(진행 중)됩니다.
+                    서류·필기 탈락을 누르면 다음 전형의 외부위원 및 기관 목록에서 해당 지원자가 제외됩니다. 같은 버튼을 다시 누르면 탈락 처리가 취소됩니다.
                   </div>
                 </td>
               </tr>

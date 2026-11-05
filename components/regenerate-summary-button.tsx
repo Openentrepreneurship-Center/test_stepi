@@ -16,7 +16,7 @@ export default function RegenerateSummaryButton({ jobId, applicantId }: Props) {
 
   const click = async () => {
     if (busy) return;
-    if (!confirm("이 지원자의 종합 요약 + 자기소개서 핵심을 다시 생성합니다. 약 1~2분 소요. 계속할까요?")) return;
+    if (!confirm("이 지원자의 종합 요약과 자기소개서 핵심을 다시 생성합니다. 약 1~2분이 소요됩니다. 계속하시겠습니까?")) return;
     setBusy(true);
     setMsg(null);
     try {
@@ -25,14 +25,13 @@ export default function RegenerateSummaryButton({ jobId, applicantId }: Props) {
         { method: "POST" },
       );
       if (!res.ok) {
-        const t = await res.text().catch(() => "");
-        throw new Error(`${res.status}: ${t || "재생성 요청 실패"}`);
+        throw new Error("요약 재생성 요청에 실패하였습니다.");
       }
-      setMsg("재생성 큐잉 완료 — 잠시 후 새로고침");
+      setMsg("재생성을 요청하였습니다. 잠시 후 화면이 자동으로 갱신됩니다.");
       // 2분 후 자동 새로고침; 그 전에 사용자가 직접 새로고침해도 됨
       setTimeout(() => router.refresh(), 90_000);
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : "오류");
+      setMsg(e instanceof Error ? e.message : "요청 중 오류가 발생하였습니다.");
       setBusy(false);
     }
   };
@@ -50,7 +49,7 @@ export default function RegenerateSummaryButton({ jobId, applicantId }: Props) {
         }`}
       >
         <RefreshCw size={12} className={busy ? "animate-spin" : ""} />
-        {busy ? "재생성 중…" : "요약 재생성"}
+        {busy ? "재생성 중" : "요약 재생성"}
       </button>
       {msg && (
         <span className="text-[11px] text-[var(--ink-muted)] max-w-[24ch] text-right leading-tight">

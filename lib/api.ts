@@ -26,7 +26,7 @@ async function apiToken(minLeft = 60): Promise<string | null> {
         window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname)}`);
         throw new Error("로그인이 필요합니다.");
       }
-      if (!res.ok) throw new Error(`접속 확인 실패: ${res.status}`);
+      if (!res.ok) throw new Error("접속 확인에 실패하였습니다. 잠시 후 다시 시도해 주십시오.");
       const body = (await res.json()) as { token: string | null; ttl: number };
       browserToken = { token: body.token, exp: now + body.ttl };
       return browserToken.token;
@@ -98,7 +98,7 @@ export interface JobProgress {
 export function failedLabel(p: JobProgress, withAttempts = true): string | null {
   const people = p.failed_applicants > 0 ? p.failed_applicants : p.failed;
   if (people <= 0) return null;
-  return withAttempts && p.failed > people ? `실패 ${people}명, 오류 ${p.failed}번` : `실패 ${people}명`;
+  return withAttempts && p.failed > people ? `실패 ${people}명, 오류 ${p.failed}회` : `실패 ${people}명`;
 }
 
 export interface JobStatusResponse {
@@ -886,7 +886,7 @@ async function prelimJson<T>(res: Response, fallback: string): Promise<T> {
     try {
       detail = JSON.parse(text).detail;
     } catch {}
-    throw new Error(typeof detail === "string" ? detail : `${fallback}: ${res.status}`);
+    throw new Error(typeof detail === "string" ? detail : fallback);
   }
   return res.json() as Promise<T>;
 }
@@ -923,7 +923,7 @@ export const prelim = {
       try {
         detail = JSON.parse(text).detail;
       } catch {}
-      throw new Error(typeof detail === "string" ? detail : `prelim/run failed: ${res.status} ${text}`);
+      throw new Error(typeof detail === "string" ? detail : "사전스크리닝 실행에 실패하였습니다.");
     }
     return res.json() as Promise<PrelimRunResponse>;
   },
@@ -993,7 +993,7 @@ export const prelim = {
         body: JSON.stringify({ token }),
         signal: timeoutSignal(30_000),
       });
-      await prelimJson(res, "미리보기를 지우지 못했습니다");
+      await prelimJson(res, "미리보기 삭제에 실패하였습니다.");
     },
   },
   result: (ticket: string) => http<PrelimResult>(`/prelim/results/${encodeURIComponent(ticket)}`),
@@ -1007,7 +1007,7 @@ export const prelim = {
         // 저장은 한 줄로 차례대로 가므로, 멈춘 요청 하나가 뒤의 저장을 붙잡지 않게 끊음
         signal: timeoutSignal(30_000),
       });
-      return prelimJson<{ verdicts: PrelimVerdicts; derived: PrelimDerived }>(res, "판정 저장 실패");
+      return prelimJson<{ verdicts: PrelimVerdicts; derived: PrelimDerived }>(res, "판정 저장에 실패하였습니다.");
     },
   },
   upload: {
@@ -1019,7 +1019,7 @@ export const prelim = {
         body: form,
         signal: timeoutSignal(120_000),
       });
-      return prelimJson<{ uploads: PrelimResult["uploads"]; derived: PrelimDerived }>(res, "파일 업로드 실패");
+      return prelimJson<{ uploads: PrelimResult["uploads"]; derived: PrelimDerived }>(res, "파일 업로드에 실패하였습니다.");
     },
   },
   attach: {
@@ -1032,7 +1032,7 @@ export const prelim = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ size_bytes: file.size, file_name: file.name }),
       });
-      await prelimJson<unknown>(pre, "첨부 실적 업로드 준비 실패");
+      await prelimJson<unknown>(pre, "첨부 실적 업로드 준비에 실패하였습니다.");
       // 본문 전송 시작 때 한 번만 검사하므로, 긴 전송 중에 토큰이 만료돼도 끊기지 않음
       const token = await apiToken(540);
       await new Promise<void>((resolve, reject) => {
@@ -1047,7 +1047,7 @@ export const prelim = {
           try {
             detail = JSON.parse(xhr.responseText).detail;
           } catch {}
-          reject(new Error(typeof detail === "string" ? detail : `첨부 실적 업로드 실패: ${xhr.status}`));
+          reject(new Error(typeof detail === "string" ? detail : "첨부 실적 업로드에 실패하였습니다."));
         };
         xhr.onerror = () => reject(new Error("첨부 실적 업로드 중 연결이 끊겼습니다."));
         xhr.send(file);

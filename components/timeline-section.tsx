@@ -40,7 +40,7 @@ function rangeLabel(start?: string, end?: string): string {
   if (!s && !e) return "";
   if (!e) return s;
   if (!s) return e;
-  return s === e ? s : `${s} – ${e}`;
+  return s === e ? s : `${s} ~ ${e}`;
 }
 
 export default function TimelineSection({
@@ -73,7 +73,7 @@ export default function TimelineSection({
   if (entries.length === 0) {
     return (
       <p className="text-[15px] text-[var(--ink-soft)] italic py-3">
-        학력·이력 정보가 없습니다. (지원정보 xlsx 미주입)
+        학력·이력 정보가 없습니다(지원정보 엑셀 미등록).
       </p>
     );
   }

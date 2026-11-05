@@ -30,7 +30,7 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
         className={`cell ${cls}`}
         role="button"
         tabIndex={0}
-        title={`${CELL_TITLE[tab]} 화면에서 보기`}
+        title={`${CELL_TITLE[tab]} 화면으로 이동`}
         onClick={(e) => {
           e.stopPropagation();
           go(tab, { focus: no });
@@ -95,7 +95,7 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
                 </span>
               ))}
           </div>
-          <div className="hint">한 표현이 여러 유형에 걸리면 유형마다 셉니다.</div>
+          <div className="hint">한 표현이 여러 유형에 해당하면 유형별로 집계합니다.</div>
           <button className="cta" type="button" onClick={() => go("essay")}>
             위배 구절 →
           </button>
@@ -150,7 +150,7 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
           </div>
           <div className={num(kpi.missing.count)}>
             {kpi.missing.count}
-            <small>줄</small>
+            <small>행</small>
           </div>
           <div className="chips">
             {kpi.missing.rows.map((r) => (
@@ -158,10 +158,10 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
                 {r}행
               </span>
             ))}
-            {restMissing > 0 && <span>외 {restMissing}줄</span>}
+            {restMissing > 0 && <span>외 {restMissing}행</span>}
           </div>
           <Link className="cta" href="/prelim/new" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
-            파일 재업로드 →
+            파일 재업로드
           </Link>
         </div>
 
@@ -183,7 +183,7 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
           <header id="matrix">
             <h2>사전스크리닝 검토 해당 지원자</h2>
             <div className="hdtools">
-              <span className="hint">지원자를 누르면 개인별 화면, 숫자를 누르면 해당 검토 화면으로 이동합니다</span>
+              <span className="hint">지원자를 선택하면 개인별 화면으로, 숫자를 선택하면 해당 검토 화면으로 이동합니다.</span>
               <XBtn href={exportUrl("summary")} title="전체 엑셀 다운로드" />
             </div>
           </header>
@@ -307,12 +307,12 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
           ) : (
             <div className="empty">
               {ctx.data.files_used && !ctx.data.files_used.raw_xlsm
-                ? "지원정보 파일을 올리지 않아 제척 검토를 하지 못했습니다."
+                ? "지원정보 파일을 업로드하지 않아 제척 검토를 수행하지 않았습니다."
                 : "제척(내부) 화면에서 연구 목록·인사기록 파일을 업로드하면 내부 제척위원이 표시됩니다."}
             </div>
           )}
           <div className="note">
-            제척 외부위원은 2년 이내 재직 지원자가 있는 기관 소속 섭외위원과 지원자의 지도교수인 섭외위원, 내부 제척위원은 참여과제 연구책임자·소속(상위)부서장·동일학력
+            제척 외부위원은 2년 이내 재직 지원자가 있는 기관 소속 섭외 심사위원과 지원자의 지도교수인 섭외 심사위원, 내부 제척위원은 참여과제 연구책임자·소속(상위)부서장·동일학력
             내부직원과 지원자의 지도교수인 내부직원입니다.
           </div>
         </div>

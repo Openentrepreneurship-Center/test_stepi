@@ -53,9 +53,9 @@ function ConfirmDelete({ count, onCancel, onConfirm }: { count: number; onCancel
         </header>
         <div className="imp-body">
           <p id="rt-confirm-desc" className="m-0">
-            <b>{count}건</b>을 영구 삭제합니다. 삭제한 회차는 복원할 수 없습니다.
+            <b>{count}건</b>을 영구 삭제합니다. 삭제한 회차는 복구할 수 없습니다.
             <br />
-            계속할까요?
+            계속하시겠습니까?
           </p>
         </div>
         <footer className="imp-foot">
@@ -125,16 +125,16 @@ export default function RetentionPanel() {
     setMsg(null);
     try {
       const r = await prelimRetention.run({ token: preview.token, base_date: preview.base_date, count: preview.count });
-      setMsg({ ok: true, text: `${r.deleted_count}건을 삭제했습니다.` });
+      setMsg({ ok: true, text: `${r.deleted_count}건을 삭제하였습니다.` });
     } catch (e) {
       const err = e as PrelimRetentionError;
       setMsg({
         ok: false,
         text:
           err.status === undefined
-            ? "응답을 받지 못했습니다. 삭제되었는지 아래 실행 이력과 대상 목록에서 확인해 주세요."
+            ? "응답을 받지 못하였습니다. 삭제 여부를 아래 실행 이력과 대상 목록에서 확인해 주십시오."
             : err.status === 409
-              ? `${err.message} 대상을 새로 불러왔습니다.`
+              ? `${err.message} 대상을 다시 불러왔습니다.`
               : err.message,
       });
     } finally {
@@ -152,7 +152,7 @@ export default function RetentionPanel() {
     <div className="prelim mt-6 grid gap-6">
       {previewFailed ? (
         <div className="empty" role="alert">
-          대상을 불러오지 못했습니다. 잠시 뒤 미리보기 새로고침을 눌러 주세요.
+          대상을 불러오지 못하였습니다. 잠시 후 ‘미리보기 새로고침’을 눌러 주십시오.
         </div>
       ) : !preview ? (
         <div className="empty" role="status">
@@ -161,14 +161,14 @@ export default function RetentionPanel() {
       ) : (
         <dl className="grid grid-cols-2 lg:grid-cols-5 gap-px bg-[var(--line)] border border-[var(--line)]">
           {[
-            ["기준일", preview.base_date, "서버 기준 오늘"],
-            ["경계일", preview.cutoff, "이 날짜 전 회차가 대상, 당일은 남김"],
+            ["기준일", preview.base_date, "시스템 기준 오늘"],
+            ["경계일", preview.cutoff, "이 날짜보다 앞선 회차가 대상이며 당일 회차는 유지"],
             ["삭제 대상", `${preview.count}건`, "외부위원 회차"],
-            ["남기는 내부위원 회차", `${preview.excluded_internal}건`, "경계일 전이라도 남김"],
+            ["유지하는 내부위원 회차", `${preview.excluded_internal}건`, "경계일 전이라도 유지"],
             [
               "확인 필요",
               `${preview.needs_check.unknown_origin + preview.needs_check.missing_date}건`,
-              `내부/외부 미지정 ${preview.needs_check.unknown_origin}건, 일자 없음 ${preview.needs_check.missing_date}건. 자동으로 지우지 않습니다.`,
+              `내부/외부 미지정 ${preview.needs_check.unknown_origin}건, 일자 없음 ${preview.needs_check.missing_date}건. 자동으로 삭제하지 않습니다.`,
             ],
           ].map(([k, v, sub]) => (
             <div key={k} className="bg-white px-4 py-3">
@@ -192,7 +192,7 @@ export default function RetentionPanel() {
           disabled={!canDelete}
         >
           <Trash2 size={16} aria-hidden="true" />
-          {running ? "삭제하는 중" : preview ? `대상 ${count}건 삭제` : "대상 삭제"}
+          {running ? "삭제 중" : preview ? `대상 ${count}건 삭제` : "대상 삭제"}
         </button>
         {loading && preview && (
           <span className="hint" role="status">
@@ -213,7 +213,7 @@ export default function RetentionPanel() {
         <section className="grid gap-3">
           <h2>삭제 대상 회차</h2>
           {preview.items.length === 0 ? (
-            <div className="empty">정리할 회차가 없습니다. 경계일 전의 외부위원 회차가 없습니다.</div>
+            <div className="empty">경계일보다 앞선 외부위원 회차가 없어 정리할 대상이 없습니다.</div>
           ) : (
             <table className="dtable">
               <thead>
@@ -241,18 +241,18 @@ export default function RetentionPanel() {
 
       <section className="grid gap-3">
         <h2>
-          실행 이력 <span className="hint">최근 20건, 실행 시각·기준일·삭제 건수만 남깁니다</span>
+          실행 이력 <span className="hint">최근 20건, 실행 시각·기준일·삭제 건수만 기록합니다.</span>
         </h2>
         {historyFailed ? (
           <div className="empty" role="alert">
-            실행 이력을 불러오지 못했습니다. 잠시 뒤 미리보기 새로고침을 눌러 주세요.
+            실행 이력을 불러오지 못하였습니다. 잠시 후 ‘미리보기 새로고침’을 눌러 주십시오.
           </div>
         ) : !history ? (
           <div className="empty" role="status">
             실행 이력을 불러오는 중입니다.
           </div>
         ) : history.length === 0 ? (
-          <div className="empty">아직 실행한 기록이 없습니다.</div>
+          <div className="empty">실행 이력이 없습니다.</div>
         ) : (
           <table className="dtable">
             <thead>

@@ -40,7 +40,7 @@ export default function FinalTab({ ctx, final }: { ctx: Ctx; final: PrelimFinal 
             {rows.length}건 · 지원자 {people}명
           </span>
           <XBtn href={exportUrl("final")} title="전체 엑셀 다운로드" />
-          <XBtn href={exportUrl("final-v")} cap="위배" title="위배 확정(감점 대상) 엑셀 다운로드" />
+          <XBtn href={exportUrl("final-v")} cap="위배" title="위배 확정 엑셀 다운로드" />
         </div>
       </header>
       <div className="tblwrap">
@@ -63,7 +63,7 @@ export default function FinalTab({ ctx, final }: { ctx: Ctx; final: PrelimFinal 
                   data-no={r.no}
                   data-jump
                   tabIndex={0}
-                  title={`${r.kind === "자기소개서" ? "자기소개서 위배" : "첨부 실적 내 위배"} 화면에서 보기`}
+                  title={`${r.kind === "자기소개서" ? "자기소개서 위배" : "첨부 실적 내 위배"} 화면으로 이동`}
                   className={focusNo === r.no ? "focus" : undefined}
                   onClick={() => jump(r)}
                   onKeyDown={(e) => {

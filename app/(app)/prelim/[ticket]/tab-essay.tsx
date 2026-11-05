@@ -44,10 +44,10 @@ export default function EssayTab({ ctx }: { ctx: Ctx }) {
         <span className="now">
           {c ? (
             <>
-              처리됨: <b style={{ color: "var(--ink)" }}>{BLABEL[c]}</b> · 같은 버튼을 다시 누르면 취소
+              처리됨: <b style={{ color: "var(--ink)" }}>{BLABEL[c]}</b> · 같은 버튼을 다시 누르면 취소됩니다.
             </>
           ) : (
-            "아직 판정하지 않았습니다"
+            "미판정"
           )}
         </span>
       </div>
@@ -58,7 +58,7 @@ export default function EssayTab({ ctx }: { ctx: Ctx }) {
     <>
       <div className="guide">
         <b>점검 유형</b>
-        <div className="ref-chips essay-types" role="group" aria-label="점검 유형으로 거르기">
+        <div className="ref-chips essay-types" role="group" aria-label="점검 유형 필터">
           {kpi.essay_by_type
             .filter(([t, n]) => t !== "기타" || n > 0)
             .map(([t, n]) => (
@@ -69,13 +69,13 @@ export default function EssayTab({ ctx }: { ctx: Ctx }) {
         </div>
         {picked.length > 0 && (
           <span className="essay-on">
-            {known.filter((t) => picked.includes(t)).join(" · ")}만 보는 중 ·{" "}
+            {known.filter((t) => picked.includes(t)).join(" · ")}만 표시 중 ·{" "}
             <button type="button" onClick={() => setPicked([])}>
               전체 보기
             </button>
           </span>
         )}
-        <span className="hint">한 표현이 여러 유형에 걸리면 유형마다 셉니다.</span>
+        <span className="hint">한 표현이 여러 유형에 해당하면 유형별로 집계합니다.</span>
         <span className="hint" style={{ marginLeft: "auto" }}>
           노란색으로 표시된 구절이 위배로 판단된 부분입니다
         </span>

@@ -22,23 +22,23 @@ export default async function TrashPage() {
       <section className="mt-8">
         {list === null ? (
           <div className="panel py-16 text-center">
-            <p className="text-[16px] text-[var(--ink-muted)]">백엔드에 연결할 수 없습니다.</p>
+            <p className="text-[16px] text-[var(--ink-muted)]">서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주십시오.</p>
           </div>
         ) : jobs.length === 0 ? (
           <div className="panel py-16 text-center">
-            <p className="text-[19px] font-bold mb-2">삭제 항목이 비어있습니다.</p>
-            <p className="text-[14.5px] text-[var(--ink-muted)]">삭제된 작업이 여기로 옵니다.</p>
+            <p className="text-[19px] font-bold mb-2">삭제 항목이 없습니다.</p>
+            <p className="text-[14.5px] text-[var(--ink-muted)]">삭제한 분석은 이곳에 보관됩니다.</p>
           </div>
         ) : (
           <div className="bg-[var(--paper)] border border-[var(--line-strong)] rounded-xl overflow-hidden">
             <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-[var(--bg-2)] border-b border-[var(--line-strong)] text-[13.5px] font-semibold tracking-wide text-[var(--ink-muted)]">
-              <div className="col-span-5">작업</div>
+              <div className="col-span-5">분석명</div>
               <div className="col-span-2">상태</div>
-              <div className="col-span-2 text-right">진행</div>
-              <div className="col-span-3 text-right">삭제일 / 작업</div>
+              <div className="col-span-2 text-right">진행률</div>
+              <div className="col-span-3 text-right">삭제일 / 관리</div>
             </div>
             {jobs.map((j) => {
-              const label = (j.request_id || "").replace(/^excel:/, "") || "이름 없는 분석";
+              const label = (j.request_id || "").replace(/^excel:/, "") || "분석명 없음";
               return (
                 <div
                   key={j.job_id}
@@ -64,7 +64,7 @@ export default async function TrashPage() {
                             month: "2-digit",
                             day: "2-digit",
                           })
-                        : "—"}
+                        : "-"}
                     </span>
                     <TrashRowActions jobId={j.job_id} />
                   </div>

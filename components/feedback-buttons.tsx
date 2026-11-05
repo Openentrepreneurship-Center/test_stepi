@@ -62,7 +62,7 @@ export default function FeedbackButtons({
       )}
       <button
         type="button"
-        aria-label="좋아요"
+        aria-label="적절함"
         onClick={() => set(true)}
         disabled={isPending}
         className={`${baseBtn} ${
@@ -75,7 +75,7 @@ export default function FeedbackButtons({
       </button>
       <button
         type="button"
-        aria-label="싫어요"
+        aria-label="부적절함"
         onClick={() => set(false)}
         disabled={isPending}
         className={`${baseBtn} ${

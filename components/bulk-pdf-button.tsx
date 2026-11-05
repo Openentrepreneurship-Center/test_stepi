@@ -85,7 +85,7 @@ export default function BulkPdfButton({ jobId }: { jobId: string }) {
           timerRef.current = setTimeout(poll, POLL_MS);
         } else if (next.status === "error") {
           saveTaskId(jobId, null);
-          setError(next.error ?? "생성에 실패했습니다.");
+          setError(next.error ?? "생성에 실패하였습니다.");
           setBusy(false);
         } else {
           // 완료분은 열쇠를 남겨 둠. 보관 기한 안에는 다시 들어와도 받을 수 있음
@@ -113,7 +113,7 @@ export default function BulkPdfButton({ jobId }: { jobId: string }) {
     try {
       const res = await fetch(`/api/bulk-pdf/${encodeURIComponent(jobId)}`, { method: "POST" });
       const body = await res.json();
-      if (!res.ok) throw new Error(body?.error ?? "요청에 실패했습니다.");
+      if (!res.ok) throw new Error(body?.error ?? "요청에 실패하였습니다.");
       setTaskId(body.task_id);
       saveTaskId(jobId, body.task_id);
       setState({ status: "running", done: 0, total: body.total ?? 0, failed: [], error: null });
@@ -143,7 +143,7 @@ export default function BulkPdfButton({ jobId }: { jobId: string }) {
           )}
           {showFailed && (
             <span className="text-[12px] text-[var(--bad)] whitespace-nowrap">
-              {state.failed.length}명 실패 (나머지는 담겨 있습니다)
+              {state.failed.length}명 실패(나머지 지원자는 ZIP 파일에 포함)
             </span>
           )}
           {error && (
@@ -162,10 +162,10 @@ export default function BulkPdfButton({ jobId }: { jobId: string }) {
           onClick={start}
           disabled={busy}
           className="btn-ghost inline-flex items-center gap-2 disabled:opacity-50"
-          title="지원자별 PDF 를 모두 만들어 ZIP 으로 묶습니다"
+          title="지원자별 PDF를 생성하여 ZIP 파일로 묶습니다."
         >
           {busy ? <Loader2 size={13} className="animate-spin" /> : <FileArchive size={13} />}
-          {busy ? "만드는 중" : "전체 지원자 PDF"}
+          {busy ? "생성 중" : "전체 지원자 PDF"}
         </button>
       )}
     </div>

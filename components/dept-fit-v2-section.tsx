@@ -49,7 +49,7 @@ export default function DeptFitV2Section({
   if (loading) {
     return (
       <div className="text-[15px] text-[var(--ink-muted)] flex items-center gap-2">
-        <Loader2 size={14} className="animate-spin" /> 직군 적합도 로딩…
+        <Loader2 size={14} className="animate-spin" /> 직군 적합도를 불러오는 중
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default function DeptFitV2Section({
   if (error && !data) {
     return (
       <div>
-        <p className="text-[15px] text-[var(--ink-muted)]">직군 적합도를 불러오지 못했습니다. 잠시 뒤 새로고침해 주세요.</p>
+        <p className="text-[15px] text-[var(--ink-muted)]">직군 적합도를 불러오지 못하였습니다. 잠시 후 새로고침해 주십시오.</p>
         <p className="mt-1 text-[12px] text-red-600 break-all">{error}</p>
       </div>
     );
@@ -79,7 +79,7 @@ export default function DeptFitV2Section({
       <div>
         <div className="flex items-center gap-3">
           <p className="text-[15px] text-[var(--ink-muted)]">
-            아직 채점 결과가 없습니다. 자기소개서 + 분석된 논문이 모두 준비되면 자동 산출됩니다.
+            채점 결과가 없습니다. 자기소개서와 논문 분석이 모두 완료되면 자동으로 산출됩니다.
           </p>
           <button
             onClick={onRecompute}

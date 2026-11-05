@@ -81,7 +81,7 @@ export default function PapersSection({
   };
 
   const onDelete = async (fileId: number) => {
-    if (!confirm("이 논문 첨부를 삭제할까요?")) return;
+    if (!confirm("첨부한 논문을 삭제하시겠습니까?")) return;
     try {
       await api.deletePaper(jobId, applicantId, fileId);
       setDetails((prev) => {
@@ -98,7 +98,7 @@ export default function PapersSection({
   if (loading) {
     return (
       <div className="text-[13px] text-[var(--ink-muted)] flex items-center gap-2">
-        <Loader2 size={14} className="animate-spin" /> 논문 목록 로딩…
+        <Loader2 size={14} className="animate-spin" /> 논문 목록을 불러오는 중
       </div>
     );
   }
@@ -111,7 +111,7 @@ export default function PapersSection({
       >
         <Upload size={14} className="text-[var(--ink-muted)]" />
         <span className="text-[13px] text-[var(--ink-muted)]">
-          {uploading ? "업로드 중…" : "PDF 논문 첨부 (파일 1개당 최대 50MB)"}
+          {uploading ? "업로드 중" : "PDF 논문 첨부 (파일 1개당 최대 50MB)"}
         </span>
         <input
           type="file"
@@ -135,7 +135,7 @@ export default function PapersSection({
       {listError && (
         <div className="text-[12px] text-red-600 border border-red-200 px-3 py-2">
           {files === null
-            ? "학술지 게재 이력을 불러오지 못했습니다. 잠시 뒤 새로고침해 주세요."
+            ? "학술지 게재 이력을 불러오지 못하였습니다. 잠시 후 새로고침해 주십시오."
             : "학술지 게재 이력을 다시 불러오지 못해 이전 목록을 표시합니다."}
           <div className="mt-1 break-all">{listError}</div>
         </div>
@@ -143,7 +143,7 @@ export default function PapersSection({
 
       {files === null ? null : files.length === 0 ? (
         <p className="text-[13px] text-[var(--ink-muted)]">
-          학술지 게재 이력 없음. xlsx 지원정보 또는 PDF 업로드로 등록됩니다.
+          학술지 게재 이력이 없습니다. 지원정보 엑셀 또는 논문 PDF를 업로드하면 등록됩니다.
         </p>
       ) : (
         <div className="space-y-10">

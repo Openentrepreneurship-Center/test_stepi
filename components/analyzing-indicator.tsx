@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 export default function AnalyzingIndicator({
-  text = "분석중",
+  text = "분석 중",
   className = "",
 }: {
   text?: string;

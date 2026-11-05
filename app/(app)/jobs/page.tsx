@@ -45,7 +45,7 @@ export default async function DashboardPage() {
         eyebrow="지원자 분석"
         icon={LayoutDashboard}
         title="분석 현황"
-        description={"업로드된 자기소개서를 분석하여 직무적합성 분석 결과를 제공합니다.\n새 분석을 시작하거나 분석 진행 현황을 확인할 수 있습니다."}
+        description={"업로드된 자기소개서의 직무적합성 분석 결과를 제공합니다.\n신규 분석을 시작하거나 진행 현황을 확인할 수 있습니다."}
         wideDescription
         aside={
           <Link href="/jobs/new" className="btn-primary">
@@ -69,16 +69,16 @@ export default async function DashboardPage() {
 
         {list === null ? (
           <div className="panel py-16 text-center">
-            <p className="text-[19px] font-bold mb-2">백엔드에 연결할 수 없습니다.</p>
+            <p className="text-[19px] font-bold mb-2">서버에 연결할 수 없습니다.</p>
             <p className="text-[13.5px] text-[var(--ink-muted)]">
-              잠시 후 다시 시도해주세요.
+              잠시 후 다시 시도해 주십시오.
             </p>
           </div>
         ) : jobs.length === 0 ? (
           <div className="panel py-16 text-center">
-            <p className="text-[22px] font-bold mb-3">아직 분석 이력이 없습니다.</p>
+            <p className="text-[22px] font-bold mb-3">분석 이력이 없습니다.</p>
             <p className="text-[14px] text-[var(--ink-muted)]">
-              자기소개서 xlsx 파일을 업로드하여 첫 분석을 시작해보세요.
+              자기소개서 엑셀 파일을 업로드하여 분석을 시작할 수 있습니다.
             </p>
             <Link href="/jobs/new" className="btn-primary inline-block mt-6">
               자기소개서 업로드
@@ -91,12 +91,12 @@ export default async function DashboardPage() {
               <div>상태</div>
               <div className="text-right">진행률</div>
               <div className={`${WIDE_ONLY} text-right`}>생성일</div>
-              <div className={`${WIDE_ONLY} text-right`}>시작시간</div>
-              <div className="text-right">종료시간</div>
+              <div className={`${WIDE_ONLY} text-right`}>시작 시간</div>
+              <div className="text-right">종료 시간</div>
               <div></div>
             </div>
             {jobs.map((j) => {
-              const label = (j.request_id || "").replace(/^excel:/, "") || "이름 없는 분석";
+              const label = (j.request_id || "").replace(/^excel:/, "") || "분석명 없음";
               return (
                 <Link
                   key={j.job_id}
@@ -138,14 +138,14 @@ export default async function DashboardPage() {
                     ) : j.status !== "running" ? (
                       formatTime(j.finished_at)
                     ) : j.estimated_overdue ? (
-                      "곧 종료"
+                      "종료 예정"
                     ) : j.estimated_finished_at ? (
                       <>
-                        <div className="text-[12px]">(예상종료시간)</div>
+                        <div className="text-[12px]">(예상 종료 시간)</div>
                         <div>{formatEta(j.estimated_finished_at, j.started_at)}</div>
                       </>
                     ) : (
-                      "계산중"
+                      "계산 중"
                     )}
                   </div>
                   <div className="flex justify-end">

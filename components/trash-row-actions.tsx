@@ -17,7 +17,7 @@ export default function TrashRowActions({ jobId }: { jobId: string }) {
         await api.restoreJob(jobId);
         router.refresh();
       } catch (e) {
-        setErr(e instanceof Error ? e.message : "복구 실패");
+        setErr(e instanceof Error ? e.message : "복구에 실패하였습니다.");
       }
     });
   };
@@ -25,7 +25,7 @@ export default function TrashRowActions({ jobId }: { jobId: string }) {
   const hard = () => {
     if (
       !confirm(
-        "이 작업을 영구 삭제합니다.\n원본 자기소개서·분석 결과·논문·평가가 모두 사라지며 복구 불가합니다. 계속할까요?",
+        "이 분석을 영구 삭제합니다.\n원본 자기소개서, 분석 결과, 논문, 평가 정보가 모두 삭제되며 복구할 수 없습니다. 계속하시겠습니까?",
       )
     )
       return;
@@ -35,7 +35,7 @@ export default function TrashRowActions({ jobId }: { jobId: string }) {
         await api.hardDeleteJob(jobId);
         router.refresh();
       } catch (e) {
-        setErr(e instanceof Error ? e.message : "영구삭제 실패");
+        setErr(e instanceof Error ? e.message : "영구 삭제에 실패하였습니다.");
       }
     });
   };
@@ -62,7 +62,7 @@ export default function TrashRowActions({ jobId }: { jobId: string }) {
         className="inline-flex items-center gap-1.5 rounded-[2px] border border-[var(--line-strong)] px-2.5 py-1.5 text-[13.5px] text-[var(--ink-muted)] hover:border-[var(--bad)] hover:bg-[var(--bad)] hover:text-white transition disabled:opacity-50"
       >
         <Trash2 size={13} strokeWidth={1.7} />
-        영구삭제
+        영구 삭제
       </button>
       {err && <span className="text-[12px] text-[var(--bad)] ml-2">{err}</span>}
     </div>

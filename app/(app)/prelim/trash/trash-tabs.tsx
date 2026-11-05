@@ -41,7 +41,7 @@ export default function TrashTabs({ initial }: { initial: Tab }) {
         eyebrow="사전스크리닝 검토"
         icon={Trash2}
         title="삭제 항목"
-        description={"섭외 심사위원 목록에서 기준일로부터 2년이 지난 외부위원 회차를 정리합니다.\n같은 위원의 최근 회차와 내부위원 회차는 남기며, 삭제한 회차는 복원할 수 없습니다."}
+        description={"섭외 심사위원 목록에서 기준일로부터 2년이 지난 외부위원 회차를 정리합니다.\n같은 위원의 최근 회차와 내부위원 회차는 유지하며, 삭제한 회차는 복구할 수 없습니다."}
       />
       {bar}
       <RetentionPanel />

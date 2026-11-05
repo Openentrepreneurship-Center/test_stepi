@@ -80,7 +80,7 @@ export default function TuringMonitor() {
         eyebrow="AI 품질 점검"
         icon={Activity}
         title="turing."
-        description={"AI가 생성한 분석 결과의 신뢰성을 자동으로 점검합니다.\n① 제출 자료에 없는 내용을 생성하지 않았는지,\n② 모든 항목이 빠짐없이 완성됐는지,\n③ 지원자 1명당 처리 시간을 최근 작업 기준으로 보여줍니다."}
+        description={"AI가 생성한 분석 결과의 신뢰성을 자동으로 점검합니다.\n① 제출 자료에 없는 내용의 생성 여부\n② 전체 항목의 작성 완료 여부\n③ 최근 분석 기준 지원자 1명당 처리 시간"}
         aside={
           <div className="flex items-center gap-3 text-[14px] text-[var(--ink-muted)]">
             {shownAt && (
@@ -115,7 +115,7 @@ export default function TuringMonitor() {
           value={metrics?.hallucination_prevention.rate}
           empty={metricState ?? "검사 대상 없음"}
           suffix="%"
-          detail="분석 속 숫자·이름·기관을 제출 자료와 대조"
+          detail="분석 결과의 숫자·이름·기관을 제출 자료와 대조"
         />
         <MetricPanel
           icon={<ShieldCheck size={20} />}
@@ -181,7 +181,7 @@ export default function TuringMonitor() {
                   {isHallucinationFlag ? (
                     <div>
                       <div className="line-clamp-2 text-[var(--ink)]">AI 분석: {item.nli_contradictions?.[0]?.generated || item.generated_excerpt}</div>
-                      <div className="mt-1 line-clamp-2">실제 자료: {item.nli_contradictions?.[0]?.source || "—"}</div>
+                      <div className="mt-1 line-clamp-2">실제 자료: {item.nli_contradictions?.[0]?.source || "-"}</div>
                       {item.reason && <div className="mt-1 line-clamp-2 text-[var(--ink-soft)]">확인 사유: {item.reason}</div>}
                     </div>
                   ) : (
@@ -219,7 +219,7 @@ export default function TuringMonitor() {
             </div>
           ) : latestRows.length === 0 ? (
             <div className="py-16 text-center text-[15px] text-[var(--ink-muted)]">
-              아직 집계할 분석 결과가 없습니다.
+              집계할 분석 결과가 없습니다.
             </div>
           ) : latestRows.map((row) => (
             <Link
@@ -247,7 +247,7 @@ export default function TuringMonitor() {
         <div className="col-span-12 lg:col-span-4 panel">
           <div className="flex items-center gap-2 text-[15px] font-semibold text-[var(--ink)]"><Activity size={15} className="text-[var(--secondary-2)]" /> 점검 방식</div>
           <p className="mt-3 text-[14px] leading-6 text-[var(--ink-muted)]">
-            AI가 작성한 문장 속 숫자와 이름·기관을, 지원자가 제출한 자료·논문과 하나씩 대조합니다. 자료에 없거나 다른 값이 발견되면 위 &lsquo;검수 권장 분석&rsquo;에 모아 표시합니다.
+            AI가 작성한 문장의 숫자와 이름·기관을 지원자가 제출한 자료·논문과 하나씩 대조합니다. 자료에 없거나 다른 값이 발견되면 &lsquo;검수 권장 분석&rsquo;에 표시합니다.
           </p>
         </div>
         <div className="col-span-12 lg:col-span-8 panel">
@@ -306,7 +306,7 @@ function statusLabel(status: string) {
     case "pending": return "대기";
     case "failed": return "실패";
     case "canceled":
-    case "cancelled": return "취소";
+    case "cancelled": return "중단";
     default: return status;
   }
 }

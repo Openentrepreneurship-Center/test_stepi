@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   const job = url.searchParams.get("job");
   const applicant = url.searchParams.get("applicant");
   if (!job || !applicant) {
-    return NextResponse.json({ error: "missing job or applicant" }, { status: 400 });
+    return NextResponse.json({ error: "분석 또는 지원자 정보가 없습니다." }, { status: 400 });
   }
   const target = `/analysis-jobs/${encodeURIComponent(job)}/applicants/${encodeURIComponent(applicant)}/regenerate-summary`;
   const res = await apiFetch(target, { method: "POST" });

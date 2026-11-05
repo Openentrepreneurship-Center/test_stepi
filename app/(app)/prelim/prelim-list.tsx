@@ -81,7 +81,7 @@ export default function PrelimList({ trashed, tabs }: { trashed: boolean; tabs?:
       await fn();
       await load();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "처리하지 못했습니다");
+      alert(e instanceof Error ? e.message : "처리에 실패하였습니다.");
     } finally {
       setBusy(null);
     }
@@ -98,7 +98,7 @@ export default function PrelimList({ trashed, tabs }: { trashed: boolean; tabs?:
           eyebrow="사전스크리닝 검토"
           icon={Trash2}
           title="삭제 항목"
-          description={"삭제한 검토 결과를 보관합니다. 복구하거나 영구 삭제할 수 있습니다.\n영구 삭제 시 검토 결과, 판정, 올린 확인 자료와 첨부 파일이 모두 삭제되며 복구할 수 없습니다."}
+          description={"삭제한 검토 결과를 보관합니다. 복구하거나 영구 삭제할 수 있습니다.\n영구 삭제 시 검토 결과, 판정, 업로드한 확인 자료와 첨부 파일이 모두 삭제되며 복구할 수 없습니다."}
         />
       ) : (
         <PageHeader
@@ -129,21 +129,21 @@ export default function PrelimList({ trashed, tabs }: { trashed: boolean; tabs?:
 
         {failed ? (
           <div className="panel py-16 text-center">
-            <p className="text-[19px] font-bold mb-2">백엔드에 연결할 수 없습니다.</p>
-            <p className="text-[13.5px] text-[var(--ink-muted)]">잠시 후 다시 시도해주세요.</p>
+            <p className="text-[19px] font-bold mb-2">서버에 연결할 수 없습니다.</p>
+            <p className="text-[13.5px] text-[var(--ink-muted)]">잠시 후 다시 시도해 주십시오.</p>
           </div>
         ) : items === null ? (
           <SkeletonTable />
         ) : items.length === 0 ? (
           trashed ? (
             <div className="panel py-16 text-center">
-              <p className="text-[19px] font-bold mb-2">삭제 항목이 비어있습니다.</p>
-              <p className="text-[14.5px] text-[var(--ink-muted)]">삭제된 검토가 여기로 옵니다.</p>
+              <p className="text-[19px] font-bold mb-2">삭제 항목이 없습니다.</p>
+              <p className="text-[14.5px] text-[var(--ink-muted)]">삭제한 검토는 이곳에 보관됩니다.</p>
             </div>
           ) : (
             <div className="panel py-16 text-center">
               <p className="text-[22px] font-bold mb-3">아직 검토 이력이 없습니다.</p>
-              <p className="text-[14px] text-[var(--ink-muted)]">자기소개서 xlsx 파일을 업로드하여 첫 검토를 시작해보세요.</p>
+              <p className="text-[14px] text-[var(--ink-muted)]">자기소개서 엑셀 파일을 업로드하여 검토를 시작할 수 있습니다.</p>
               <Link href="/prelim/new" className="btn-primary inline-block mt-6">
                 자기소개서 업로드
               </Link>
@@ -189,13 +189,13 @@ export default function PrelimList({ trashed, tabs }: { trashed: boolean; tabs?:
                       title="영구 삭제"
                       aria-label="영구 삭제"
                       onClick={() => {
-                        if (confirm("이 검토를 영구 삭제합니다.\n검토 결과·판정·올린 파일이 모두 사라지며 복구 불가합니다. 계속할까요?"))
+                        if (confirm("이 검토를 영구 삭제합니다.\n검토 결과·판정·업로드한 파일이 모두 삭제되며 복구할 수 없습니다. 계속하시겠습니까?"))
                           void act(r.ticket, () => prelim.remove(r.ticket, true));
                       }}
                       className="inline-flex items-center gap-1.5 rounded-[2px] border border-[var(--line-strong)] px-2.5 py-1.5 text-[13.5px] text-[var(--ink-muted)] hover:border-[var(--bad)] hover:bg-[var(--bad)] hover:text-white transition disabled:opacity-50"
                     >
                       <Trash2 size={13} strokeWidth={1.7} />
-                      영구삭제
+                      영구 삭제
                     </button>
                   </div>
                 </div>
@@ -209,12 +209,12 @@ export default function PrelimList({ trashed, tabs }: { trashed: boolean; tabs?:
               <div>상태</div>
               <div className={`${WIDE_ONLY} text-right`}>평가기준일</div>
               <div className="text-right">지원자 수</div>
-              <div className={`${WIDE_ONLY} text-right`}>자소서 위배</div>
+              <div className={`${WIDE_ONLY} text-right`}>자기소개서 위배</div>
               <div className={`${WIDE_ONLY} text-right`}>첨부 위배</div>
               <div className={`${WIDE_ONLY} text-right`}>제척(내부)</div>
               <div className={`${WIDE_ONLY} text-right`}>제척(외부)</div>
               <div className="text-right">판정 진행</div>
-              <div className="text-right">실행시간</div>
+              <div className="text-right">실행 시간</div>
               <div></div>
             </div>
             {items.map((r) => {
@@ -263,7 +263,7 @@ export default function PrelimList({ trashed, tabs }: { trashed: boolean; tabs?:
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (confirm(`"${name(r)}" 검토를 삭제 항목으로 이동합니다.\n삭제 항목에서 복구 가능합니다.`))
+                        if (confirm(`"${name(r)}" 검토를 삭제 항목으로 이동합니다.\n삭제 항목에서 복구할 수 있습니다. 계속하시겠습니까?`))
                           void act(r.ticket, () => prelim.remove(r.ticket));
                       }}
                       className="grid place-items-center h-9 w-9 rounded-[2px] border border-transparent text-[var(--ink-muted)] opacity-0 group-hover:opacity-100 hover:border-[var(--bad)] hover:bg-[var(--bad)] hover:text-white transition disabled:opacity-50"

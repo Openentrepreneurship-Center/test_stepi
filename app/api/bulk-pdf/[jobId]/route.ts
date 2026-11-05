@@ -27,7 +27,7 @@ export async function POST(
   }
 
   if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return NextResponse.json({ error: "API 주소가 설정되지 않았습니다." }, { status: 500 });
+    return NextResponse.json({ error: "서버 설정 오류입니다. 시스템 관리자에게 문의해 주십시오." }, { status: 500 });
   }
 
   const res = await apiFetch(
@@ -41,7 +41,7 @@ export async function POST(
   ).catch(() => null);
 
   if (!res) {
-    return NextResponse.json({ error: "백엔드에 연결하지 못했습니다." }, { status: 502 });
+    return NextResponse.json({ error: "서버에 연결할 수 없습니다." }, { status: 502 });
   }
   const text = await res.text();
   if (!res.ok) {

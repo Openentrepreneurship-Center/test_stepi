@@ -212,7 +212,7 @@ export default function TalentTypesSection({
           <>
             {status === "error" && (
               <p className="mb-4 text-[14px] leading-[1.6] text-[var(--bad)]">
-                선정 인재상을 불러오지 못했습니다. 아래는 저장된 값이 아니라 기본 예시입니다. 왼쪽 메뉴에서 다시 시도해 주세요.
+                선정 인재상을 불러오지 못했습니다. 아래는 저장된 값이 아니라 기본 예시입니다. 왼쪽 메뉴에서 다시 시도해 주십시오.
               </p>
             )}
             <div
@@ -245,7 +245,7 @@ export default function TalentTypesSection({
         desc={
           <>
             인재상마다 판정 가능한 문항 중 충족한 수로 점수를 냅니다. 미확정 기준과 자료 부족은 판정 불가로 표시합니다.{" "}
-            <b className="font-bold text-[var(--ink)]">줄을 누르면 판정과 근거가 열립니다.</b>
+            <b className="font-bold text-[var(--ink)]">항목을 선택하면 판정 결과와 근거를 확인할 수 있습니다.</b>
           </>
         }
         action={
@@ -269,7 +269,7 @@ export default function TalentTypesSection({
               <GroupHeading label={g.name} count={g.items.length} />
               {g.items.length === 0 ? (
                 <p className="px-1 py-2 text-[15px] text-[var(--ink-soft)]">
-                  고른 인재상이 없습니다.
+                  선택한 인재상이 없습니다.
                 </p>
               ) : (
                 <ul className={listClass}>
@@ -466,7 +466,7 @@ function SetBox({
 
       {items.length === 0 ? (
         <p className="py-6 text-center text-[14px] leading-[1.6] text-[var(--ink-muted)]">
-          고른 인재상이 없습니다.
+          선택한 인재상이 없습니다.
         </p>
       ) : items.length >= RADAR_MIN ? (
         <>
@@ -568,8 +568,8 @@ function ScoreText({
             axis.enough ? "text-[var(--secondary-2)]" : "font-semibold text-[var(--secondary-2)]"
           }`}
         >
-          유효 {axis.effective_total}문항
-          {!axis.enough && " 뿐"}
+          유효 문항 {axis.effective_total}개
+          {!axis.enough && "뿐"}
         </span>
       )}
     </span>

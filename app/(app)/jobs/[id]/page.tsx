@@ -57,10 +57,10 @@ export default async function JobDetailPage({
         <PageHeader back={{ href: "/jobs", label: "분석 목록" }} eyebrow="지원자 분석" title="분석 보고" />
         <div className="mt-10 panel text-center py-16">
           <h2 className="text-[22px] font-bold mb-2">
-            {isNotFound(statusRes) ? "작업을 찾을 수 없습니다." : "분석 정보를 불러오지 못했습니다."}
+            {isNotFound(statusRes) ? "분석을 찾을 수 없습니다." : "분석 정보를 불러오지 못했습니다."}
           </h2>
           <p className="text-[14px] text-[var(--ink-muted)] tabular-nums">
-            {isNotFound(statusRes) ? id : `잠시 뒤 새로고침해 주세요. ${id}`}
+            {isNotFound(statusRes) ? id : `잠시 후 새로고침해 주십시오. 분석 번호: ${id}`}
           </p>
         </div>
       </div>
@@ -93,7 +93,7 @@ export default async function JobDetailPage({
               sub={failedLabel(status.progress) ?? undefined}
             />
             <Stat
-              label="개시"
+              label="생성 일시"
               valueNode={
                 <span className="text-[14px] tabular-nums text-[var(--ink)]">
                   {new Date(status.created_at).toLocaleString("ko-KR", {
@@ -144,11 +144,11 @@ export default async function JobDetailPage({
       {isRunning && (
         <section className="mt-10 grid grid-cols-12 gap-6 items-center">
           <div className="col-span-12 lg:col-span-3 text-[14px] text-[var(--ink)]">
-            <AnalyzingIndicator text="분석중" />
+            <AnalyzingIndicator text="분석 중" />
           </div>
           <div className="col-span-12 lg:col-span-9">
             <div className="flex items-baseline justify-between mb-2 text-[13px] text-[var(--ink-muted)]">
-              <span>완료율</span>
+              <span>진행률</span>
               <span className="text-[var(--ink)] tabular-nums">{pct.toFixed(0)}%</span>
             </div>
             <div className="h-px w-full bg-[var(--line)]">
@@ -164,7 +164,7 @@ export default async function JobDetailPage({
       {resultFailed && (
         <div className="mt-10 panel text-center py-12">
           <p className="text-[17px] font-bold mb-2">지원자 명부를 불러오지 못했습니다.</p>
-          <p className="text-[13.5px] text-[var(--ink-muted)]">잠시 뒤 새로고침해 주세요.</p>
+          <p className="text-[13.5px] text-[var(--ink-muted)]">잠시 후 새로고침해 주십시오.</p>
         </div>
       )}
 
@@ -188,7 +188,7 @@ export default async function JobDetailPage({
                 <Download size={13} /> CSV
               </a>
               <a href={api.reportPdfUrl(id)} className="btn-ghost inline-flex items-center gap-2" target="_blank" rel="noreferrer">
-                <FileText size={13} /> 전체 PDF
+                <FileText size={13} /> 분석 보고 PDF
               </a>
               <BulkPdfButton jobId={id} />
             </div>

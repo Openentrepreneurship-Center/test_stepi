@@ -26,13 +26,13 @@ function LoginInner() {
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        setErr(j.error ?? `로그인 실패 (${res.status})`);
+        setErr(j.error ?? "로그인에 실패하였습니다.");
         setLoading(false);
         return;
       }
       router.replace(next);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "네트워크 오류");
+      setErr(e instanceof Error ? e.message : "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주십시오.");
       setLoading(false);
     }
   };
@@ -53,8 +53,8 @@ function LoginInner() {
             를 읽습니다.
           </h1>
           <p className="mt-7 text-[15px] leading-[1.85] text-[var(--ink-muted)]">
-            자기소개서를 다축으로 분석하여 핵심인재 유사도, 직무 적합도, 직군 매칭, 그리고 면접 질문 후보를 제시합니다.
-            본 시스템은 채용 의사결정의 보조 지표로 사용되며, 최종 판단은 면접관의 몫입니다.
+            자기소개서를 다각도로 분석하여 핵심인재 유사도, 직무 적합도, 직군 매칭 결과와 면접 질문 후보를 제시합니다.
+            본 시스템은 채용 의사결정의 보조 지표로 사용되며, 최종 판단은 면접관이 합니다.
           </p>
         </div>
 
@@ -72,7 +72,7 @@ function LoginInner() {
         <div className="max-w-[360px]">
           <h2 className="serif text-[28px] leading-tight mb-2">로그인</h2>
           <p className="text-[14px] text-[var(--ink-muted)] leading-[1.7] mb-10">
-            인사팀에 공유된 비밀번호를 입력하세요.
+            인사팀에 공유된 비밀번호를 입력해 주십시오.
           </p>
 
           <form onSubmit={submit} className="space-y-6">
@@ -104,12 +104,12 @@ function LoginInner() {
               className="btn-primary w-full"
               disabled={loading}
             >
-              {loading ? "확인 중…" : "들어가기"}
+              {loading ? "확인 중" : "로그인"}
             </button>
           </form>
 
           <p className="mt-12 pt-6 border-t border-[var(--line)] text-[12.5px] text-[var(--ink-muted)] leading-[1.7]">
-            본 콘솔은 권한이 부여된 사용자만 접근할 수 있습니다. 비밀번호 분실 시 시스템 관리자에게 문의해주세요.
+            본 시스템은 권한이 부여된 사용자만 이용할 수 있습니다. 비밀번호 분실 시 시스템 관리자에게 문의해 주십시오.
           </p>
         </div>
       </section>

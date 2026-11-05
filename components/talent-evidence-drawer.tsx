@@ -145,15 +145,15 @@ export default function TalentEvidenceDrawer({
             {/* 점수가 왜 이 값인지 한 줄로 밝힘. 소수점이 붙은 이유가 여기 있음 */}
             <p className="mt-2.5 text-[13px] leading-[1.6] text-[var(--ink-muted)]">
               {axis.score === null
-                ? "판정할 수 있는 문항이 없어 점수를 내지 못했습니다."
+                ? "판정 가능한 문항이 없어 점수를 산출하지 못하였습니다."
                 : axis.n_count > 0
-                  ? `문항 ${axis.items.length}개 중 ${axis.n_count}개는 판정할 수 없어 계산에서 뺐습니다. 남은 ${axis.effective_total}개 중 ${axis.o_count}개를 충족해 ${formatScore100(axis.score)}점입니다.`
-                  : `문항 ${axis.items.length}개 중 ${axis.o_count}개를 충족해 ${formatScore100(axis.score)}점입니다.`}
+                  ? `문항 ${axis.items.length}개 중 판정할 수 없는 ${axis.n_count}개는 계산에서 제외하였습니다. 나머지 ${axis.effective_total}개 중 ${axis.o_count}개를 충족하여 ${formatScore100(axis.score)}점입니다.`
+                  : `문항 ${axis.items.length}개 중 ${axis.o_count}개를 충족하여 ${formatScore100(axis.score)}점입니다.`}
             </p>
 
             {!axis.defined && (
               <p className="mt-1.5 text-[13px] leading-[1.6] text-[var(--ink-soft)]">
-                이 인재상은 아직 문항표가 없어 아래 문항은 예시입니다.
+                이 인재상은 문항표가 없어 아래 문항을 예시로 표시합니다.
               </p>
             )}
           </div>
@@ -270,10 +270,10 @@ function ItemRow({
         <span className="min-w-0 flex-1">
           <span className="block text-[14.5px] leading-[1.55] text-[var(--ink)]">{item.question}</span>
           <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[var(--ink-soft)]">
-            <span>{item.judged_by === "code" ? "코드 판정" : "LLM 판정"}</span>
+            <span>{item.judged_by === "code" ? "규칙 판정" : "AI 판정"}</span>
             {review && <span className="text-[var(--secondary-2)]">검토 권장</span>}
             {item.flags.includes("date_calc") && <span>날짜 계산</span>}
-            {item.flags.includes("data_sparse") && <span>데이터 부족</span>}
+            {item.flags.includes("data_sparse") && <span>자료 부족</span>}
           </span>
         </span>
         {open ? (
@@ -321,7 +321,7 @@ function ItemRow({
           )}
 
           {item.x_example && (
-            <Field label="이런 경우는 미충족">
+            <Field label="미충족 예시">
               <p className="text-[13.5px] leading-[1.65] text-[var(--ink-muted)]">{item.x_example}</p>
             </Field>
           )}

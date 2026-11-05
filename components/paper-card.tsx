@@ -111,23 +111,23 @@ export default function PaperCard({
 
       {isMetaOnly ? (
         <div className="px-5 py-6 text-[13px] text-[var(--ink-muted)]">
-          xlsx 지원정보의 학술지 게재 이력. PDF 를 업로드하면 본문 분석 (problem · solution · result 등) 이 자동 진행됩니다.
+          지원정보 엑셀에서 가져온 학술지 게재 이력입니다. PDF를 업로드하면 본문 분석(문제·해결·결과 등)이 자동으로 진행됩니다.
         </div>
       ) : !isAnalyzed ? (
         <div className="px-5 py-8 text-[13px] text-[var(--ink-muted)] text-center">
           {file.status === "extract_fail" || file.status === "analysis_fail"
-            ? `처리 실패: ${file.error_message ?? "오류"}`
+            ? `처리 실패: ${file.error_message ?? "원인 미상"}`
             : file.status === "analyzed"
               ? "분석 결과를 불러오지 못했습니다."
-              : "분석 진행 중…"}
+              : "분석 진행 중"}
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[var(--line)]">
           {/* §1 P-S-R + §3 tech */}
           <div className="p-5 space-y-5">
-            <PSRRow label="Problem"  value={detail.paper_problem}  evidence={detail.paper_evidence?.problem} />
-            <PSRRow label="Solution" value={detail.paper_solution} evidence={detail.paper_evidence?.solution} />
-            <PSRRow label="Result"   value={detail.paper_result}   evidence={detail.paper_evidence?.result} />
+            <PSRRow label="문제"  value={detail.paper_problem}  evidence={detail.paper_evidence?.problem} />
+            <PSRRow label="해결" value={detail.paper_solution} evidence={detail.paper_evidence?.solution} />
+            <PSRRow label="결과"   value={detail.paper_result}   evidence={detail.paper_evidence?.result} />
 
             {detail.paper_tech_stack && detail.paper_tech_stack.length > 0 && (
               <div>
@@ -169,10 +169,10 @@ export default function PaperCard({
           {/* §4 strength/weakness/interview */}
           <div className="p-5 space-y-5">
             {detail.paper_strength && (
-              <SWBlock label="Strength" tone="strength" value={detail.paper_strength} />
+              <SWBlock label="강점" tone="strength" value={detail.paper_strength} />
             )}
             {detail.paper_weakness && (
-              <SWBlock label="Weakness" tone="weakness" value={detail.paper_weakness} />
+              <SWBlock label="약점" tone="weakness" value={detail.paper_weakness} />
             )}
             {detail.paper_interview_qs && detail.paper_interview_qs.length > 0 && (
               <div>

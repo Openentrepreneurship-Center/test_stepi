@@ -22,7 +22,7 @@ export default function JobRowDeleteButton({
     const name = label?.trim() || jobId;
     if (
       !confirm(
-        `"${name}" 작업을 삭제 항목으로 이동합니다.\n진행 중이면 자동으로 중단되며, 삭제 항목에서 복구 가능합니다.`,
+        `"${name}" 분석을 삭제 항목으로 이동합니다.\n진행 중인 분석은 자동으로 중단되며, 삭제 항목에서 복구할 수 있습니다. 계속하시겠습니까?`,
       )
     )
       return;
@@ -31,7 +31,7 @@ export default function JobRowDeleteButton({
         await api.softDeleteJob(jobId);
         router.refresh();
       } catch (err) {
-        alert(err instanceof Error ? err.message : "삭제 실패");
+        alert(err instanceof Error ? err.message : "삭제에 실패하였습니다.");
       }
     });
   };

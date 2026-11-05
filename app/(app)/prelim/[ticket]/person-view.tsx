@@ -31,7 +31,7 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
   const exOther = [
     ...(derived.exx_advisor ?? [])
       .filter((a) => a.no === no)
-      .map((a) => ({ id: a.id, kind: "지도교수가 섭외 위원", text: a.advisor })),
+      .map((a) => ({ id: a.id, kind: "지도교수가 섭외 심사위원", text: a.advisor })),
     ...(data.view.external_edu ?? [])
       .filter((e) => e.no === no)
       .map((e, i) => ({ id: `edu:${i}`, kind: "학력 기관", text: `${e.school} (${e.org})` })),
@@ -41,7 +41,7 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
   return (
     <>
       <button className="backlink" type="button" onClick={() => go("summary")}>
-        ← 요약 화면으로
+        요약 화면으로 이동
       </button>
       <div className="phead">
         <div>
@@ -132,7 +132,7 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
                               전체 보기
                             </button>
                             <a className="jbtn" href={attachFileUrl(ticket, a.id)} style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", color: "inherit" }}>
-                              내려받기
+                              다운로드
                             </a>
                           </div>
                         </div>
@@ -161,7 +161,7 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
                 <tr>
                   <th style={{ width: 150 }}>제척 구분</th>
                   <th>근거</th>
-                  <th style={{ width: 200 }}>제척 내부위원</th>
+                  <th style={{ width: 200 }}>내부 제척위원</th>
                 </tr>
               </thead>
               <tbody>

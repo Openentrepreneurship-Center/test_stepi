@@ -10,7 +10,7 @@ import "../prelim.css";
 
 type Slot = "essay" | "attach" | "origin";
 
-const EMPTY_TEXT = "파일을 여기로 끌어다 놓으세요";
+const EMPTY_TEXT = "파일을 끌어다 놓거나 클릭하여 선택해 주십시오.";
 
 // 평가기준일 범위는 백엔드와 같게
 const EVAL_MIN = "2000-01-01";
@@ -114,8 +114,8 @@ export default function UploadForm() {
     if (f && label && (await isLockedExcel(f))) {
       setFiles((prev) => ({ ...prev, [slot]: null }));
       window.alert(
-        `${label} 파일에 암호가 걸려 있어 올릴 수 없습니다.\n` +
-          "엑셀에서 암호를 지운 뒤(파일 > 정보 > 통합 문서 보호 > 암호 설정) 다시 올려 주세요.",
+        `${label} 파일에 암호가 설정되어 있어 업로드할 수 없습니다.\n` +
+          "엑셀에서 암호를 해제한 뒤(파일 > 정보 > 통합 문서 보호 > 암호 설정) 다시 업로드해 주십시오.",
       );
       return false;
     }
@@ -150,7 +150,7 @@ export default function UploadForm() {
         } catch (err) {
           // 검토는 이미 만들어졌음. 결과 화면은 열어 주고 첨부 실패만 알림(첨부 탭에도 실패 안내가 남음)
           window.alert(
-            `첨부 실적은 올리지 못했습니다. ${err instanceof Error ? err.message : String(err)}`,
+            `첨부 실적 업로드에 실패하였습니다. 사유: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
       }
@@ -183,13 +183,13 @@ export default function UploadForm() {
                 <div>
                   <div className="name">자기소개서</div>
                   <div className="hint">.xlsx 파일</div>
-                  <div className="hint">채용 사이트에서 받은 자기소개서 파일. 시트 이름은 상관없습니다</div>
+                  <div className="hint">채용 사이트에서 다운로드한 자기소개서 파일입니다. 시트 이름은 제한이 없습니다.</div>
                   <a
                     className="tpl-link"
                     href="/templates/자기소개서 양식.xlsx"
                     download="자기소개서 양식.xlsx"
                   >
-                    양식 내려받기
+                    양식 다운로드
                   </a>
                 </div>
                 <DropBox
@@ -204,13 +204,13 @@ export default function UploadForm() {
                 <div>
                   <div className="name">지원정보</div>
                   <div className="hint">.xlsx 또는 .xlsm 파일</div>
-                  <div className="hint">지원자 학력·경력을 읽습니다. 없으면 제척 검토가 빠집니다</div>
+                  <div className="hint">지원자 학력·경력을 확인합니다. 업로드하지 않으면 제척 검토를 수행하지 않습니다.</div>
                   <a
                     className="tpl-link"
                     href="/templates/지원정보 양식.xlsx"
                     download="지원정보 양식.xlsx"
                   >
-                    양식 내려받기
+                    양식 다운로드
                   </a>
                 </div>
                 <DropBox
@@ -227,7 +227,7 @@ export default function UploadForm() {
                   <div className="hint">.zip 파일 (pdf·docx·이미지)</div>
                   {attachMaxGb !== null && (
                     <div className="hint">
-                      첨부 실적은 {attachMaxGb}GB 까지 올릴 수 있습니다
+                      첨부 실적은 최대 {attachMaxGb}GB까지 업로드할 수 있습니다.
                     </div>
                   )}
                   <a
@@ -235,7 +235,7 @@ export default function UploadForm() {
                     href="/templates/첨부 실적 예시.zip"
                     download="첨부 실적 예시.zip"
                   >
-                    예시 zip 내려받기
+                    예시 zip 다운로드
                   </a>
                 </div>
                 <DropBox
@@ -251,7 +251,7 @@ export default function UploadForm() {
                   <div className="name">
                     제척 기준 정보 <span className="tag opt">자동</span>
                   </div>
-                  <div className="hint">파일을 올리지 않아도 됩니다</div>
+                  <div className="hint">별도로 파일을 업로드하지 않아도 됩니다.</div>
                 </div>
                 <div className="refbox">
                   <span>
@@ -265,7 +265,7 @@ export default function UploadForm() {
                     )}
                   </span>
                   <Link href="/prelim/reference" className="btn link">
-                    제척 기준 정보 보기 →
+                    제척 기준 정보로 이동
                   </Link>
                 </div>
               </div>
@@ -320,8 +320,8 @@ export default function UploadForm() {
                   </div>
                   <span className="hint" style={evalShowBad ? { color: "var(--red-text)" } : undefined}>
                     {evalShowBad
-                      ? "날짜를 2026-09-30 처럼 작성해주세요."
-                      : "비워 두면 오늘 날짜를 기준으로 검토합니다."}
+                      ? "날짜를 2026-09-30 형식으로 입력해 주십시오."
+                      : "입력하지 않으면 오늘 날짜를 기준으로 검토합니다."}
                   </span>
                 </div>
                 <div className="field">
@@ -348,7 +348,7 @@ export default function UploadForm() {
               >
                 {running
                   ? progress !== null
-                    ? `첨부 올리는 중 ${Math.round(progress * 100)}%`
+                    ? `첨부 실적 업로드 중 ${Math.round(progress * 100)}%`
                     : "검토 중"
                   : "검토 실행"}{" "}
                 <span aria-hidden="true">→</span>
@@ -360,7 +360,7 @@ export default function UploadForm() {
                 {error ??
                   (ready
                     ? "검토할 파일이 준비되었습니다."
-                    : "자기소개서·지원정보·첨부 실적 중 하나를 올리면 검토를 실행할 수 있습니다.")}
+                    : "자기소개서·지원정보·첨부 실적 중 하나 이상을 업로드하면 검토를 실행할 수 있습니다.")}
               </span>
             </div>
           </form>

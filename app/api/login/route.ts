@@ -17,14 +17,14 @@ export async function POST(req: Request) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "invalid body" }, { status: 400 });
+    return NextResponse.json({ error: "요청 형식이 올바르지 않습니다." }, { status: 400 });
   }
   const accepted = [process.env.AUTH_PASSWORD, process.env.AUTH_PASSWORD_2].filter(
     (p): p is string => !!p,
   );
   const secret = process.env.SESSION_SECRET ?? "";
   if (accepted.length === 0 || !secret) {
-    return NextResponse.json({ error: "server misconfigured" }, { status: 500 });
+    return NextResponse.json({ error: "서버 설정 오류입니다. 시스템 관리자에게 문의해 주십시오." }, { status: 500 });
   }
   const got = body.password ?? "";
   // every candidate is checked even after a match, so timing does not leak which one it was

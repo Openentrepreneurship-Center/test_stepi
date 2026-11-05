@@ -96,7 +96,7 @@ export default function ApplicantPdfButton({
         className="btn-ghost inline-flex items-center gap-2 disabled:opacity-50"
       >
         {busy ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} />}
-        {busy ? "준비 중" : "PDF"}
+        {busy ? "생성 중" : "PDF"}
       </button>
     );
   }
@@ -106,7 +106,7 @@ export default function ApplicantPdfButton({
       type="button"
       onClick={open}
       disabled={busy}
-      title="이 지원자만 PDF 로 저장"
+      title="이 지원자 PDF 저장"
       className="text-[var(--ink-muted)] hover:text-[var(--ink)] transition p-0.5 disabled:opacity-50"
     >
       {busy ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} />}

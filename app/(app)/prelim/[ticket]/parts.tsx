@@ -69,7 +69,7 @@ export function UpBtn({
   return (
     <label className={`upbtn${fileName ? " done" : ""}`} aria-disabled={busy}>
       <span aria-hidden="true">{fileName ? "✓" : "⬆"}</span>
-      {busy ? "올리는 중" : fileName || label}
+      {busy ? "업로드 중" : fileName || label}
       <input
         type="file"
         accept=".xlsx,.csv"

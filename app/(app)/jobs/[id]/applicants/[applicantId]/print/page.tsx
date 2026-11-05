@@ -126,7 +126,7 @@ export default async function ApplicantPrintPage({
       ? { value: "불러오지 못했습니다", muted: true }
       : deptFit.skipped
         ? { value: "미산출", sub: "행정직 미산출", muted: true }
-        : { value: "미산출", sub: "아직 채점 결과가 없습니다", muted: true };
+        : { value: "미산출", sub: "채점 결과가 없습니다", muted: true };
 
   const timelineTotal =
     (sourceApplicant?.education?.length ?? 0) + (sourceApplicant?.career?.length ?? 0);
@@ -236,7 +236,7 @@ export default async function ApplicantPrintPage({
         {sourceFailed ? (
           <EmptyRow title="학력 · 이력">불러오지 못했습니다.</EmptyRow>
         ) : timelineTotal === 0 ? (
-          <EmptyRow title="학력 · 이력">기입되지 않았습니다.</EmptyRow>
+          <EmptyRow title="학력 · 이력">기재된 내용이 없습니다.</EmptyRow>
         ) : (
           <Card
             title="학력 · 이력"
@@ -262,7 +262,7 @@ export default async function ApplicantPrintPage({
             <Card
               figure
               title="핵심인재 유사도"
-              desc={`합격자들의 자기소개서와 얼마나 닮았는지를 나타냅니다. ${baselineNote(hasBaseline, baselineFailed)}`}
+              desc={`합격자 자기소개서와 비슷한 정도를 나타냅니다. ${baselineNote(hasBaseline, baselineFailed)}`}
             >
               <RadarCard data={coreData} color="#33307A" baseline={coreBaseline} height={PRINT_RADAR_HEIGHT} />
             </Card>
@@ -418,7 +418,7 @@ export default async function ApplicantPrintPage({
         {papersFailed ? (
           <EmptyRow title="학술지 게재 이력">불러오지 못했습니다.</EmptyRow>
         ) : papers.length === 0 ? (
-          <EmptyRow title="학술지 게재 이력">기입되지 않았습니다.</EmptyRow>
+          <EmptyRow title="학술지 게재 이력">기재된 내용이 없습니다.</EmptyRow>
         ) : (
           <Card title="학술지 게재 이력" note={omitted(paperList.hidden, "편")} split>
             <PapersPrintList

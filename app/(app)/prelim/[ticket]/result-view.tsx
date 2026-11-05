@@ -213,7 +213,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
       } catch (e) {
         setNotice(
           e instanceof Error && e.name === "TimeoutError"
-            ? "응답이 늦어 저장하지 못했습니다. 새로고침한 뒤 다시 눌러 주세요."
+            ? "응답이 지연되어 저장에 실패하였습니다. 새로고침한 후 다시 시도해 주십시오."
             : e instanceof Error ? e.message : String(e),
         );
         return false;
@@ -298,7 +298,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
         const detail: unknown = JSON.parse(error.slice(error.indexOf("{"))).detail;
         if (typeof detail === "string") gone = detail;
       } catch {}
-      gone ??= "삭제 항목에 있는 검토입니다. 검토 삭제 항목에서 복구한 뒤에 열 수 있습니다.";
+      gone ??= "삭제 항목에 있는 검토입니다. 삭제 항목에서 복구한 후 열람할 수 있습니다.";
     }
     return (
       <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
@@ -309,10 +309,10 @@ export default function ResultView({ ticket }: { ticket: string }) {
               <>
                 {gone}{" "}
                 <Link href="/prelim/trash" className="underline underline-offset-4">
-                  삭제 항목으로 가기
+                  삭제 항목으로 이동
                 </Link>
               </>
-            ) : error.startsWith("404 ") ? "검토를 찾을 수 없습니다." : `검토 결과를 불러오지 못했습니다. ${error}`}
+            ) : error.startsWith("404 ") ? "검토를 찾을 수 없습니다." : "검토 결과를 불러오지 못하였습니다. 잠시 후 새로고침해 주십시오."}
           </div>
         </div>
       </div>
@@ -401,12 +401,12 @@ export default function ResultView({ ticket }: { ticket: string }) {
             전체 엑셀 다운로드
           </button>
           <span className="absolute right-0 top-full mt-1 whitespace-nowrap text-[12px] text-[var(--ink-muted)]">
-            여러 파일 다운로드를 허용해 주세요
+            여러 파일 다운로드를 허용해 주십시오.
           </span>
         </div>
       )}
       <Link href="/prelim/new" className="btn-primary">
-        + 새 검토 시작
+        + 신규 검토 생성
       </Link>
     </div>
   );
@@ -425,9 +425,9 @@ export default function ResultView({ ticket }: { ticket: string }) {
               <i style={{ width: `${total ? Math.round((done / total) * 100) : 0}%` }} />
             </div>
             <p className="wait-n">
-              {total ? `${done} / ${total}개` : data.attach_status === "scanning" ? "검토 중" : "대기"}
+              {total ? `${done} / ${total}개` : data.attach_status === "scanning" ? "검사 중" : "대기"}
             </p>
-            <p>검사가 끝나면 결과를 한 번에 볼 수 있습니다</p>
+            <p>검사가 완료되면 결과를 한 번에 확인할 수 있습니다.</p>
           </div>
         </div>
       </div>

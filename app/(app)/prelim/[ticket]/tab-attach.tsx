@@ -89,14 +89,14 @@ export function Viewer({
           <div className="vw-tools">
             <div className="seg2">
               <button type="button" aria-pressed={mode === "hit"} onClick={() => onMode("hit")}>
-                해당 페이지만
+                해당 페이지 보기
               </button>
               <button type="button" aria-pressed={mode === "all"} onClick={() => onMode("all")}>
                 전체 보기
               </button>
             </div>
             <a className="btn quiet sm" href={attachFileUrl(ticket, item.id)} style={{ textDecoration: "none" }}>
-              내려받기
+              다운로드
             </a>
             <button className="btn sm" type="button" onClick={onClose}>
               닫기
@@ -105,9 +105,9 @@ export function Viewer({
         </header>
         <div className="vw-body">
           {item.in_filename && (
-            <div className="rulebox">파일명에 성명이 있습니다: <b>{item.file}</b></div>
+            <div className="rulebox">파일명에 성명이 포함되어 있습니다: <b>{item.file}</b></div>
           )}
-          {pages.length === 0 && !item.in_filename && <div className="vw-more">본문에서 검출된 쪽이 없습니다</div>}
+          {pages.length === 0 && !item.in_filename && <div className="vw-more">본문에서 검출된 페이지가 없습니다.</div>}
           {pages.map((n) => {
             const hit = item.hits.includes(n);
             const boxes = item.boxes?.[String(n)] ?? [];
@@ -115,12 +115,12 @@ export function Viewer({
               <div className={`pg ${hit ? "hit" : ""} ${render ? "img" : ""}`} key={n}>
                 <div className="pg-no">
                   <span>{item.is_image ? "표지" : `${n} / ${item.total}p`}</span>
-                  {hit && <span className="tag hard">성명 매칭{render && boxes.length === 0 ? " · 위치를 표시하지 못했습니다" : ""}</span>}
+                  {hit && <span className="tag hard">성명 매칭{render && boxes.length === 0 ? " · 위치를 표시할 수 없습니다" : ""}</span>}
                 </div>
                 {render ? (
                   <div className="pgimg">
                     {/* eslint-disable-next-line @next/next/no-img-element -- 백엔드가 그린 PNG, 크기 미리 알 수 없음 */}
-                    <img src={attachPageUrl(ticket, item.id, n)} alt={`${item.file} ${n}쪽`} loading="lazy" draggable={false} />
+                    <img src={attachPageUrl(ticket, item.id, n)} alt={`${item.file} ${n}페이지`} loading="lazy" draggable={false} />
                     {boxes.map(([x0, y0, x1, y1], i) => (
                       <span
                         key={i}
@@ -152,11 +152,11 @@ export function Viewer({
             );
           })}
           {!render && (
-            <div className="vw-more">이 형식은 쪽 그림을 보여 주지 못합니다. 내려받기로 원본을 확인하세요</div>
+            <div className="vw-more">이 파일 형식은 페이지 미리보기를 지원하지 않습니다. 원본을 다운로드하여 확인해 주십시오.</div>
           )}
           {mode === "all" && item.total > pages.length && (
             <div className="vw-more">
-              전체 {item.total}p 중 {pages.length}p 표시 · 나머지는 내려받기로 원본을 확인하세요
+              전체 {item.total}p 중 {pages.length}p 표시 · 나머지는 원본을 다운로드하여 확인해 주십시오.
             </div>
           )}
         </div>
@@ -245,7 +245,7 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
           <br />
           검출된 파일은 위배 후보이며, 원본을 확인해 <b>위배 확정 / 문제 없음(사유 입력) / 보류</b>로 판정합니다.
           <br />
-          가림 처리·다중 성명 나열·동명이인·이미지 텍스트 미검출은 위배로 보지 않습니다.
+          가림 처리·다중 성명 나열·동명이인·이미지 텍스트 미검출은 위배로 판단하지 않습니다.
         </span>
       </div>
 
@@ -261,10 +261,10 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
           </div>
         </header>
         {status === "none" ? (
-          <div className="empty">첨부 실적 zip 을 올리지 않았습니다</div>
+          <div className="empty">첨부 실적 zip 파일을 업로드하지 않았습니다.</div>
         ) : status === "failed" ? (
           <div className="empty" role="alert">
-            첨부 실적 검사에 실패했습니다. {data.attach_error ?? ""}
+            첨부 실적 검사에 실패하였습니다.{data.attach_error ? ` 사유: ${data.attach_error}` : ""}
           </div>
         ) : status !== "done" && attach.length === 0 ? (
           <div className="empty">
@@ -323,7 +323,7 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
                               전체 보기
                             </button>
                             <a className="jbtn" href={attachFileUrl(ticket, a.id)} style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", color: "inherit" }}>
-                              내려받기
+                              다운로드
                             </a>
                           </div>
                         </div>
@@ -341,20 +341,20 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
                             rows={2}
                             disabled={st.value !== "dismiss"}
                             value={st.value === "dismiss" ? (st.reason ?? "") : ""}
-                            placeholder={st.value === "dismiss" ? "사유를 입력하세요 (예: 가림 확인, 다중 성명 나열, 동명이인 확인)" : "문제 없음 선택 시 사유 입력"}
-                            aria-label="위배 아님 사유"
+                            placeholder={st.value === "dismiss" ? "사유 입력(예: 가림 확인, 다중 성명 나열, 동명이인 확인)" : "문제 없음 선택 시 사유 입력"}
+                            aria-label="문제 없음 사유"
                             onChange={(e) => typeReason(a.id, e.target.value, saved.reason ?? "")}
                             onBlur={() => flushReason(a.id)}
                           />
                           {st.value === "dismiss" && saveState[a.id] && (
                             <span className={`jsave ${saveState[a.id].s}`} role="status">
                               {saveState[a.id].s === "typing"
-                                ? "입력 중…"
+                                ? "입력 중"
                                 : saveState[a.id].s === "saving"
-                                  ? "저장 중…"
+                                  ? "저장 중"
                                   : saveState[a.id].s === "saved"
                                     ? `✓ 저장됨 ${saveState[a.id].at}`
-                                    : "저장하지 못해 이전 사유로 되돌렸습니다. 다시 입력해 주세요."}
+                                    : "저장에 실패하여 이전 사유로 되돌렸습니다. 다시 입력해 주십시오."}
                             </span>
                           )}
                           <span className={`jtext ${t.cls}`}>{t.t}</span>
@@ -369,7 +369,7 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
                   <td colSpan={7}>
                     <div className="tf-in">
                       판정 내용 예시 · 위배 / 위배 아님(가림 확인) / 위배 아님(다중 성명 나열) / 위배 아님(텍스트 확인 결과 성명 미검출) / 위배 아님(동명이인
-                      확인). 사유는 자유 입력(글자 수 제한 없음)
+                      확인). 사유는 자유롭게 입력할 수 있습니다(글자 수 제한 없음).
                     </div>
                   </td>
                 </tr>

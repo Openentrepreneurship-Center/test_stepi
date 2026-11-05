@@ -170,7 +170,7 @@ export default function Sidebar() {
         <button
           onClick={() => setCollapsed((v) => !v)}
           className="text-[var(--ink-muted)] hover:text-[var(--ink)] transition p-1.5 rounded-md hover:bg-[var(--bg-2)] shrink-0"
-          title={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
+          title={collapsed ? "메뉴 펼치기" : "메뉴 접기"}
           aria-label={collapsed ? "expand sidebar" : "collapse sidebar"}
         >
           {collapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}

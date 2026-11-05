@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
-import { CalendarDays, CircleCheck, Database, Download, Plus, Upload, X } from "lucide-react";
+import { CalendarDays, ChevronRight, CircleCheck, Database, Download, Plus, Upload, X } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { Bar } from "@/components/page-skeleton";
 import {
@@ -47,7 +47,7 @@ const STAFF_FORM: Section[] = [
     fields: [
       { key: `${p}_school`, label: school },
       { key: `${p}_major`, label: "전공" },
-      { key: `${p}_advisor`, label: "지도교수 (여럿이면 쉼표로)", wide: true },
+      { key: `${p}_advisor`, label: "지도교수(여러 명은 쉼표로 구분)", wide: true },
     ],
   })),
   { fields: [{ key: "note", label: "비고", max: 255, wide: true }] },
@@ -97,21 +97,21 @@ const TABS: { kind: PrelimRefKind; label: string; unit: string; desc: string; ad
     label: "내부위원 학력정보",
     unit: "명",
     add: "내부위원 추가",
-    desc: "학교·전공·지도교수가 모두 같은 지원자를 동일학력 제척으로 표시하고, 지원자 지도교수가 내부위원인지 확인합니다.\n위원을 클릭하면 수정이 가능합니다.",
+    desc: "학교·전공·지도교수가 모두 같은 지원자를 동일학력 제척으로 표시하고, 지원자 지도교수가 내부위원인지 확인합니다.\n위원을 선택하면 수정할 수 있습니다.",
   },
   {
     kind: "reviewers",
     label: "섭외 심사위원 목록",
     unit: "명",
     add: "심사위원 추가",
-    desc: "채용마다 모신 심사위원을 기록합니다. 검토를 실행하면 지원자의 지도교수가 이 목록에 있을 때 제척으로 표시하고, 제척(외부) 화면의 외부위원 목록표에도 이 목록을 씁니다. 채용 시기와 직군 구분은 아직 대조에 넣지 않습니다.",
+    desc: "채용별로 섭외한 심사위원을 기록합니다. 검토를 실행하면 지원자의 지도교수가 이 목록에 있을 때 제척으로 표시하고, 제척(외부) 화면의 외부위원 목록표에도 이 목록을 사용합니다. 채용 시기와 직군 구분은 아직 대조에 포함하지 않습니다.",
   },
   {
     kind: "orgs",
     label: "연구기관 목록(외부 제척)",
     unit: "곳",
     add: "연구기관 추가",
-    desc: "지원자가 최근 2년 안에 재직했거나 졸업한 기관이면 외부 제척으로 표시합니다.",
+    desc: "지원자가 최근 2년 이내에 재직하였거나 졸업한 기관이면 외부 제척으로 표시합니다.",
   },
 ];
 
@@ -131,7 +131,7 @@ const matches = (r: PrelimRefRow, q: string) =>
   );
 const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 
-const DATE_ERROR = "일자는 2025-10-20 형식으로 입력해 주세요.";
+const DATE_ERROR = "일자는 2025-10-20 형식으로 입력해 주십시오.";
 /** 일자 글자를 YYYY-MM-DD 로. 20251020, 2025.10.20, 2025-10-20, 2025/10/20 을 받고 없는 날짜는 null (평가기준일 칸과 같은 규칙) */
 function toIsoDate(text: string): string | null {
   const t = text.trim();
@@ -210,7 +210,7 @@ export default function ReferenceView() {
 
   // 고치던 내용이 있으면 버릴지 물음
   const leaveDrawer = () =>
-    !drawer?.dirty || window.confirm("저장하지 않은 수정 내용이 있습니다. 버리고 닫을까요?");
+    !drawer?.dirty || window.confirm("저장하지 않은 수정 내용이 있습니다. 저장하지 않고 닫으시겠습니까?");
 
   const closeDrawer = () => {
     if (!leaveDrawer()) return;
@@ -250,7 +250,7 @@ export default function ReferenceView() {
     if (!drawer || saving) return;
     const missing = FORMS[drawer.kind].flatMap((s) => s.fields).find((f) => f.required && !drawer.values[f.key]?.trim());
     if (missing) {
-      setDrawerError(`${missing.label}은(는) 비워 둘 수 없습니다.`);
+      setDrawerError(`${missing.label}은(는) 필수 입력 항목입니다.`);
       return;
     }
     const dateKeys = new Set(FORMS[drawer.kind].flatMap((s) => s.fields).filter((f) => f.type === "date").map((f) => f.key));
@@ -274,9 +274,9 @@ export default function ReferenceView() {
       setDrawer(null);
       setSavedId(saved.id);
       if (drawer.kind === "reviewers" && hiddenWritten(items).has(saved.id))
-        setInfo("행정직이 없는 채용의 필기 위원이라 목록에는 보이지 않습니다. 제척 검토에는 쓰입니다.");
+        setInfo("행정직이 없는 채용의 필기 위원이므로 목록에는 표시되지 않으며, 제척 검토에는 사용됩니다.");
     } catch (e) {
-      setDrawerError(e instanceof Error ? e.message : "저장하지 못했습니다.");
+      setDrawerError(e instanceof Error ? e.message : "저장에 실패하였습니다.");
     } finally {
       setSaving(false);
     }
@@ -284,14 +284,14 @@ export default function ReferenceView() {
 
   async function removeRow(kind: PrelimRefKind, row: PrelimRefRow) {
     const who = str(row.name) || "이 항목";
-    if (!window.confirm(`${who}을(를) 삭제할까요? 삭제한 뒤에는 되돌릴 수 없습니다.`)) return false;
+    if (!window.confirm(`${who}을(를) 삭제하시겠습니까? 삭제한 후에는 복구할 수 없습니다.`)) return false;
     setError(null);
     try {
       await prelim.reference.remove(kind, row.id);
       setRows((prev) => ({ ...prev, [kind]: (prev[kind] ?? []).filter((r) => r.id !== row.id) }));
       return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "삭제하지 못했습니다.");
+      setError(e instanceof Error ? e.message : "삭제에 실패하였습니다.");
       return false;
     }
   }
@@ -304,7 +304,7 @@ export default function ReferenceView() {
     try {
       setPreview(await prelim.reference.importPreview(file));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "엑셀을 읽지 못했습니다.");
+      setError(e instanceof Error ? e.message : "엑셀 파일을 읽을 수 없습니다.");
     } finally {
       setReading(false);
     }
@@ -326,10 +326,10 @@ export default function ReferenceView() {
   const q = query.trim().toLowerCase();
   const chipBar =
     tab === "reviewers"
-      ? { label: "직군", aria: "직군으로 공고 필터", options: JOBS }
+      ? { label: "직군", aria: "직군 필터", options: JOBS }
       : tab === "orgs"
-        ? { label: "계열", aria: "계열로 거르기", options: ORG_KINDS }
-        : { label: "직급", aria: "직급으로 거르기", options: [...new Set([...(list ?? []).map((r) => str(r.grade)).filter(Boolean), ...STAFF_GRADES])] };
+        ? { label: "계열", aria: "계열 필터", options: ORG_KINDS }
+        : { label: "직급", aria: "직급 필터", options: [...new Set([...(list ?? []).map((r) => str(r.grade)).filter(Boolean), ...STAFF_GRADES])] };
   // 올리기·수정으로 사라진 직급 칩이 선택된 채 남지 않게
   const activeChips = chips.filter((c) => chipBar.options.includes(c));
 
@@ -339,7 +339,7 @@ export default function ReferenceView() {
         eyebrow="사전스크리닝 검토"
         icon={Database}
         title="제척 기준 정보"
-        description="제척 검토에 쓰는 내부위원·기관·심사위원 정보입니다. 여기서 고친 내용은 다음에 만드는 검토부터 반영됩니다."
+        description="제척 검토에 사용하는 내부위원·기관·심사위원 정보입니다. 이 화면에서 수정한 내용은 이후 생성하는 검토부터 반영됩니다."
         wideDescription
         aside={
           <div className="prelim ref-head-actions">
@@ -353,7 +353,7 @@ export default function ReferenceView() {
                     onClick={() => fileRef.current?.click()}
                     disabled={reading}
                   >
-                    <Upload size={16} aria-hidden="true" /> {reading ? "읽는 중" : "엑셀 업로드"}
+                    <Upload size={16} aria-hidden="true" /> {reading ? "불러오는 중" : "엑셀 업로드"}
                   </button>
                   <input
                     ref={fileRef}
@@ -369,11 +369,11 @@ export default function ReferenceView() {
                 </>
               )}
               <a className="btn sm quiet" href={prelim.reference.exportUrl()} download>
-                <Download size={16} aria-hidden="true" /> 엑셀 내려받기
+                <Download size={16} aria-hidden="true" /> 엑셀 다운로드
               </a>
             </div>
             <a className="tpl-link" href={prelim.reference.exportUrl(true)} download>
-              빈 양식 내려받기
+              빈 양식 다운로드
             </a>
           </div>
         }
@@ -440,7 +440,7 @@ export default function ReferenceView() {
         )}
 
         {failed ? (
-          <div className="empty">제척 기준 정보를 불러오지 못했습니다. 잠시 뒤 새로고침해 주세요.</div>
+          <div className="empty">제척 기준 정보를 불러오지 못하였습니다. 잠시 후 새로고침해 주십시오.</div>
         ) : !list ? (
           <div role="status" aria-live="polite">
             <span className="sr-only">불러오는 중입니다</span>
@@ -630,7 +630,7 @@ function RefGroup({
             }}
           >
             전체 {items.length}
-            {unit} 보기 →
+            {unit} 보기 <ChevronRight size={14} aria-hidden="true" style={{ display: "inline", verticalAlign: "-2px" }} />
           </button>
         </div>
       )}
@@ -928,14 +928,14 @@ function ReviewerGroups({
   if (!rows.length)
     return (
       <div className="ref-emptycard">
-        <b>아직 기록된 심사위원이 없습니다</b>
+        <b>기록된 심사위원이 없습니다.</b>
         <p>
-          채용이 끝나면 그 채용에 모신 서류·필기·면접 위원을 기록해 두세요.
+          채용이 완료되면 해당 채용에 섭외한 서류·필기·면접 위원을 기록해 주십시오.
           <br />
-          직전 채용과 동일 직군 채용의 위원은 다음 채용에서 다시 모실 수 없어, 이 목록이 기준이 됩니다.
+          직전 채용과 동일 직군 채용의 위원은 다음 채용에서 다시 섭외할 수 없으므로 이 목록을 기준으로 합니다.
         </p>
         <button type="button" className="btn sm primary" onClick={() => onOpen(null)}>
-          <Plus size={16} aria-hidden="true" /> 첫 심사위원 기록하기
+          <Plus size={16} aria-hidden="true" /> 심사위원 추가
         </button>
       </div>
     );
@@ -1073,7 +1073,7 @@ function ImportDialog({
     if (
       bulk.length &&
       !window.confirm(
-        `${bulk.map((x) => `${x.s.label} ${x.n}줄`).join(", ")}을(를) 삭제합니다. 삭제한 뒤에는 되돌릴 수 없습니다. 반영할까요?`,
+        `${bulk.map((x) => `${x.s.label} ${x.n}행`).join(", ")}을 삭제합니다. 삭제한 후에는 복구할 수 없습니다. 반영하시겠습니까?`,
       )
     )
       return;
@@ -1086,7 +1086,7 @@ function ImportDialog({
         await prelim.reference.importApply({ token: preview.token, choices, confirm_bulk_delete: bulk.length > 0 }),
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : "반영하지 못했습니다.");
+      setError(e instanceof Error ? e.message : "반영에 실패하였습니다.");
       setBusy(false);
     }
   }
@@ -1102,7 +1102,7 @@ function ImportDialog({
             <p className="imp-file">{preview.file_name}</p>
             <div className="hint">
               {preview.form ? `양식 종류 ${preview.form}` : "양식 정보 없음"}
-              {when ? ` · 내려받은 시각 ${when}` : ""}
+              {when ? ` · 다운로드 시각 ${when}` : ""}
             </div>
           </div>
           <button ref={closeRef} type="button" className="ref-close" onClick={onClose} aria-label="닫기" disabled={busy}>
@@ -1110,10 +1110,10 @@ function ImportDialog({
           </button>
         </header>
         <div className="imp-body">
-          {preview.no_change && <div className="imp-same">바뀌는 내용이 없습니다.</div>}
+          {preview.no_change && <div className="imp-same">변경 사항이 없습니다.</div>}
           {preview.already_applied && !preview.no_change && (
             <p className="imp-warn">
-              이 파일로 이미 한 번 반영했습니다. 관리번호가 빈 줄은 다시 추가됩니다. 더 고치려면 엑셀을 다시 내려받아 주세요.
+              이 파일은 이미 반영하였습니다. 관리번호가 비어 있는 행은 다시 추가됩니다. 추가로 수정하려면 엑셀을 다시 다운로드해 주십시오.
             </p>
           )}
           <div className="tblwrap">
@@ -1123,7 +1123,7 @@ function ImportDialog({
                   <th>시트</th>
                   <th>추가</th>
                   <th>수정</th>
-                  <th>반영 안 함</th>
+                  <th>미반영</th>
                 </tr>
               </thead>
               <tbody>
@@ -1206,8 +1206,8 @@ function ImportDialog({
                       <b>충돌</b> {c.name}
                       {c.row ? ` (엑셀 ${c.row}행)` : ""}:{" "}
                       {c.type === "delete"
-                        ? "엑셀에서 지운 줄인데, 내려받은 뒤 화면에서 고쳤습니다."
-                        : "내려받은 뒤 화면에서도 고친 줄입니다."}
+                        ? "엑셀에서 삭제한 행이지만, 다운로드 이후 화면에서 수정되었습니다."
+                        : "다운로드 이후 화면에서도 수정된 행입니다."}
                     </p>
                     <table className="dtable">
                       <thead>
@@ -1222,25 +1222,25 @@ function ImportDialog({
                           <tr key={col.label}>
                             <td>{col.label}</td>
                             <td>{shown(col.db)}</td>
-                            <td>{c.type === "delete" ? "엑셀에서 지움" : shown(col.excel)}</td>
+                            <td>{c.type === "delete" ? "엑셀에서 삭제" : shown(col.excel)}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                    <div className="seg2" role="group" aria-label={`${c.name} 쓸 값`}>
+                    <div className="seg2" role="group" aria-label={`${c.name} 적용할 값`}>
                       <button
                         type="button"
                         aria-pressed={choices[c.key] === "db"}
                         onClick={() => setChoices((x) => ({ ...x, [c.key]: "db" }))}
                       >
-                        사이트 값 쓰기
+                        사이트 값 적용
                       </button>
                       <button
                         type="button"
                         aria-pressed={choices[c.key] === "excel"}
                         onClick={() => setChoices((x) => ({ ...x, [c.key]: "excel" }))}
                       >
-                        {c.type === "delete" ? "엑셀대로 삭제" : "엑셀 값 쓰기"}
+                        {c.type === "delete" ? "엑셀 기준 삭제" : "엑셀 값 적용"}
                       </button>
                     </div>
                   </div>
@@ -1248,7 +1248,7 @@ function ImportDialog({
                 {s.skipped.length > 0 && (
                   <div className="imp-part">
                     <h4>
-                      반영 안 함 <span>{s.skipped.length}</span>
+                      미반영 <span>{s.skipped.length}</span>
                     </h4>
                     <table className="dtable imp-grid imp-skip">
                       <thead>
@@ -1280,7 +1280,7 @@ function ImportDialog({
               {error}
             </p>
           )}
-          {unresolved > 0 && <p className="hint">충돌한 줄 {unresolved}개에서 쓸 값을 골라 주세요.</p>}
+          {unresolved > 0 && <p className="hint">충돌한 행 {unresolved}개의 적용할 값을 선택해 주십시오.</p>}
           <div className="ref-form-btns">
             <button type="button" className="btn sm quiet" onClick={onClose} disabled={busy}>
               {preview.no_change ? "닫기" : "취소"}

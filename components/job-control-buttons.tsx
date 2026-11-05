@@ -20,14 +20,14 @@ export default function JobControlButtons({
   const canResume = status === "cancelled" || status === "failed";
 
   const cancel = () => {
-    if (!confirm("진행 중인 분석을 중단합니다.\n현재 처리 중인 1명까지는 끝까지 처리되고 멈춥니다 (최대 ~2분). 계속할까요?")) return;
+    if (!confirm("진행 중인 분석을 중단합니다.\n처리 중인 지원자 1명의 분석을 마친 후 중단되며, 최대 2분이 소요됩니다. 계속하시겠습니까?")) return;
     setErr(null);
     startTransition(async () => {
       try {
         await api.cancelJob(jobId);
         router.refresh();
       } catch (e) {
-        setErr(e instanceof Error ? e.message : "중단 실패");
+        setErr(e instanceof Error ? e.message : "중단에 실패하였습니다.");
       }
     });
   };
@@ -39,15 +39,15 @@ export default function JobControlButtons({
         await api.resumeJob(jobId);
         router.refresh();
       } catch (e) {
-        setErr(e instanceof Error ? e.message : "재개 실패");
+        setErr(e instanceof Error ? e.message : "재개에 실패하였습니다.");
       }
     });
   };
 
   const trash = () => {
     const msg = canCancel
-      ? "진행 중인 분석을 중단하고 삭제 항목으로 이동합니다. 계속할까요?\n(삭제 항목에서 복구 또는 영구삭제 가능)"
-      : "이 작업을 삭제 항목으로 이동합니다. 계속할까요?\n(삭제 항목에서 복구 또는 영구삭제 가능)";
+      ? "진행 중인 분석을 중단하고 삭제 항목으로 이동합니다.\n삭제 항목에서 복구하거나 영구 삭제할 수 있습니다. 계속하시겠습니까?"
+      : "이 분석을 삭제 항목으로 이동합니다.\n삭제 항목에서 복구하거나 영구 삭제할 수 있습니다. 계속하시겠습니까?";
     if (!confirm(msg)) return;
     setErr(null);
     startTransition(async () => {
@@ -55,7 +55,7 @@ export default function JobControlButtons({
         await api.softDeleteJob(jobId);
         router.replace("/jobs");
       } catch (e) {
-        setErr(e instanceof Error ? e.message : "삭제 실패");
+        setErr(e instanceof Error ? e.message : "삭제에 실패하였습니다.");
       }
     });
   };
@@ -70,12 +70,12 @@ export default function JobControlButtons({
           className="btn-ghost"
           style={{ borderColor: "var(--bad)", color: "var(--bad)" }}
         >
-          {pending ? "처리 중…" : "분석 중단"}
+          {pending ? "처리 중" : "분석 중단"}
         </button>
       )}
       {canResume && (
         <button type="button" onClick={resume} disabled={pending} className="btn-primary">
-          {pending ? "처리 중…" : "분석 재개"}
+          {pending ? "처리 중" : "분석 재개"}
         </button>
       )}
       <button

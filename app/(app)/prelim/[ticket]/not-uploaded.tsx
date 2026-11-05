@@ -5,10 +5,10 @@ import type { PrelimResult } from "@/lib/api";
 export type NotUploadedKind = "essay" | "attach" | "origin" | "blind";
 
 const TEXT: Record<NotUploadedKind, string> = {
-  essay: "이 검토에는 자기소개서 파일을 올리지 않았습니다",
-  attach: "첨부 실적 zip 을 올리지 않았습니다",
-  origin: "이 검토에는 지원정보 파일을 올리지 않았습니다",
-  blind: "이 검토에는 자기소개서와 첨부 실적을 올리지 않았습니다",
+  essay: "이 검토에는 자기소개서 파일을 업로드하지 않았습니다.",
+  attach: "첨부 실적 zip 파일을 업로드하지 않았습니다.",
+  origin: "이 검토에는 지원정보 파일을 업로드하지 않았습니다.",
+  blind: "이 검토에는 자기소개서와 첨부 실적을 업로드하지 않았습니다.",
 };
 
 /** 파일을 올리지 않아 비는 탭이면 그 파일 종류, 아니면 null. 올린 파일 기록이 없는 옛 검토는 안내하지 않음 */

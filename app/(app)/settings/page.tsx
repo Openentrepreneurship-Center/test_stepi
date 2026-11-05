@@ -26,8 +26,8 @@ export default function SettingsPage() {
           <div>
             <div className="text-[15px] font-medium text-[var(--ink)]">추천 면접 질문 표시</div>
             <div className="mt-1.5 text-[13px] text-[var(--ink-muted)] leading-[1.65]">
-              꺼두면 지원자 상세 화면의 &quot;추천 면접 질문&quot; 카드가 숨겨집니다.
-              서류평가 단계에서 면접 질문이 평가에 영향을 주지 않게 하고 싶을 때 사용하세요.
+              해제하면 지원자 상세 화면에 &quot;추천 면접 질문&quot; 카드를 표시하지 않습니다.
+              서류평가 단계에서 면접 질문이 평가에 영향을 주지 않도록 할 때 사용합니다.
             </div>
           </div>
           <input

@@ -102,16 +102,16 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
           평가기준일 <span className="mono">{derived.end}</span> 기준 최근 2년(<span className="mono">{derived.win}</span> 이후) 종료된 내부 과제의
           연구책임자, 근무부서의 소속(상위)부서장, 학위별 학교·학과·지도교수가 모두 일치하는 동일학력 내부직원, 지원자의 지도교수인 내부직원을 평가에서 제척합니다.
           <br />
-          참여과제·근무부서 확인 항목은 아래 연구 목록·인사기록 파일 업로드로 채워집니다. 동일학력·지도교수는 제척 기준 정보와 대조한 결과입니다.
+          참여과제·근무부서 확인 항목은 아래 연구 목록·인사기록 파일을 업로드하면 입력됩니다. 동일학력·지도교수는 제척 기준 정보와 대조한 결과입니다.
         </span>
       </div>
 
       <div className="panel">
         <header>
-          <h2>제척 내부위원 전체 목록</h2>
+          <h2>내부 제척위원 전체 목록</h2>
           <div className="hdtools">
             <span className="hint">
-              제척 내부위원 {rows.length}명{pendingCnt ? ` · 확인 자료 미업로드 ${pendingCnt}건` : ""}
+              내부 제척위원 {rows.length}명{pendingCnt ? ` · 확인 자료 미업로드 ${pendingCnt}건` : ""}
             </span>
             <XBtn href={exportUrl("inx-staff")} title="전체 엑셀 다운로드" />
             <XBtn href={exportUrl("inx-staff-v")} cap="제척" title="제척위원 엑셀 다운로드" />
@@ -159,7 +159,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
               ) : (
                 <tr>
                   <td colSpan={5} className="no2">
-                    제척 내부위원이 없습니다. 연구 목록·인사기록 파일을 업로드하면 산출됩니다.
+                    내부 제척위원이 없습니다. 연구 목록·인사기록 파일을 업로드하면 산출됩니다.
                   </td>
                 </tr>
               )}
@@ -185,7 +185,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
             <span className="hint">시스템 추출 {internal.length}건</span>
             <UpBtn kind="inx" label="연구 목록 파일 업로드" fileName={uploads.inx?.file_name} busy={busy === "up:inx"} onPick={upload} />
             <a className="tpl-link" style={{ marginTop: 0 }} href="/templates/연구 목록 양식.xlsx" download="연구 목록 양식.xlsx">
-              양식 내려받기
+              양식 다운로드
             </a>
             <XBtn href={exportUrl("inx")} title="전체 엑셀 다운로드" />
             <XBtn href={exportUrl("inx-v")} cap="제척" title="제척위원 엑셀 다운로드" />
@@ -194,7 +194,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
         <UpWarn list={uploads.inx?.warnings} />
         <div className="guide" style={{ background: "#fff", borderBottom: "1px solid var(--line)" }}>
           <span className="hint upfmt">
-            업로드 형식 · <b>순번 / 과제명 / 연구책임자 / 연구시작일 / 연구종료일</b>. 업로드하면 과제명 매칭으로 내부 확인 항목이 자동으로 채워집니다.
+            업로드 형식 · <b>순번 / 과제명 / 연구책임자 / 연구시작일 / 연구종료일</b>. 업로드하면 과제명 매칭으로 내부 확인 항목이 자동 입력됩니다.
           </span>
         </div>
         <div className="tblwrap">
@@ -271,7 +271,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
             </span>
             <UpBtn kind="work" label="인사기록 파일 업로드" fileName={uploads.work?.file_name} busy={busy === "up:work"} onPick={upload} />
             <a className="tpl-link" style={{ marginTop: 0 }} href="/templates/인사기록 양식.xlsx" download="인사기록 양식.xlsx">
-              양식 내려받기
+              양식 다운로드
             </a>
             <XBtn href={exportUrl("work")} title="전체 엑셀 다운로드" />
             <XBtn href={exportUrl("work-v")} cap="제척" title="제척위원 엑셀 다운로드" />
@@ -280,7 +280,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
         <UpWarn list={uploads.work?.warnings} />
         <div className="guide" style={{ background: "#fff", borderBottom: "1px solid var(--line)" }}>
           <span className="hint upfmt">
-            업로드 형식 · <b>이름 / 직위명 / 소속부서명 / 근무시작일 / 근무종료일</b>. 업로드하면 부서명 매칭으로 부서장·상위부서장이 자동으로 채워집니다.
+            업로드 형식 · <b>이름 / 직위명 / 소속부서명 / 근무시작일 / 근무종료일</b>. 업로드하면 부서명 매칭으로 부서장·상위부서장이 자동 입력됩니다.
           </span>
         </div>
         <div className="tblwrap">
@@ -407,7 +407,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
               <tr>
                 <td colSpan={10}>
                   <div className="tf-in">
-                    같은 학위 구분 안에서 학교·학과(전공)·지도교수 3개가 모두 일치하는 경우만 추출합니다. 검토를 실행할 때의 제척 기준 정보와 대조한 결과이며
+                    같은 학위 구분 안에서 학교·학과(전공)·지도교수 3개가 모두 일치하는 경우만 추출합니다. 검토 실행 시점의 제척 기준 정보와 대조한 결과이며
                     위 전체 목록에 반영됩니다.
                   </div>
                 </td>
@@ -431,8 +431,8 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
           </header>
           <div className="guide" style={{ background: "#fff", borderBottom: "1px solid var(--line)" }}>
             <span className="hint upfmt">
-              학교·지도교수는 같지만 전공명이 직접 일치하지 않는 학력을 서버의 AI 모델로 비교한 결과입니다. <b>제척 확정이 아니며</b> 양쪽 전공 원문과 근거를 보고
-              판정해 주세요. 다른 전공으로 비교된 학력은 판정 대상에서 빼고 전체 엑셀에만 남겼습니다. <b>제척 확정</b>을 누른 줄만 위 학위별 동일학력, 제척 내부위원 전체 목록과 건수에 들어갑니다.
+              학교·지도교수는 같지만 전공명이 직접 일치하지 않는 학력을 AI 모델로 비교한 결과입니다. <b>제척 확정이 아니므로</b> 양쪽 전공 원문과 근거를 확인한 뒤
+              판정해 주십시오. 다른 전공으로 판단된 학력은 판정 대상에서 제외하고 전체 엑셀에만 포함하였습니다. <b>제척 확정</b>을 선택한 행만 위 학위별 동일학력, 내부 제척위원 전체 목록과 건수에 반영됩니다.
             </span>
           </div>
           <div className="tblwrap">
@@ -452,8 +452,8 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
             </table>
           </div>
           <div className="note">
-            판단 불가는 정보 부족, 모델 오류, 시간 초과처럼 비교를 끝내지 못한 경우를 포함하며 불일치가 아닙니다. 검토를 실행할 때 비교해 저장한 결과이며 다시 열거나
-            엑셀을 받을 때 다시 비교하지 않습니다.
+            판단 불가는 정보 부족, 모델 오류, 시간 초과 등으로 비교를 완료하지 못한 경우이며, 불일치를 뜻하지 않습니다. 검토 실행 시 비교하여 저장한 결과이며, 화면을 다시 열거나
+            엑셀을 다운로드할 때 재비교하지 않습니다.
           </div>
         </div>
       )}
@@ -485,7 +485,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
                     <td>{a.advisor}</td>
                     <td className="nm">{a.advisor}</td>
                     <td style={{ whiteSpace: "nowrap" }}>
-                      <span className="yes2">지도교수 성명이 제척 기준 정보의 내부위원과 같음</span>
+                      <span className="yes2">지도교수 성명이 제척 기준 정보의 내부위원과 일치</span>
                     </td>
                   </tr>
                 ))
@@ -501,7 +501,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
               <tr>
                 <td colSpan={5}>
                   <div className="tf-in">
-                    지원정보의 지도교수 성명을 제척 기준 정보의 내부위원 학력정보 성명과 비교합니다. 동명이인일 수 있으니 소속을 확인해 주세요.
+                    지원정보의 지도교수 성명을 제척 기준 정보의 내부위원 학력정보 성명과 비교합니다. 동명이인일 수 있으므로 소속을 확인해 주십시오.
                   </div>
                 </td>
               </tr>

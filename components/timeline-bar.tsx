@@ -293,7 +293,7 @@ export default function TimelineBar({
         label: s.label,
         detail: s.detail,
         period:
-          `${ymLabel(s.start)} – ${s.end === null ? "계속" : ymLabel(s.end)}` +
+          `${ymLabel(s.start)} ~ ${s.end === null ? "현재" : ymLabel(s.end)}` +
           (reversed ? " (기간 확인 필요)" : ""),
         left: boxes[i].left,
         width: widths[i],
@@ -371,7 +371,7 @@ export default function TimelineBar({
           <Legend icon={<GraduationCap size={13} />} label="학력" color={EDU_COLORS[0]} />
         )}
         {all.some((s) => s.end === null) && (
-          <span className="text-[13.5px] text-[var(--ink-soft)]">흐린 끝은 아직 재직 및 재학 중을 의미합니다.</span>
+          <span className="text-[13.5px] text-[var(--ink-soft)]">흐리게 표시된 끝부분은 재직 또는 재학 중임을 의미합니다.</span>
         )}
       </div>
     </div>

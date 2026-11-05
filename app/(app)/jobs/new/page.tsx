@@ -22,7 +22,7 @@ export default function NewJobPage() {
   const [track, setTrack] = useState("");
   const [mode, setMode] = useState<"full" | "score_only" | "questions_only">("full");
   const [busy, setBusy] = useState(false);
-  const [busyMsg, setBusyMsg] = useState<string>("업로드 중…");
+  const [busyMsg, setBusyMsg] = useState<string>("업로드 중");
   const [err, setErr] = useState<string | null>(null);
   const [zipSummary, setZipSummary] = useState<string | null>(null);
   const [zipErrors, setZipErrors] = useState<string[]>([]);
@@ -75,10 +75,8 @@ export default function NewJobPage() {
         setInfoSheets(names);
         setInfoSheetName(names.length === 1 ? names[0] : "");
       }
-    } catch (e) {
-      setErr(
-        `시트 목록을 읽지 못했습니다: ${e instanceof Error ? e.message : String(e)}`,
-      );
+    } catch {
+      setErr("시트 목록을 읽을 수 없습니다.");
     }
   };
 
@@ -87,7 +85,7 @@ export default function NewJobPage() {
     if (submitting.current || (!createdJobId && !file)) return;
     submitting.current = true;
     setBusy(true);
-    setBusyMsg(createdJobId ? "논문 PDF ZIP 업로드 중…" : "자기소개서 업로드 중…");
+    setBusyMsg(createdJobId ? "논문 PDF ZIP 업로드 중" : "자기소개서 업로드 중");
     setErr(null);
     setZipSummary(null);
     setZipErrors([]);
@@ -109,17 +107,17 @@ export default function NewJobPage() {
       }
       if (!jobId) return;
       if (pdfZip) {
-        setBusyMsg("논문 PDF zip 업로드 중…");
+        setBusyMsg("논문 PDF ZIP 업로드 중");
         try {
           const bulk = await api.bulkUploadPapers(jobId, pdfZip);
           setZipSummary(
-            `논문 PDF ${bulk.queued}건 분석을 시작했습니다 · 중복 제외 ${bulk.duplicate_skipped}건 · 연결 안 된 지원자 ${bulk.unmatched_applicants.length}명`,
+            `논문 PDF ${bulk.queued}건의 분석을 시작하였습니다(중복 제외 ${bulk.duplicate_skipped}건, 미연결 지원자 ${bulk.unmatched_applicants.length}명).`,
           );
           setZipErrors(bulk.errors);
           setUnmatchedApplicants(bulk.unmatched_applicants);
         } catch (zerr) {
           setErr(
-            `자기소개서 분석은 시작됐으나 PDF zip 업로드 실패: ${
+            `자기소개서 분석은 시작되었으나 논문 PDF ZIP 업로드에 실패하였습니다. 사유: ${
               zerr instanceof Error ? zerr.message : String(zerr)
             }`,
           );
@@ -130,7 +128,7 @@ export default function NewJobPage() {
 
       router.push(`/jobs/${encodeURIComponent(jobId)}`);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "업로드 실패");
+      setErr(e instanceof Error ? e.message : "업로드에 실패하였습니다.");
     } finally {
       submitting.current = false;
       setBusy(false);
@@ -144,7 +142,7 @@ export default function NewJobPage() {
           eyebrow="지원자 분석"
           icon={FilePlus2}
           title="논문 PDF 업로드 결과"
-          description="자기소개서 분석은 시작됐습니다. 논문 업로드 결과를 확인한 뒤 분석 결과로 이동해 주세요."
+          description="자기소개서 분석을 시작하였습니다. 논문 업로드 결과를 확인한 후 분석 결과로 이동해 주십시오."
         />
         <form onSubmit={submit} className="space-y-6 mt-6 panel">
           {busy && <p role="status">{busyMsg}</p>}
@@ -170,7 +168,7 @@ export default function NewJobPage() {
             <section aria-label="연결하지 못한 지원자">
               <h2 className="font-semibold">연결하지 못한 지원자 {unmatchedApplicants.length}명</h2>
               <p className="mt-2 break-words">{unmatchedApplicants.join(", ")}</p>
-              <p className="mt-2">폴더의 지원자 번호가 자기소개서의 지원자 번호와 같은지 확인해 주세요.</p>
+              <p className="mt-2">폴더명의 지원자 번호가 자기소개서의 지원자 번호와 같은지 확인해 주십시오.</p>
             </section>
           )}
           <label className="block space-y-2">
@@ -184,12 +182,12 @@ export default function NewJobPage() {
             />
           </label>
           <p className="text-[13px] text-[var(--ink-muted)]">
-            용량을 초과했다면 파일을 나눠서 올려 주세요. 다시 올려도 자기소개서 분석은 새로 만들지 않습니다.
-            이미 등록된 논문은 중복 제외됩니다. 분석을 시작하지 못한 논문은 분석 결과에서 상태를 확인해 주세요.
+            용량을 초과한 경우 파일을 나누어 업로드해 주십시오. 다시 업로드해도 자기소개서 분석은 새로 생성되지 않습니다.
+            이미 등록된 논문은 중복으로 제외됩니다. 분석을 시작하지 못한 논문은 분석 결과 화면에서 상태를 확인해 주십시오.
           </p>
           <div className="flex flex-wrap gap-3 justify-end">
             <button type="submit" className="btn-primary" disabled={busy || !pdfZip}>
-              {busy ? busyMsg : "논문 ZIP 다시 올리기"}
+              {busy ? busyMsg : "논문 ZIP 재업로드"}
             </button>
             <button type="button" className="btn-primary" disabled={busy}
               onClick={() => router.push(`/jobs/${encodeURIComponent(createdJobId)}`)}>
@@ -208,7 +206,7 @@ export default function NewJobPage() {
         eyebrow="지원자 분석"
         icon={FilePlus2}
         title="신규 분석 생성"
-        description={"업로드 파일에 담긴 자기소개서를 일괄 분석합니다.\n분석은 백그라운드에서 진행되며, 진행 상태는 다음 화면에서 실시간으로 확인할 수 있습니다."}
+        description={"업로드한 파일의 자기소개서를 일괄 분석합니다.\n분석은 자동으로 진행되며, 진행 상태는 다음 화면에서 실시간으로 확인할 수 있습니다."}
       />
 
       <form onSubmit={submit} className="space-y-10 mt-6 panel">
@@ -250,7 +248,7 @@ export default function NewJobPage() {
               <>
                 <UploadCloud size={28} strokeWidth={1.4} className="text-[var(--ink-muted)]" />
                 <div className="text-center">
-                  <div className="text-[15px] font-medium">자기소개서 엑셀을 끌어놓거나 클릭해서 선택하세요</div>
+                  <div className="text-[15px] font-medium">자기소개서 엑셀 파일을 끌어다 놓거나 클릭하여 선택해 주십시오.</div>
                 </div>
               </>
             )}
@@ -266,7 +264,7 @@ export default function NewJobPage() {
                 onChange={(e) => setSheetName(e.target.value)}
                 required={sheets.length > 1}
               >
-                {sheets.length > 1 && <option value="">시트 선택…</option>}
+                {sheets.length > 1 && <option value="">시트 선택</option>}
                 {sheets.map((s) => (
                   <option key={s} value={s}>{s}</option>
                 ))}
@@ -313,7 +311,7 @@ export default function NewJobPage() {
               <>
                 <UploadCloud size={22} strokeWidth={1.4} className="text-[var(--ink-muted)]" />
                 <div className="text-center">
-                  <div className="text-[15px] font-medium">지원정보 엑셀을 끌어놓거나 클릭해서 선택하세요</div>
+                  <div className="text-[15px] font-medium">지원정보 엑셀 파일을 끌어다 놓거나 클릭하여 선택해 주십시오.</div>
                 </div>
               </>
             )}
@@ -329,7 +327,7 @@ export default function NewJobPage() {
                 onChange={(e) => setInfoSheetName(e.target.value)}
                 required={infoSheets.length > 1}
               >
-                {infoSheets.length > 1 && <option value="">시트 선택…</option>}
+                {infoSheets.length > 1 && <option value="">시트 선택</option>}
                 {infoSheets.map((s) => (
                   <option key={s} value={s}>{s}</option>
                 ))}
@@ -370,9 +368,9 @@ export default function NewJobPage() {
               <>
                 <UploadCloud size={22} strokeWidth={1.4} className="text-[var(--ink-muted)]" />
                 <div className="text-center">
-                  <div className="text-[15px] font-medium">논문 PDF 압축파일(zip)을 끌어놓거나 클릭해서 선택하세요</div>
+                  <div className="text-[15px] font-medium">논문 PDF 압축 파일(ZIP)을 끌어다 놓거나 클릭하여 선택해 주십시오.</div>
                   <div className="text-[13px] text-[var(--ink-muted)] mt-1 whitespace-pre-line">
-                    {"지원자 번호로 폴더를 구성하고 해당 지원자의 논문 PDF를 넣어 전체 폴더를 ZIP 파일로 압축하여 업로드해 주세요.\n폴더명은 지원자 번호와 동일해야 자기소개서와 자동 연결됩니다."}
+                    {"지원자 번호별로 폴더를 만들어 해당 지원자의 논문 PDF를 저장한 후, 전체 폴더를 ZIP 파일로 압축하여 업로드해 주십시오.\n폴더명이 지원자 번호와 같아야 자기소개서와 자동으로 연결됩니다."}
                   </div>
                 </div>
               </>
@@ -416,9 +414,9 @@ export default function NewJobPage() {
           </span>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {[
-              { v: "full", t: "전체", d: "요약 + 점수 + 면접질문 모두" },
+              { v: "full", t: "전체", d: "요약, 점수, 면접 질문 전체" },
               { v: "score_only", t: "채점만", d: "직무적합도 점수만 (빠름)" },
-              { v: "questions_only", t: "면접질문만", d: "추천 면접질문 6~8개만" },
+              { v: "questions_only", t: "면접 질문만", d: "추천 면접 질문 6~8개" },
             ].map((opt) => (
               <label
                 key={opt.v}

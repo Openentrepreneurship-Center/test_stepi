@@ -59,7 +59,7 @@ export default async function ApplicantDetailPage({
         </Link>
         <div className="panel text-center py-16">
           <h2 className="text-[22px] font-bold mb-2">지원자 정보를 불러오지 못했습니다.</h2>
-          <p className="text-[14px] text-[var(--ink-muted)]">잠시 뒤 새로고침해 주세요. {decodedAppId}</p>
+          <p className="text-[14px] text-[var(--ink-muted)]">잠시 후 새로고침해 주십시오. 지원자 번호: {decodedAppId}</p>
         </div>
       </div>
     );
@@ -121,7 +121,7 @@ export default async function ApplicantDetailPage({
       ? { value: "불러오지 못했습니다", muted: true }
       : deptFit.skipped
         ? { value: "미산출", sub: "행정직 미산출", muted: true }
-        : { value: "미산출", sub: "아직 채점 결과가 없습니다", muted: true };
+        : { value: "미산출", sub: "채점 결과가 없습니다", muted: true };
 
 
   return (
@@ -227,7 +227,7 @@ export default async function ApplicantDetailPage({
                 {/* 학력 · 이력: 연혁 바 + 상세 목록 (우측 레일에서 이동) */}
                 <Card title="학력 · 이력">
                   {sourceFailed ? (
-                    <p className="text-[15px] text-[var(--ink-muted)]">학력·이력을 불러오지 못했습니다. 잠시 뒤 새로고침해 주세요.</p>
+                    <p className="text-[15px] text-[var(--ink-muted)]">학력·이력을 불러오지 못하였습니다. 잠시 후 새로고침해 주십시오.</p>
                   ) : (
                     <>
                       <TimelineBar
@@ -248,7 +248,7 @@ export default async function ApplicantDetailPage({
                 {coreData.length > 0 ? (
                   <Card
                     title="핵심인재 유사도"
-                    desc={`합격자들의 자기소개서와 얼마나 닮았는지를 나타냅니다.\n${baselineNote(hasBaseline, baselineFailed)}`}
+                    desc={`합격자 자기소개서와 비슷한 정도를 나타냅니다.\n${baselineNote(hasBaseline, baselineFailed)}`}
                     action={
                       <FeedbackButtons
                         jobId={id}
@@ -262,7 +262,7 @@ export default async function ApplicantDetailPage({
                     <RadarCard data={coreData} color="#33307A" baseline={coreBaseline} />
                   </Card>
                 ) : (
-                  <Card title="핵심인재 유사도" desc="합격자들의 자기소개서와 얼마나 닮았는지를 나타냅니다.">
+                  <Card title="핵심인재 유사도" desc="합격자 자기소개서와 비슷한 정도를 나타냅니다.">
                     <p className="text-[15px] text-[var(--ink-muted)]">산출된 결과가 없습니다.</p>
                   </Card>
                 )}
