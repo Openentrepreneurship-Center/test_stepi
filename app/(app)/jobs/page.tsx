@@ -88,7 +88,7 @@ export default async function DashboardPage() {
           <div className="bg-[var(--paper)] border border-[var(--line-strong)] rounded-xl overflow-hidden">
             <div className={`${ROW_GRID} px-4 py-3 bg-[var(--bg-2)] border-b border-[var(--line-strong)] text-[12.5px] font-semibold tracking-wide text-[var(--ink-muted)]`}>
               <div>분석명</div>
-              <div>상태</div>
+              <div className="text-center">상태</div>
               <div className="text-right">진행률</div>
               <div className={`${WIDE_ONLY} text-right`}>생성일</div>
               <div className={`${WIDE_ONLY} text-right`}>시작 시간</div>
@@ -108,7 +108,7 @@ export default async function DashboardPage() {
                       {label}
                     </div>
                   </div>
-                  <div>
+                  <div className="flex justify-center">
                     <JobStatusBadge status={j.status} />
                   </div>
                   <div className="text-right">

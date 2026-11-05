@@ -10,7 +10,7 @@ import { prelim, type PrelimSummary } from "@/lib/api";
 // 지원자 분석의 분석 현황·삭제 항목과 같은 틀을 씀
 // 상태 열을 넣으면서 숫자 칸과 간격을 줄여 공고명 칸이 전보다 좁아지지 않게 함
 const ROW_GRID =
-  "grid grid-cols-[minmax(0,1fr)_100px_56px_72px_84px_40px] xl:grid-cols-[minmax(0,1fr)_100px_84px_56px_64px_56px_60px_60px_72px_84px_40px] items-center gap-3";
+  "grid grid-cols-[minmax(0,1fr)_100px_56px_72px_84px_40px] xl:grid-cols-[minmax(0,1fr)_72px_84px_56px_96px_56px_60px_60px_72px_84px_40px] items-center gap-3";
 const TRASH_GRID = "grid grid-cols-12 items-center gap-4";
 const WIDE_ONLY = "hidden xl:block";
 const CELL = "text-right text-[13.5px] text-[var(--ink-muted)] tabular-nums";
@@ -206,7 +206,7 @@ export default function PrelimList({ trashed, tabs }: { trashed: boolean; tabs?:
           <div className="bg-[var(--paper)] border border-[var(--line-strong)] rounded-xl overflow-hidden">
             <div className={`${ROW_GRID} px-4 py-3 bg-[var(--bg-2)] border-b border-[var(--line-strong)] text-[12.5px] font-semibold tracking-wide text-[var(--ink-muted)]`}>
               <div>검토 공고명</div>
-              <div>상태</div>
+              <div className="text-center">상태</div>
               <div className={`${WIDE_ONLY} text-right`}>평가기준일</div>
               <div className="text-right">지원자 수</div>
               <div className={`${WIDE_ONLY} text-right`}>자기소개서 위배</div>
@@ -234,7 +234,7 @@ export default function PrelimList({ trashed, tabs }: { trashed: boolean; tabs?:
                       <div className="mt-0.5 text-[13px] text-[var(--ink-soft)] truncate">{r.label}</div>
                     )}
                   </div>
-                  <div>
+                  <div className="flex justify-center">
                     <StatusBadge r={r} />
                   </div>
                   <div className={`${WIDE_ONLY} ${CELL}`}>{r.eval_date || "-"}</div>

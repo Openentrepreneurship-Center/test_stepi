@@ -167,7 +167,7 @@ export default function TalentEvidenceDrawer({
                   <li key={g.items[0].item_id}>
                     <div className="rounded-lg border border-[var(--line)] px-2.5 pt-2 pb-1">
                       <div className="mb-1 px-1 text-[12px] font-medium tracking-wide text-[var(--ink-soft)]">
-                        {g.ladder} 계단
+                        {g.ladder} 단계
                       </div>
                       <ul>
                         {g.items.map((item) => (
