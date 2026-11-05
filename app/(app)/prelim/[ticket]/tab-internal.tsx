@@ -324,7 +324,7 @@ export default function InternalTab({ ctx }: { ctx: Ctx }) {
                     <Dash v={w.up} />
                   </td>
                   <td>
-                    <Y2 yes={w.within2y} />
+                    <Y2 yes={w.within2y} to={w.to} />
                   </td>
                 </tr>
               ))}

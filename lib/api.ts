@@ -108,6 +108,10 @@ export interface JobStatusResponse {
   created_at: string;
   updated_at: string;
   error?: string | null;
+  /** 분석명. 옛 서버 응답에는 없음 */
+  request_id?: string | null;
+  /** 분석 수준(full·score_only·questions_only). 옛 서버 응답에는 없음 */
+  mode?: string;
   /** 생성 때 남긴 입력 경고(분석에서 뺀 지원자, 연결 안 된 지원정보 등). 옛 서버 응답에는 없음 */
   warnings?: string[];
 }

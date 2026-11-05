@@ -30,12 +30,13 @@ export default async function ApplicantDetailPage({
   const { id, applicantId } = await params;
   const decodedAppId = decodeURIComponent(applicantId);
 
-  const [resultRes, fb, papersRes, sourceInputRes, coreBaselineRes] = await Promise.all([
+  const [resultRes, fb, papersRes, sourceInputRes, coreBaselineRes, jobStatus] = await Promise.all([
     api.getResult(id).catch(asError),
     api.listFeedback(id, decodedAppId).catch(() => ({ items: [] as never[] })),
     api.listPapers(id, decodedAppId).catch(asError),
     api.getSourceInput(id).catch(asError),
     api.getCorePassedBaseline().catch(asError),
+    api.getStatus(id).catch(() => null),
   ]);
   const papersFailed = papersRes instanceof Error;
   const papers = papersFailed ? [] : papersRes;
@@ -336,7 +337,7 @@ export default async function ApplicantDetailPage({
                     />
                   }
                 >
-                  <DeptFitV2Section jobId={id} applicantId={decodedAppId} />
+                  <DeptFitV2Section jobId={id} applicantId={decodedAppId} scoreOnly={jobStatus?.mode === "score_only"} />
                 </Card>
 
                 {/* AI 사용 의심도 근거: 헤더 통계줄의 숫자를 풀어서 설명함.

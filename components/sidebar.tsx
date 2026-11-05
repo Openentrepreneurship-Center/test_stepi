@@ -15,6 +15,7 @@ import {
   Database,
   SlidersHorizontal,
   LogOut,
+  Menu,
   type LucideIcon,
 } from "lucide-react";
 import StepiLogo from "./stepi-logo";
@@ -37,8 +38,14 @@ type Feature = {
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsedPref, setCollapsed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  // 768px 미만에서는 사이드바를 숨기고 메뉴 버튼으로 겹쳐 엶. 열려 있을 때는 접힌 아이콘 모양을 쓰지 않음
+  // 연 경로를 기억해 다른 화면으로 이동하면 저절로 닫힘
+  const [openedAt, setOpenedAt] = useState<string | null>(null);
+  const mobileOpen = openedAt === pathname;
+  const setMobileOpen = (open: boolean) => setOpenedAt(open ? pathname : null);
+  const collapsed = collapsedPref && !mobileOpen;
 
   // 분석작업 안에 있을 때만 인재상 메뉴를 띄움
   //   /jobs/{id}...  -> 분석 ID
@@ -55,8 +62,15 @@ export default function Sidebar() {
   }, []);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem(STORAGE_KEY, collapsed ? "1" : "0");
-  }, [collapsed, hydrated]);
+    if (hydrated) localStorage.setItem(STORAGE_KEY, collapsedPref ? "1" : "0");
+  }, [collapsedPref, hydrated]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpenedAt(null);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileOpen]);
 
   // 세 개의 동급 기능. 「사전스크리닝검토」와 「지원자 분석」은 하위 탭을 가짐
   const features: Feature[] = [
@@ -145,9 +159,30 @@ export default function Sidebar() {
   ];
 
   return (
+    <>
+    <div
+      data-print-hide
+      className="md:hidden sticky top-0 z-30 flex items-center gap-3 h-12 px-3 border-b border-[var(--line-strong)] bg-[var(--bg)]"
+    >
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="text-[var(--ink-muted)] hover:text-[var(--ink)] transition p-1.5 rounded-md hover:bg-[var(--bg-2)]"
+        title="메뉴 펼치기"
+        aria-label="메뉴 펼치기"
+        aria-expanded={mobileOpen}
+      >
+        <Menu size={20} />
+      </button>
+      <Link href="/prelim" title="사전스크리닝 검토">
+        <StepiLogo size={24} variant="mark" />
+      </Link>
+    </div>
+    {mobileOpen && (
+      <div data-print-hide className="md:hidden fixed inset-0 z-40 bg-black/40" onClick={() => setMobileOpen(false)} />
+    )}
     <aside
       data-print-hide
-      className={`hidden md:flex ${widthClass} shrink-0 flex-col md:sticky md:top-0 md:h-screen border-r border-[var(--line-strong)] bg-[var(--bg)] transition-[width] duration-200`}
+      className={`${mobileOpen ? "flex fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw]" : "hidden"} md:flex ${widthClass} shrink-0 flex-col md:sticky md:top-0 md:h-screen border-r border-[var(--line-strong)] bg-[var(--bg)] transition-[width] duration-200`}
     >
       {/* 헤더: 로고, 접기 토글 */}
       <div
@@ -168,7 +203,7 @@ export default function Sidebar() {
           </Link>
         )}
         <button
-          onClick={() => setCollapsed((v) => !v)}
+          onClick={() => (mobileOpen ? setMobileOpen(false) : setCollapsed((v) => !v))}
           className="text-[var(--ink-muted)] hover:text-[var(--ink)] transition p-1.5 rounded-md hover:bg-[var(--bg-2)] shrink-0"
           title={collapsed ? "메뉴 펼치기" : "메뉴 접기"}
           aria-label={collapsed ? "expand sidebar" : "collapse sidebar"}
@@ -362,5 +397,6 @@ export default function Sidebar() {
         )}
       </div>
     </aside>
+    </>
   );
 }

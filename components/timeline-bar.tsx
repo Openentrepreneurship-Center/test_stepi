@@ -96,13 +96,18 @@ function toSegments(
 
   const car: Segment[] = [];
   for (const c of career || []) {
-    const start = parseDate(c.start_date);
+    // 백엔드는 경력 기간 한 칸("2017.03 ~ 2019.02")을 start_date 에 통째로 넣고 end_date 는 비워 보냄
+    const [rawStart, rawEnd] =
+      !c.end_date && typeof c.start_date === "string" && c.start_date.includes("~")
+        ? c.start_date.split("~").map((x) => x.trim())
+        : [c.start_date, c.end_date];
+    const start = parseDate(rawStart);
     if (start === null) continue;
     car.push({
       label: [c.company, c.title].filter(Boolean).join(" "),
       detail: [c.department, c.employment_type].filter(Boolean).join(" · "),
       start,
-      end: parseDate(c.end_date),
+      end: parseDate(rawEnd),
     });
   }
 

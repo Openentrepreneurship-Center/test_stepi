@@ -8,9 +8,11 @@ import DeptFitList from "@/components/dept-fit-list";
 export default function DeptFitV2Section({
   jobId,
   applicantId,
+  scoreOnly = false,
 }: {
   jobId: string;
   applicantId: string;
+  scoreOnly?: boolean;
 }) {
   const [data, setData] = useState<DeptFitResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,6 +73,10 @@ export default function DeptFitV2Section({
         {data.skipped_reason ?? "행정직은 직군 적합도 산출 대상이 아닙니다."}
       </p>
     );
+  }
+
+  if (scoreOnly && (!data || data.items.length === 0)) {
+    return <p className="text-[15px] text-[var(--ink-muted)]">채점만 분석은 직군 적합도 산출 대상이 아닙니다.</p>;
   }
 
   if (!data || data.items.length === 0) {

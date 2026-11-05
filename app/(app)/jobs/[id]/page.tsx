@@ -79,6 +79,7 @@ export default async function JobDetailPage({
         eyebrow="지원자 분석"
         icon={LayoutDashboard}
         title="분석 보고"
+        description={(status.request_id || "").replace(/^excel:/, "") || undefined}
         aside={
           <div className="w-[min(280px,80vw)] panel-soft flex flex-col gap-3.5">
             <Stat label="상태" valueNode={<JobStatusBadge status={status.status} />} />

@@ -257,7 +257,7 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
                       <Dash v={f.to} />
                     </td>
                     <td>
-                      <Y2 yes={f.within2y} />
+                      <Y2 yes={f.within2y} to={f.to} />
                     </td>
                   </tr>
                 ))}

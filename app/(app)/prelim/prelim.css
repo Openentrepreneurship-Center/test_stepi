@@ -171,6 +171,7 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .dtable .jcol { text-align: center; }
 .prelim .yes2 { color: var(--red-text); font-weight: 600; white-space: nowrap; }
 .prelim .no2 { color: var(--muted); }
+.prelim .chk2 { color: var(--warn-text); font-weight: 600; white-space: nowrap; }
 .prelim .pill { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; font-size: 13.5px; background: var(--surface); border-radius: 0; white-space: nowrap; }
 .prelim .srcpills { display: flex; flex-wrap: wrap; gap: 4px; }
 .prelim .guide { background: var(--surface); padding: 16px 24px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-size: 15.5px; }

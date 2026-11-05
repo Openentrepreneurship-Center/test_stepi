@@ -207,7 +207,7 @@ export default function NewJobPage() {
 
       <form onSubmit={submit} className="space-y-10 mt-6 panel">
         <label className="block">
-          <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
+          <span className="block text-[12px] tracking-[0.18em] text-[var(--ink-muted)] mb-2">
             자기소개서 (.xlsx)
           </span>
           <label
@@ -251,7 +251,7 @@ export default function NewJobPage() {
           </label>
           {sheets.length > 0 && (
             <div className="mt-3">
-              <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-1.5">
+              <span className="block text-[12px] tracking-[0.18em] text-[var(--ink-muted)] mb-1.5">
                 분석할 시트 ({sheets.length}개 감지)
               </span>
               <select
@@ -270,7 +270,7 @@ export default function NewJobPage() {
         </label>
 
         <label className="block">
-          <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
+          <span className="block text-[12px] tracking-[0.18em] text-[var(--ink-muted)] mb-2">
             지원정보 (선택 · 논문·학술지 게재 내역)
           </span>
           <label
@@ -314,7 +314,7 @@ export default function NewJobPage() {
           </label>
           {infoSheets.length > 0 && (
             <div className="mt-3">
-              <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-1.5">
+              <span className="block text-[12px] tracking-[0.18em] text-[var(--ink-muted)] mb-1.5">
                 지원정보 시트 ({infoSheets.length}개 감지)
               </span>
               <select
@@ -333,7 +333,7 @@ export default function NewJobPage() {
         </label>
 
         <label className="block">
-          <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
+          <span className="block text-[12px] tracking-[0.18em] text-[var(--ink-muted)] mb-2">
             논문 PDF (선택 · 압축파일 · PDF 파일 1개당 최대 50MB)
           </span>
           <label
@@ -376,7 +376,7 @@ export default function NewJobPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <label className="block">
-            <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
+            <span className="block text-[12px] tracking-[0.18em] text-[var(--ink-muted)] mb-2">
               분석명 (선택)
             </span>
             <input
@@ -387,7 +387,7 @@ export default function NewJobPage() {
             />
           </label>
           <label className="block">
-            <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-2">
+            <span className="block text-[12px] tracking-[0.18em] text-[var(--ink-muted)] mb-2">
               직군 지정
             </span>
             <select
@@ -405,7 +405,7 @@ export default function NewJobPage() {
         </div>
 
         <fieldset>
-          <span className="block text-[12px] uppercase tracking-[0.18em] text-[var(--ink-muted)] mb-3">
+          <span className="block text-[12px] tracking-[0.18em] text-[var(--ink-muted)] mb-3">
             분석 수준 선택
           </span>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

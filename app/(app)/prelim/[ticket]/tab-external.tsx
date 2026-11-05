@@ -299,7 +299,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
                       <Dash v={f.to} />
                     </td>
                     <td>
-                      <Y2 yes={f.within2y} />
+                      <Y2 yes={f.within2y} to={f.to} />
                     </td>
                     {f.first && (
                       <td rowSpan={f.span} className={focused ? "gf-span" : undefined}>

@@ -15,8 +15,10 @@ export function Dash({ v, mono }: { v: string | null | undefined; mono?: boolean
   return v ? <span className={mono ? "mono" : undefined}>{v}</span> : <span className="no2">-</span>;
 }
 
-export function Y2({ yes }: { yes: boolean }) {
-  return yes ? <span className="yes2">해당(2년 이내)</span> : <span className="no2">미해당</span>;
+/** to: 근무 종료일. 비어 있으면 서버가 2년 판정을 못 하고 미해당으로 둔 것이라 화면에서만 확인 필요로 보임(엑셀은 그대로) */
+export function Y2({ yes, to }: { yes: boolean; to?: string | null }) {
+  if (yes) return <span className="yes2">해당(2년 이내)</span>;
+  return to === "" || to === null ? <span className="chk2">확인 필요</span> : <span className="no2">미해당</span>;
 }
 
 function XIcon({ cap }: { cap: boolean }) {
