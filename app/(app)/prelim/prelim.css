@@ -103,6 +103,15 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .panel { border: 1px solid var(--line); background: #fff; }
 .prelim .panel > header { padding: 18px 24px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
 .prelim .panel > header h2 { font-size: 17.5px; font-weight: 600; }
+.prelim .fold > summary { list-style: none; padding: 18px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.prelim .fold > summary::-webkit-details-marker { display: none; }
+.prelim .fold > summary h2 { font-size: 17.5px; font-weight: 600; }
+.prelim .fold > summary:hover { background: var(--surface); }
+.prelim .fold[open] > summary { border-bottom: 1px solid var(--line); }
+.prelim .fold .fold-t { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-size: 14.5px; font-weight: 600; color: var(--navy); }
+.prelim .fold .fold-t svg { transition: transform .15s; }
+.prelim .fold[open] .fold-t svg { transform: rotate(180deg); }
+.prelim .fold > .bcards { padding: 20px 24px 24px; }
 .prelim .matrix { width: 100%; border-collapse: collapse; }
 .prelim .matrix th { padding: 10px 8px; font-size: 13.5px; font-weight: 600; color: var(--muted); background: var(--surface); text-align: center; line-height: 1.35; }
 .prelim .matrix th:first-child, .prelim .matrix td:first-child { text-align: left; padding-left: 24px; }

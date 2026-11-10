@@ -195,13 +195,21 @@ export default function ResultView({ ticket }: { ticket: string }) {
     [setQuery],
   );
 
-  // 이동해 온 지원자 줄로 스크롤
+  // 이동해 온 지원자 줄로 한 번만 스크롤. 판정 저장으로 derived 가 바뀔 때마다 다시 끌어오지 않게 함
+  const scrolledTo = useRef<string | null>(null);
   useEffect(() => {
-    if (!focusNo || !derived) return;
+    if (!focusNo) {
+      scrolledTo.current = null;
+      return;
+    }
+    const key = `${tab}:${focusNo}`;
+    if (!derived || scrolledTo.current === key) return;
     const el = paneRef.current?.querySelector(
       `[data-no="${CSS.escape(focusNo)}"]`,
     );
-    if (el) setTimeout(() => el.scrollIntoView({ block: "center" }), 0);
+    if (!el) return;
+    scrolledTo.current = key;
+    setTimeout(() => el.scrollIntoView({ block: "center" }), 0);
   }, [focusNo, tab, derived]);
 
   const enqueueWrite = useCallback((busyKey: string, run: () => Promise<void>) => {

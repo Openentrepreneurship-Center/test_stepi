@@ -31,7 +31,7 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
   const exOther = [
     ...(derived.exx_advisor ?? [])
       .filter((a) => a.no === no)
-      .map((a) => ({ id: a.id, kind: "지도교수가 섭외 심사위원", text: a.advisor })),
+      .map((a) => ({ id: a.id, kind: "외부심사위원 풀 내 지도교수 경험", text: a.advisor })),
     ...(data.view.external_edu ?? [])
       .filter((e) => e.no === no)
       .map((e, i) => ({ id: `edu:${i}`, kind: "학력 기관", text: `${e.school} (${e.org})` })),

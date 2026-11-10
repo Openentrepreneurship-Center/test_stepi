@@ -1,6 +1,27 @@
 "use client";
 
+import { useState, type ReactNode } from "react";
+import { ChevronDown } from "lucide-react";
 import type { PrelimUploadKind } from "@/lib/api";
+
+/** 하단 상세표 접기. 처음엔 접힘, 요약에서 특정 지원자로 이동해 왔으면 펼침 */
+export function Fold({ title, hint, tools, open = false, children }: { title: string; hint?: ReactNode; tools?: ReactNode; open?: boolean; children: ReactNode }) {
+  const [on, setOn] = useState(open);
+  return (
+    <details className="panel fold" open={on} onToggle={(e) => setOn(e.currentTarget.open)}>
+      <summary>
+        <h2>{title}</h2>
+        {hint && <span className="hint">{hint}</span>}
+        {tools && <div className="hdtools">{tools}</div>}
+        <span className="fold-t">
+          {on ? "접기" : "펼치기"}
+          <ChevronDown size={18} aria-hidden="true" />
+        </span>
+      </summary>
+      {children}
+    </details>
+  );
+}
 
 export const BLABEL: Record<string, string> = { confirm: "위배 확정", dismiss: "문제 없음", hold: "보류" };
 export const STAGES = ["서류", "필기", "면접"] as const;

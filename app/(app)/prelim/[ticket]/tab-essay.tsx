@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { PrelimEssayItem } from "@/lib/api";
-import { BLABEL, XBtn, shownNo } from "./parts";
+import { BLABEL, Fold, XBtn, shownNo } from "./parts";
 import type { Ctx } from "./result-view";
 
 export default function EssayTab({ ctx }: { ctx: Ctx }) {
@@ -123,6 +123,7 @@ export default function EssayTab({ ctx }: { ctx: Ctx }) {
         </div>
       </div>
 
+      <Fold title="지원자별 상세 내역" hint={`지원자 ${people.length}명 · 펼쳐서 판정합니다`} open={!!focusNo}>
       <div className="bcards">
         {people.map((p) => {
           const mine = essay.filter((b) => b.no === p.no);
@@ -172,6 +173,7 @@ export default function EssayTab({ ctx }: { ctx: Ctx }) {
           );
         })}
       </div>
+      </Fold>
     </>
   );
 }

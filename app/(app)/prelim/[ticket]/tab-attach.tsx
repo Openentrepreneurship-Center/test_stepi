@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { hasHangul, downloadUrl, type PrelimAttachItem, type PrelimVerdict } from "@/lib/api";
-import { XBtn, shownNo } from "./parts";
+import { Fold, XBtn, shownNo } from "./parts";
 import type { Ctx } from "./result-view";
 
 export const pageLabel = (a: PrelimAttachItem) =>
@@ -236,6 +236,79 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
     };
   }, []);
 
+  // 저장 전 입력 중인 사유까지 반영한 판정
+  const stateOf = (a: PrelimAttachItem) => {
+    const saved = attachState(a, verdicts.attach);
+    const draft = drafts[a.id];
+    return saved.value === "dismiss" && draft !== undefined ? { ...saved, reason: draft } : saved;
+  };
+  const fileBtns = (a: PrelimAttachItem) => (
+    <div className="jbtns">
+      <button className="jbtn" type="button" onClick={() => setViewing({ id: a.id, mode: "hit" })}>
+        해당 페이지 보기
+      </button>
+      <button className="jbtn" type="button" onClick={() => setViewing({ id: a.id, mode: "all" })}>
+        전체 보기
+      </button>
+      <a className="jbtn" href={attachFileUrl(ticket, a.id)} style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", color: "inherit" }}>
+        다운로드
+      </a>
+    </div>
+  );
+  const judgeCell = (a: PrelimAttachItem) => {
+    const saved = attachState(a, verdicts.attach);
+    const st = stateOf(a);
+    const t = attText(st);
+    // 같은 버튼을 다시 누르면 미판정. 시스템 제안이 있는 건은 none 을 저장해야 제안이 되살아나지 않음
+    const press = (val: "confirm" | "dismiss" | "hold") => {
+      flushReason(a.id);
+      dropDraft(a.id);
+      const next = st.value === val ? (a.suggested ? "none" : null) : val;
+      void judge("attach", a.id, next, next === "dismiss" ? (saved.reason ?? null) : null);
+    };
+    const jbtn = (val: "confirm" | "dismiss" | "hold", cls: string, label: string) => (
+      <button className={`jbtn ${cls}`} type="button" aria-pressed={st.value === val} onClick={() => press(val)}>
+        {label}
+      </button>
+    );
+    return (
+      <div className="jcell">
+        <div className="jbtns">
+          {jbtn("confirm", "c", "위배 확정")}
+          {jbtn("dismiss", "d", "문제 없음")}
+          {jbtn("hold", "h", "보류")}
+        </div>
+        <textarea
+          rows={2}
+          disabled={st.value !== "dismiss"}
+          value={st.value === "dismiss" ? (st.reason ?? "") : ""}
+          placeholder={st.value === "dismiss" ? "사유 입력(예: 가림 확인, 다중 성명 나열, 동명이인 확인)" : "문제 없음 선택 시 사유 입력"}
+          aria-label="문제 없음 사유"
+          onChange={(e) => typeReason(a.id, e.target.value, saved.reason ?? "")}
+          onBlur={() => flushReason(a.id)}
+        />
+        {st.value === "dismiss" && saveState[a.id] && (
+          <span className={`jsave ${saveState[a.id].s}`} role="status">
+            {saveState[a.id].s === "typing"
+              ? "입력 중"
+              : saveState[a.id].s === "saving"
+                ? "저장 중"
+                : saveState[a.id].s === "saved"
+                  ? `✓ 저장됨 ${saveState[a.id].at}`
+                  : "저장에 실패하여 이전 사유로 되돌렸습니다. 다시 입력해 주십시오."}
+          </span>
+        )}
+        <span className={`jtext ${t.cls}`}>{t.t}</span>
+      </div>
+    );
+  };
+  const people = attach.reduce<{ no: string; name: string; items: PrelimAttachItem[] }[]>((acc, a) => {
+    const p = acc.find((x) => x.no === a.no);
+    if (p) p.items.push(a);
+    else acc.push({ no: a.no, name: a.name, items: [a] });
+    return acc;
+  }, []);
+
   return (
     <>
       <div className="guide">
@@ -281,32 +354,12 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
                   <th>파일명 · 원본 확인</th>
                   <th style={{ width: 140 }}>매칭 언어</th>
                   <th style={{ width: 90 }}>매칭 페이지</th>
-                  <th style={{ width: 290 }}>판정 내용</th>
+                  <th style={{ width: 220 }}>판정 내용</th>
                 </tr>
               </thead>
               <tbody>
                 {attach.map((a) => {
-                  const saved = attachState(a, verdicts.attach);
-                  const draft = drafts[a.id];
-                  const st = saved.value === "dismiss" && draft !== undefined ? { ...saved, reason: draft } : saved;
-                  const t = attText(st);
-                  // 같은 버튼을 다시 누르면 미판정. 시스템 제안이 있는 건은 none 을 저장해야 제안이 되살아나지 않음
-                  const press = (val: "confirm" | "dismiss" | "hold") => {
-                    flushReason(a.id);
-                    dropDraft(a.id);
-                    const next = st.value === val ? (a.suggested ? "none" : null) : val;
-                    void judge("attach", a.id, next, next === "dismiss" ? (saved.reason ?? null) : null);
-                  };
-                  const jbtn = (val: "confirm" | "dismiss" | "hold", cls: string, label: string) => (
-                    <button
-                      className={`jbtn ${cls}`}
-                      type="button"
-                      aria-pressed={st.value === val}
-                      onClick={() => press(val)}
-                    >
-                      {label}
-                    </button>
-                  );
+                  const t = attText(stateOf(a));
                   return (
                     <tr key={a.id} data-no={a.no} className={focusNo === a.no ? "focus" : undefined}>
                       <td className="mono">{shownNo(a.no)}</td>
@@ -315,50 +368,13 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
                       <td>
                         <div className="fcell">
                           <span className="fname2">{a.file}</span>
-                          <div className="jbtns">
-                            <button className="jbtn" type="button" onClick={() => setViewing({ id: a.id, mode: "hit" })}>
-                              해당 페이지 보기
-                            </button>
-                            <button className="jbtn" type="button" onClick={() => setViewing({ id: a.id, mode: "all" })}>
-                              전체 보기
-                            </button>
-                            <a className="jbtn" href={attachFileUrl(ticket, a.id)} style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", color: "inherit" }}>
-                              다운로드
-                            </a>
-                          </div>
+                          {fileBtns(a)}
                         </div>
                       </td>
                       <td style={{ whiteSpace: "nowrap" }}>{langLabel(a)}</td>
                       <td className="mono">{pageLabel(a)}</td>
                       <td>
-                        <div className="jcell">
-                          <div className="jbtns">
-                            {jbtn("confirm", "c", "위배 확정")}
-                            {jbtn("dismiss", "d", "문제 없음")}
-                            {jbtn("hold", "h", "보류")}
-                          </div>
-                          <textarea
-                            rows={2}
-                            disabled={st.value !== "dismiss"}
-                            value={st.value === "dismiss" ? (st.reason ?? "") : ""}
-                            placeholder={st.value === "dismiss" ? "사유 입력(예: 가림 확인, 다중 성명 나열, 동명이인 확인)" : "문제 없음 선택 시 사유 입력"}
-                            aria-label="문제 없음 사유"
-                            onChange={(e) => typeReason(a.id, e.target.value, saved.reason ?? "")}
-                            onBlur={() => flushReason(a.id)}
-                          />
-                          {st.value === "dismiss" && saveState[a.id] && (
-                            <span className={`jsave ${saveState[a.id].s}`} role="status">
-                              {saveState[a.id].s === "typing"
-                                ? "입력 중"
-                                : saveState[a.id].s === "saving"
-                                  ? "저장 중"
-                                  : saveState[a.id].s === "saved"
-                                    ? `✓ 저장됨 ${saveState[a.id].at}`
-                                    : "저장에 실패하여 이전 사유로 되돌렸습니다. 다시 입력해 주십시오."}
-                            </span>
-                          )}
-                          <span className={`jtext ${t.cls}`}>{t.t}</span>
-                        </div>
+                        <span className={`jtext ${t.cls}`}>{t.t}</span>
                       </td>
                     </tr>
                   );
@@ -378,6 +394,44 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
           </div>
         )}
       </div>
+
+      {people.length > 0 && (
+        <Fold title="지원자별 상세 내역" hint={`지원자 ${people.length}명 · 펼쳐서 판정합니다`} open={!!focusNo}>
+          <div className="bcards">
+            {people.map((p) => {
+              const done = p.items.filter((a) => stateOf(a).value).length;
+              return (
+                <article className={`bcard ${done === p.items.length ? "done" : ""} ${focusNo === p.no ? "focus" : ""}`} key={p.no}>
+                  <div className="b-side">
+                    <h3>
+                      <span className="mono">{shownNo(p.no)}</span>
+                      <small>{p.name}</small>
+                    </h3>
+                    <div className="b-type">
+                      위배 후보<span style={{ fontSize: 14, color: "var(--ink)" }}>{p.items.length}건 중 {done}건 판정</span>
+                    </div>
+                  </div>
+                  <div className="b-main">
+                    {p.items.map((a) => (
+                      <div className="vblock" key={a.id}>
+                        <div className="vhead">
+                          <b>{a.file}</b>
+                          <span className="pill">{a.cat}</span>
+                          <span>
+                            {langLabel(a)} · {pageLabel(a)}
+                          </span>
+                        </div>
+                        {fileBtns(a)}
+                        {judgeCell(a)}
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </Fold>
+      )}
 
       {current && viewing && (
         <Viewer ticket={ticket} item={current} mode={viewing.mode} onMode={(m) => setViewing({ id: current.id, mode: m })} onClose={() => setViewing(null)} />

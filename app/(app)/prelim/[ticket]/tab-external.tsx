@@ -1,7 +1,7 @@
 "use client";
 
 import type { PrelimCommittee } from "@/lib/api";
-import { Dash, OUT_STAGES, STAGES, XBtn, Y2, shownNo } from "./parts";
+import { Dash, Fold, OUT_STAGES, STAGES, XBtn, Y2, shownNo } from "./parts";
 import type { Ctx } from "./result-view";
 
 const SRC_CLS: Record<string, string> = { 직전공고: "src-prev", "동일직군 최근공고": "src-same" };
@@ -153,7 +153,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
 
       <div className="panel">
         <header>
-          <h2>지원자 지도교수가 섭외 심사위원</h2>
+          <h2>외부심사위원 풀 내 지도교수 경험</h2>
           <div className="hdtools">
             <span className="hint">제척 {advisor.length}건</span>
           </div>
@@ -253,17 +253,17 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
         )}
       </div>
 
-      <div className="panel">
-        <header>
-          <h2>지원자별 상세 내역</h2>
-          <div className="hdtools">
-            <span className="hint">
-              {detail.length}건 · 지원자 {peopleCount}명
-            </span>
+      <Fold
+        title="지원자별 상세 내역"
+        hint={`${detail.length}건 · 지원자 ${peopleCount}명`}
+        open={!!focusNo}
+        tools={
+          <>
             <XBtn href={exportUrl("exx")} title="전체 엑셀 다운로드" />
             <XBtn href={exportUrl("exx-v")} cap="제척" title="2년 이내 해당자 엑셀 다운로드" />
-          </div>
-        </header>
+          </>
+        }
+      >
         <div className="tblwrap">
           <table className="dtable">
             <thead>
@@ -334,7 +334,7 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
             </tfoot>
           </table>
         </div>
-      </div>
+      </Fold>
     </>
   );
 }
