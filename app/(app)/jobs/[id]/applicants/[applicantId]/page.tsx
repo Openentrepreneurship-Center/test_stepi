@@ -299,13 +299,13 @@ export default async function ApplicantDetailPage({
                       {Object.entries(applicant.scores?.job_fit ?? {}).map(([axis, v], idx) => (
                         <div
                           key={axis}
-                          className={`grid grid-cols-12 gap-x-6 gap-y-2 py-4 items-baseline ${idx > 0 ? "border-t border-[var(--line)]" : ""}`}
+                          className={`grid grid-cols-12 lg:grid-cols-[minmax(6rem,2fr)_minmax(3.5rem,1fr)_minmax(0,8fr)_auto] gap-x-6 gap-y-2 py-4 items-baseline ${idx > 0 ? "border-t border-[var(--line)]" : ""}`}
                         >
-                          <div className="col-span-6 lg:col-span-2 serif text-[18px]">{axis}</div>
-                          <div className="col-span-6 lg:col-span-1 serif text-[24px] text-[var(--secondary-2)] tabular-nums">
+                          <div className="col-span-6 lg:col-span-1 serif text-[18px]">{axis}</div>
+                          <div className="col-span-6 lg:col-span-1 serif text-[24px] text-[var(--secondary-2)] tabular-nums whitespace-nowrap">
                             {(v.score * 10).toFixed(0)}
                           </div>
-                          <p className="col-span-12 lg:col-span-8 text-[16.5px] leading-[1.75] text-[var(--ink-muted)]">
+                          <p className="col-span-12 lg:col-span-1 text-[16.5px] leading-[1.75] text-[var(--ink-muted)]">
                             {cleanReason(v.reason)}
                           </p>
                           <div className="col-span-12 lg:col-span-1 flex lg:justify-end">

@@ -27,7 +27,7 @@ export default function FeedbackButtons({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const dim = size === "sm" ? "h-7 w-7" : "h-8 w-8";
+  const dim = size === "sm" ? "h-7 px-2 text-[12.5px]" : "h-8 px-2.5 text-[13px]";
   const iconSize = size === "sm" ? 14 : 16;
 
   const set = (next: boolean) => {
@@ -51,7 +51,7 @@ export default function FeedbackButtons({
     });
   };
 
-  const baseBtn = `${dim} grid place-items-center rounded-[2px] border transition disabled:opacity-50`;
+  const baseBtn = `${dim} inline-flex items-center gap-1.5 whitespace-nowrap rounded-[2px] border transition disabled:opacity-50`;
 
   return (
     <div className="flex items-center gap-1.5">
@@ -62,7 +62,7 @@ export default function FeedbackButtons({
       )}
       <button
         type="button"
-        aria-label="적절함"
+        aria-pressed={rating === true}
         onClick={() => set(true)}
         disabled={isPending}
         className={`${baseBtn} ${
@@ -71,11 +71,12 @@ export default function FeedbackButtons({
             : "border-[var(--line-strong)] text-[var(--ink-muted)] hover:bg-[var(--bg-2)]"
         }`}
       >
-        <ThumbsUp size={iconSize} strokeWidth={1.8} />
+        <ThumbsUp size={iconSize} strokeWidth={1.8} aria-hidden="true" />
+        적절함
       </button>
       <button
         type="button"
-        aria-label="부적절함"
+        aria-pressed={rating === false}
         onClick={() => set(false)}
         disabled={isPending}
         className={`${baseBtn} ${
@@ -84,7 +85,8 @@ export default function FeedbackButtons({
             : "border-[var(--line-strong)] text-[var(--ink-muted)] hover:bg-[var(--bg-2)]"
         }`}
       >
-        <ThumbsDown size={iconSize} strokeWidth={1.8} />
+        <ThumbsDown size={iconSize} strokeWidth={1.8} aria-hidden="true" />
+        부적절함
       </button>
       {error && <span className="text-xs text-[var(--bad)]">!</span>}
     </div>

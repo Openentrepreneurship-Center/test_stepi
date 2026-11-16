@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
-import { CalendarDays, ChevronRight, CircleCheck, Database, Download, Plus, Upload, X } from "lucide-react";
+import { CalendarDays, ChevronRight, ChevronUp, CircleCheck, Database, Download, Plus, Upload, X } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { Bar } from "@/components/page-skeleton";
 import {
@@ -119,6 +119,8 @@ const TABS: { kind: PrelimRefKind; label: string; unit: string; desc: string; ad
 type Drawer = { kind: PrelimRefKind; id: number | "new"; values: Record<string, string>; dirty: boolean };
 
 const JOBS = ["연구직", "전문연구직", "행정직"];
+// 직군마다 배지 모양을 달리함
+const JOB_TONE: Record<string, string> = { 연구직: "j-res", 전문연구직: "j-pro", 행정직: "j-adm" };
 const STAFF_GRADES = ["책임연구원", "선임연구원", "연구원"];
 const STAGES = ["서류", "필기", "면접"];
 const ORG_KINDS = ["NRC", "NST"];
@@ -595,21 +597,21 @@ export default function ReferenceView() {
   );
 }
 
-/** 묶음 한 장: 머리 + 줄들. FOLD 줄 넘으면 "전체 N명 보기" */
+/** 묶음 한 장: 머리 + 줄들. FOLD 줄 넘으면 "전체 N명 보기", 펼치면 "접기" */
 function RefGroup({
   head,
   action,
   items,
   unit,
   expanded,
-  onExpand,
+  onToggle,
 }: {
   head: ReactNode;
   action?: ReactNode;
   items: ReactNode[];
   unit: string;
   expanded: boolean;
-  onExpand: () => void;
+  onToggle: () => void;
 }) {
   const folded = !expanded && items.length > FOLD;
   return (
@@ -626,12 +628,19 @@ function RefGroup({
             onClick={(e) => {
               // 버튼이 사라지므로 새로 보이는 첫 줄로 포커스를 옮김
               const card = e.currentTarget.closest("section");
-              onExpand();
+              onToggle();
               requestAnimationFrame(() => card?.querySelectorAll<HTMLElement>(".ref-row")[FOLD]?.focus());
             }}
           >
             전체 {items.length}
             {unit} 보기 <ChevronRight size={14} aria-hidden="true" style={{ display: "inline", verticalAlign: "-2px" }} />
+          </button>
+        </div>
+      )}
+      {expanded && items.length > FOLD && (
+        <div className="ref-more">
+          <button type="button" onClick={onToggle}>
+            접기 <ChevronUp size={14} aria-hidden="true" style={{ display: "inline", verticalAlign: "-2px" }} />
           </button>
         </div>
       )}
@@ -682,8 +691,13 @@ function RefRow({
 /** 방금 저장한 줄이 접힌 자리에 있으면 그 묶음을 펼침 */
 function useExpanded(savedKey: string | null) {
   const [open, setOpen] = useState<string[]>([]);
-  if (savedKey !== null && !open.includes(savedKey)) setOpen([...open, savedKey]);
-  return [open, (k: string) => setOpen((o) => [...o, k])] as const;
+  const [prevKey, setPrevKey] = useState<string | null>(null);
+  // 저장 키가 바뀔 때만 펼침, 그 뒤 사용자가 접으면 접힌 채로 둠
+  if (savedKey !== prevKey) {
+    setPrevKey(savedKey);
+    if (savedKey !== null && !open.includes(savedKey)) setOpen([...open, savedKey]);
+  }
+  return [open, (k: string) => setOpen((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k]))] as const;
 }
 
 function groupBy(rows: PrelimRefRow[], key: (r: PrelimRefRow) => string) {
@@ -750,7 +764,7 @@ function StaffGroups({
           }
           unit="명"
           expanded={open.includes(dept)}
-          onExpand={() => expand(dept)}
+          onToggle={() => expand(dept)}
           items={members.map((r) => (
             <RefRow
               key={r.id}
@@ -811,7 +825,7 @@ function OrgGroups({
           }
           unit="곳"
           expanded={open.includes(kind)}
-          onExpand={() => expand(kind)}
+          onToggle={() => expand(kind)}
           items={
             members.length
               ? members.map((r) => (
@@ -964,7 +978,7 @@ function ReviewerGroups({
               <>
                 {name}
                 {jobList.map((j) => (
-                  <em key={j} className="job">
+                  <em key={j} className={`job ${JOB_TONE[j] ?? ""}`}>
                     {j}
                   </em>
                 ))}
@@ -989,7 +1003,7 @@ function ReviewerGroups({
             }
             unit="명"
             expanded={open.includes(name)}
-            onExpand={() => expand(name)}
+            onToggle={() => expand(name)}
             items={members.map((r) => (
               <RefRow
                 key={r.id}

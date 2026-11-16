@@ -94,7 +94,7 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .kpi .num.zero { color: var(--muted); }
 .prelim .kpi.att .chip { height: auto; padding: 0 0 0 4px; border: 0; background: none; font-weight: 600; color: var(--ink); }
 .prelim .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14.5px; color: var(--muted); }
-.prelim .legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; }
+.prelim .legend b { font-weight: 600; color: var(--ink); }
 .prelim .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 14.5px; color: var(--muted); }
 .prelim .chip { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; font-size: 13.5px; background: #fff; border: 1px solid var(--line); border-radius: 0; color: var(--ink); }
 .prelim .kpi .cta { justify-self: start; min-height: 24px; padding: 0; border: 0; background: none; color: var(--navy); font-size: 13.5px; font-weight: 600; text-align: left; }
@@ -149,7 +149,7 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .dtable thead th { background: var(--surface); font-weight: 600; color: var(--muted); white-space: nowrap; }
 .prelim .dtable thead th.grp { text-align: center; background: var(--navy); color: #fff; }
 .prelim .dtable thead th.grp.in { background: var(--orange); color: #fff; }
-.prelim .dtable tbody tr:hover { background: #fafafa; }
+.prelim .dtable tbody tr[data-jump]:hover, .prelim .dtable tbody tr[data-person]:hover { background: #fafafa; }
 .prelim .dtable td.mono { font-family: var(--mono); white-space: nowrap; }
 .prelim .dtable td.nm { white-space: nowrap; font-weight: 600; }
 .prelim .dtable input, .prelim .dtable select { width: 100%; min-width: 96px; height: 36px; border: 1px solid var(--line-strong); background: #fff; padding: 0 8px; font-size: 14.5px; }
@@ -375,6 +375,9 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .ref-group h3 { margin: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 17.5px; font-weight: 700; }
 .prelim .ref-group h3 em { font-style: normal; display: inline-flex; align-items: center; height: 24px; padding: 0 10px; font-size: 12.5px; font-weight: 500; }
 .prelim .ref-group h3 em.job { background: #ecebf7; color: var(--navy); }
+.prelim .ref-group h3 em.job.j-res { background: var(--navy); color: #fff; }
+.prelim .ref-group h3 em.job.j-pro { background: #fff; color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy); }
+.prelim .ref-group h3 em.job.j-adm { background: var(--surface); color: var(--muted); box-shadow: inset 0 0 0 1px var(--line-strong); }
 .prelim .ref-group h3 em.emp { background: #fdf3e4; color: #8a5300; }
 .prelim .ref-group h3 span { font-size: 13.5px; font-weight: 400; color: var(--muted); }
 .prelim .ref-row.rv { grid-template-columns: 190px minmax(0, 1fr) 64px; align-items: center; }

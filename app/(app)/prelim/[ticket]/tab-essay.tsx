@@ -75,7 +75,6 @@ export default function EssayTab({ ctx }: { ctx: Ctx }) {
             </button>
           </span>
         )}
-        <span className="hint">한 표현이 여러 유형에 해당하면 유형별로 집계합니다.</span>
         <span className="hint" style={{ marginLeft: "auto" }}>
           노란색으로 표시된 구절이 위배로 판단된 부분입니다
         </span>

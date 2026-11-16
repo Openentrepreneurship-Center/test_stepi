@@ -95,7 +95,6 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
                 </span>
               ))}
           </div>
-          <div className="hint">한 표현이 여러 유형에 해당하면 유형별로 집계합니다.</div>
           <button className="cta" type="button" onClick={() => go("essay")}>
             위배 구절 →
           </button>
@@ -131,12 +130,10 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
           </div>
           <div className="legend">
             <span>
-              <i style={{ background: "var(--red)" }} />
-              제척(외부) {kpi.external_total}건
+              제척(외부) <b>{kpi.external_total}</b>건
             </span>
             <span>
-              <i style={{ border: "2px solid var(--red)" }} />
-              제척(내부) {kpi.internal_total}건
+              제척(내부) <b>{kpi.internal_total}</b>건
             </span>
           </div>
           <button className="cta" type="button" onClick={() => go("inx")}>
