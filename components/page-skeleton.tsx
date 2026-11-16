@@ -55,8 +55,9 @@ export default function PageSkeleton({ eyebrow, title, variant = "list", back, w
   return (
     <div className={frame} role="status" aria-live="polite">
       <span className="sr-only">불러오는 중입니다</span>
-      <div className="animate-pulse" aria-hidden="true">
-        {back && <Bar className="h-4 w-24 mb-5" />}
+      {/* 제목·머리표는 글자 그대로 두고 막대 자리만 깜빡임 */}
+      <div aria-hidden="true">
+        {back && <Bar className="h-4 w-24 mb-5 animate-pulse" />}
 
         <div className="pb-5">
           {eyebrow ? (
@@ -65,20 +66,22 @@ export default function PageSkeleton({ eyebrow, title, variant = "list", back, w
               <span className="text-[12.5px] font-bold tracking-[0.08em] text-[var(--ink-muted)]">{eyebrow}</span>
             </div>
           ) : (
-            <Bar className="h-4 w-28 mb-3" />
+            <Bar className="h-4 w-28 mb-3 animate-pulse" />
           )}
           {title ? (
             <h1 className="text-[clamp(27px,3.1vw,34px)] font-bold tracking-[-0.02em] leading-[1.12] text-[var(--ink)]">
               {title}
             </h1>
           ) : (
-            <Bar className="h-9 w-[min(420px,70%)]" />
+            <Bar className="h-9 w-[min(420px,70%)] animate-pulse" />
           )}
-          <Bar className="h-4 w-[min(560px,90%)] mt-4" />
+          <Bar className="h-4 w-[min(560px,90%)] mt-4 animate-pulse" />
         </div>
         <div className="relative h-[3px] w-full bg-[var(--line)]">
           <span className="absolute left-0 top-0 h-[3px] w-20 bg-[var(--secondary)]" />
         </div>
+
+        <div className="animate-pulse">
 
         {variant === "detail" && (
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-5">
@@ -112,6 +115,7 @@ export default function PageSkeleton({ eyebrow, title, variant = "list", back, w
             </div>
           </section>
         ))}
+        </div>
       </div>
     </div>
   );

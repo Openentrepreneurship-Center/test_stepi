@@ -325,7 +325,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
   if (!data || !derived || !verdicts) {
     return (
       <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
-        {head(<Bar className="h-5 w-[min(520px,80%)]" />)}
+        {head(<Bar className="h-5 w-[min(520px,80%)] animate-pulse" />)}
         <div className="prelim result mt-8" role="status" aria-live="polite">
           <span className="sr-only">검토 결과를 불러오는 중입니다</span>
           <div className="tabs" aria-hidden="true">

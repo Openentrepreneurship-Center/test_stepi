@@ -11,6 +11,7 @@ import {
   type PrelimRetentionRun,
 } from "@/lib/api";
 import { useFocusTrap } from "@/lib/use-focus-trap";
+import { SkeletonTable } from "@/components/page-skeleton";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -250,9 +251,7 @@ export default function RetentionPanel() {
             실행 이력을 불러오지 못하였습니다. 잠시 후 ‘미리보기 새로고침’을 눌러 주십시오.
           </div>
         ) : !history ? (
-          <div className="empty" role="status">
-            실행 이력을 불러오는 중입니다.
-          </div>
+          <SkeletonTable rows={3} />
         ) : history.length === 0 ? (
           <div className="empty">실행 이력이 없습니다.</div>
         ) : (
