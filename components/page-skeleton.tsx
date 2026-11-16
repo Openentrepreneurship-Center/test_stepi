@@ -15,7 +15,7 @@ interface Props {
 
 export function Bar({ className = "" }: { className?: string }) {
   // span 이라 <p> 안(PageHeader 설명 자리)에도 둘 수 있음
-  return <span className={`block rounded-[3px] bg-[var(--bg-2)] ${className}`} />;
+  return <span className={`block rounded-[3px] bg-[var(--line)] ${className}`} />;
 }
 
 /** 분석 현황 목록과 같은 테두리 표. 머리 줄은 회색 띠, 본문은 줄마다 막대 */
