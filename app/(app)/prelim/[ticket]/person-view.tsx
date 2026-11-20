@@ -28,14 +28,9 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
   const internal = derived.inx.internal.filter((f) => f.no === no);
   const external = derived.exx_detail.filter((f) => f.no === no);
   const inxHits = (derived.inx.items ?? []).filter((it) => it.no === no && it.win);
-  const exOther = [
-    ...(derived.exx_advisor ?? [])
-      .filter((a) => a.no === no)
-      .map((a) => ({ id: a.id, kind: "외부심사위원 풀 내 지도교수 경험", text: a.advisor })),
-    ...(data.view.external_edu ?? [])
-      .filter((e) => e.no === no)
-      .map((e, i) => ({ id: `edu:${i}`, kind: "학력 기관", text: `${e.school} (${e.org})` })),
-  ];
+  const exOther = (derived.exx_advisor ?? [])
+    .filter((a) => a.no === no)
+    .map((a) => ({ id: a.id, kind: "외부심사위원 풀 내 지도교수 경험", text: a.advisor }));
   const current = viewing ? attach.find((a) => a.id === viewing.id) : null;
 
   return (

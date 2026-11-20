@@ -50,9 +50,6 @@ export default function ExternalTab({ ctx }: { ctx: Ctx }) {
           지원자의 지도교수가 섭외 심사위원 목록에 있으면 그 지원자를 제척으로 표시합니다.
         </span>
       </div>
-      {derived.external_edu_count > 0 && (
-        <div className="hint">학력 기준 기관 일치 {derived.external_edu_count}건은 기간 정보가 없어 표에서 제외하였습니다.</div>
-      )}
 
       <div className="panel">
         <header>
