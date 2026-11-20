@@ -449,7 +449,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
           ))}
         </div>
 
-        {attachLine && (
+        {attachLine && (tab !== "attach" || up?.error) && (
           <div
             className="rulebox"
             role="status"

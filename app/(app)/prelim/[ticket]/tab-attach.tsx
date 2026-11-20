@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { hasHangul, downloadUrl, type PrelimAttachItem, type PrelimVerdict } from "@/lib/api";
 import { Fold, XBtn, shownNo } from "./parts";
 import type { Ctx } from "./result-view";
@@ -309,6 +310,16 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
     return acc;
   }, []);
 
+  // 업로드·검사가 끝나기 전에는 표 대신 진행 중 표시만
+  if (["uploading", "queued", "scanning"].includes(status)) {
+    return (
+      <div className="empty flex items-center justify-center gap-2" role="status" aria-live="polite">
+        <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+        {status === "uploading" ? "첨부 실적 zip 파일을 업로드하고 있습니다." : "첨부 실적을 검사하고 있습니다."}
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="guide">
@@ -338,12 +349,6 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
         ) : status === "failed" ? (
           <div className="empty" role="alert">
             첨부 실적 검사에 실패하였습니다.{hasHangul(data.attach_error) ? ` ${data.attach_error}` : ""}
-          </div>
-        ) : status !== "done" && attach.length === 0 ? (
-          <div className="empty">
-            {status === "uploading"
-              ? "첨부 실적 zip 파일을 업로드하고 있습니다."
-              : `첨부 실적을 검사하고 있습니다. ${data.attach_total ? `${data.attach_done ?? 0} / ${data.attach_total}개` : ""}`}
           </div>
         ) : (
           <div className="tblwrap">
