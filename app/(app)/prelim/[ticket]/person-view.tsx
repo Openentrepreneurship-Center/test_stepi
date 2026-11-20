@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BLABEL, Dash, Y2, shownNo } from "./parts";
 import type { Ctx } from "./result-view";
 import { Viewer, attText, attachFileUrl, attachState, langLabel, pageLabel } from "./tab-attach";
+import { PrefCats, PrefFiles, PrefText, PrefViewer, type PrefOpen } from "./tab-preference";
 
 function Sec({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -32,6 +33,8 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
     .filter((a) => a.no === no)
     .map((a) => ({ id: a.id, kind: "외부심사위원 풀 내 지도교수 경험", text: a.advisor }));
   const current = viewing ? attach.find((a) => a.id === viewing.id) : null;
+  const pref = derived.pref?.rows.find((r) => r.no === no);
+  const [prefOpen, setPrefOpen] = useState<PrefOpen | null>(null);
 
   return (
     <>
@@ -264,6 +267,37 @@ export default function PersonView({ ctx, no }: { ctx: Ctx; no: string }) {
         )}
       </Sec>
 
+      {pref && (
+        <Sec title="가산점 증빙 검토">
+          <div className="tblwrap">
+            <table className="dtable">
+              <thead>
+                <tr>
+                  <th style={{ width: 260 }}>해당 항목</th>
+                  <th>증빙 파일 · 원본 확인</th>
+                  <th style={{ width: 200 }}>판정 내용</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <PrefCats row={pref} />
+                  </td>
+                  <td>
+                    <PrefFiles row={pref} onOpen={setPrefOpen} />
+                  </td>
+                  <td>
+                    <PrefText value={pref.verdict?.value} />
+                    {pref.verdict?.reason && <div className="hint mt-1">{pref.verdict.reason}</div>}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </Sec>
+      )}
+
+      {prefOpen && <PrefViewer ticket={ticket} open={prefOpen} onClose={() => setPrefOpen(null)} />}
       {current && viewing && (
         <Viewer ticket={ticket} item={current} mode={viewing.mode} onMode={(m) => setViewing({ id: current.id, mode: m })} onClose={() => setViewing(null)} />
       )}

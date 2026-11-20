@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { XBtn, shownNo } from "./parts";
 import type { Ctx, TabKey } from "./result-view";
+import { PrefText } from "./tab-preference";
 
 const CELL_TITLE: Record<string, string> = {
   essay: "자기소개서 위배",
@@ -23,6 +24,9 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
   const pen = hasPen ? (kpi.penalty_people ?? 0) : null;
 
   const num = (n: number | null) => (n ? "num" : "num zero");
+  // 가산점 증빙 검토(B안): 지원정보로 고른 대상자가 있는 검토만 칸과 열을 보임
+  const prefRows = derived.pref?.read ? derived.pref.rows : null;
+  const prefDone = prefRows?.filter((r) => r.verdict).length ?? 0;
 
   const cell = (n: number, cls: string, no: string, tab: Exclude<TabKey, "person" | "summary">) =>
     n ? (
@@ -120,6 +124,28 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
           </button>
         </div>
 
+        {prefRows && (
+          <div className="kpi att">
+            <div className="k-top">
+              가산점 증빙 검토
+            </div>
+            <div className={num(prefRows.length)}>
+              {prefRows.length}
+              <small>명</small>
+            </div>
+            <div className="chips">
+              판정 완료{" "}
+              <span className="chip">
+                {prefDone} / {prefRows.length}
+              </span>{" "}
+              미판정 <span className="chip">{prefRows.length - prefDone}</span>
+            </div>
+            <button className="cta" type="button" onClick={() => go("pref")}>
+              증빙 파일 →
+            </button>
+          </div>
+        )}
+
         <div className="kpi">
           <div className="k-top">
             제척
@@ -199,6 +225,7 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
                     <br />
                     위배
                   </th>
+                  {prefRows && <th>가산점</th>}
                   <th>
                     제척
                     <br />
@@ -230,6 +257,31 @@ export default function SummaryTab({ ctx }: { ctx: Ctx }) {
                     </td>
                     <td>{cell(p.essay, "b", p.no, "essay")}</td>
                     <td>{cell(p.attach, "a", p.no, "attach")}</td>
+                    {prefRows && (
+                      <td>
+                        {p.pref ? (
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            title="가산점 증빙 검토 화면으로 이동"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              go("pref", { focus: p.no });
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.stopPropagation();
+                                go("pref", { focus: p.no });
+                              }
+                            }}
+                          >
+                            <PrefText value={p.pref.verdict} />
+                          </span>
+                        ) : (
+                          <span className="cell none" aria-label="없음" />
+                        )}
+                      </td>
+                    )}
                     <td>{cell(p.internal, "s", p.no, "inx")}</td>
                     <td>{cell(p.external, "h", p.no, "exx")}</td>
                     {hasPen && (

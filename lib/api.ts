@@ -843,6 +843,20 @@ export interface PrelimPersonRow {
   no: string; name: string; essay: number; attach: number; internal: number; external: number;
   essay_done: boolean; out: string | null;
   penalty?: boolean;
+  /** 가산점 증빙 검토 대상자면 구분과 판정(grant·deny·hold, 미판정 null). 대상자 아니면 null */
+  pref?: { cats: string[]; verdict: string | null } | null;
+}
+/** 가산점 증빙 검토 한 줄(PRELIM-001) */
+export interface PrelimPrefFile { id: string; file: string; total: number; renderable: boolean }
+export interface PrelimPrefRow {
+  no: string; name: string;
+  cats: { cat: string; raw: string }[];
+  folders: { folder: string; files: PrelimPrefFile[] }[];
+  verdict: PrelimVerdict | null;
+}
+export interface PrelimPref {
+  /** 지원정보 엑셀을 올렸는지. legacy 는 이 기능 전에 만든 검토 */
+  read: boolean | null; missing_cols: string[]; rows: PrelimPrefRow[]; legacy: boolean;
 }
 /** 블라인드 최종 결과 한 줄. st 빈 글자는 미판정 */
 export interface PrelimFinalRow {
@@ -864,8 +878,9 @@ export interface PrelimDerived {
       internal_total: number; external_total: number;
       missing: { count: number; rows: number[] };
       penalty_people?: number;
+      pref_people?: number;
     };
-    tab_counts: { essay: number; attach: number; inx: number; exx: number; final?: number };
+    tab_counts: { essay: number; attach: number; inx: number; exx: number; final?: number; pref?: number };
     attach_confirmed: number;
     progress: { done: number; total: number };
     org_bars: [string, number][];
@@ -893,6 +908,8 @@ export interface PrelimDerived {
   }>;
   exx_detail: (PrelimExternalRow & { within2y: boolean; out: string | null; first: boolean; span: number })[];
   exx_advisor?: PrelimAdvisorRow[];
+  /** api 재시작 전 응답에는 없음 */
+  pref?: PrelimPref;
   external_edu_count: number;
   warnings: string[];
 }
@@ -903,6 +920,8 @@ export interface PrelimVerdicts {
   out: Record<string, PrelimVerdict>;
   /** 전공명 AI 비교 줄 확정·제외. api 재시작 전 응답에는 없음 */
   deg_ai?: Record<string, PrelimVerdict>;
+  /** 가산점 증빙 검토 판정. 키는 지원자 번호 */
+  pref?: Record<string, PrelimVerdict>;
 }
 export type PrelimUploadKind = "inx" | "work";
 export interface PrelimResult extends PrelimRunResponse {
@@ -1048,7 +1067,7 @@ export const prelim = {
   result: (ticket: string) => http<PrelimResult>(`/prelim/results/${encodeURIComponent(ticket)}`),
   verdict: {
     /** value 가 null 이면 판정 취소. 화면은 응답의 verdicts·derived 로만 갱신함 */
-    async put(ticket: string, body: { kind: "essay" | "attach" | "out" | "deg_ai"; item_id: string; value: string | null; reason?: string | null }) {
+    async put(ticket: string, body: { kind: "essay" | "attach" | "out" | "deg_ai" | "pref"; item_id: string; value: string | null; reason?: string | null }) {
       const res = await apiFetch(`/prelim/results/${encodeURIComponent(ticket)}/verdicts`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },

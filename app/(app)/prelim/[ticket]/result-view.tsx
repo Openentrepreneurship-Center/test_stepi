@@ -23,18 +23,20 @@ import { STAGES } from "./parts";
 import SummaryTab from "./tab-summary";
 import EssayTab from "./tab-essay";
 import AttachTab, { AttachResume } from "./tab-attach";
+import PrefTab from "./tab-preference";
 import InternalTab from "./tab-internal";
 import ExternalTab from "./tab-external";
 import FinalTab from "./tab-final";
 import NotUploaded, { notUploadedKind } from "./not-uploaded";
 import PersonView from "./person-view";
 
-export type TabKey = "summary" | "essay" | "attach" | "inx" | "exx" | "final" | "person";
+export type TabKey = "summary" | "essay" | "attach" | "pref" | "inx" | "exx" | "final" | "person";
 
 const TABS: [Exclude<TabKey, "person">, string][] = [
   ["summary", "요약"],
   ["essay", "자기소개서 위배"],
   ["attach", "첨부 실적 내 위배"],
+  ["pref", "가산점 증빙 검토"],
   ["inx", "제척(내부)"],
   ["exx", "제척(외부)"],
   ["final", "블라인드 최종 결과"],
@@ -42,6 +44,7 @@ const TABS: [Exclude<TabKey, "person">, string][] = [
 const BADGE_CLS: Record<string, string> = {
   essay: "navy",
   attach: "navy",
+  pref: "navy",
   inx: "red",
   exx: "red",
   final: "red",
@@ -50,6 +53,7 @@ const BADGE_CLS: Record<string, string> = {
 const ALL_KEYS = [
   "essay",
   "attach",
+  "pref",
   "inx-staff",
   "inx",
   "work",
@@ -103,7 +107,7 @@ export interface Ctx {
   go: (tab: TabKey, opts?: { focus?: string; person?: string }) => void;
   setStage: (s: PrelimStage) => void;
   judge: (
-    kind: "essay" | "attach" | "out" | "deg_ai",
+    kind: "essay" | "attach" | "out" | "deg_ai" | "pref",
     itemId: string,
     value: string | null,
     reason?: string | null,
@@ -493,7 +497,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
           ))}
         </div>
 
-        {attachLine && (tab !== "attach" || (up?.error && !paused)) && (
+        {attachLine && ((tab !== "attach" && tab !== "pref") || (up?.error && !paused)) && (
           <div
             className="rulebox"
             role="status"
@@ -539,6 +543,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
             <>
               {tab === "essay" && <EssayTab ctx={ctx} />}
               {tab === "attach" && <AttachTab ctx={ctx} />}
+              {tab === "pref" && <PrefTab ctx={ctx} />}
               {tab === "inx" && <InternalTab ctx={ctx} />}
               {tab === "exx" && <ExternalTab ctx={ctx} />}
               {tab === "final" && derived.final && <FinalTab ctx={ctx} final={derived.final} />}
