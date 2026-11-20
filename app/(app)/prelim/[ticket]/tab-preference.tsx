@@ -126,7 +126,7 @@ export default function PrefTab({ ctx }: { ctx: Ctx }) {
       </div>
     );
   }
-  if (!pref || pref.legacy) return <div className="empty">이 검토는 가산점 증빙 검토 기능 전에 만들어졌습니다.</div>;
+  if (!pref || pref.legacy) return <div className="empty">이 검토는 가산점 증빙 검토 기능 이전에 생성되었습니다.</div>;
   if (!pref.read) return <NotUploaded kind="origin" />;
 
   const rows = pref.rows;
@@ -151,15 +151,15 @@ export default function PrefTab({ ctx }: { ctx: Ctx }) {
       <div className="guide">
         <b>점검 기준</b>
         <span className="hint lines">
-          지원정보 엑셀의 장애여부·보훈여부·저소득층여부·수료·인턴증 수여 기간 확인·이전지역/지역인재 중 하나라도 해당하는 지원자를 모았습니다.
+          지원정보 엑셀의 장애여부·보훈여부·저소득층여부·수료·인턴증 수여 기간 확인·이전지역/지역인재 중 하나라도 해당하는 지원자를 표시하였습니다.
           <br />
-          첨부 실적(zip)의 가점 증빙 폴더를 열어 확인한 뒤 <b>가점 부여 / 가점 미부여 / 보류</b>로 판정합니다.
+          첨부 실적(zip)의 가점 증빙 폴더의 파일을 확인한 후 <b>가점 부여 / 가점 미부여 / 보류</b>로 판정합니다.
         </span>
       </div>
 
       {pref.missing_cols.length > 0 && (
         <div className="rulebox" role="status" style={{ borderLeftColor: "var(--orange)" }}>
-          <b>못 읽은 열</b> · 지원정보 엑셀에 {pref.missing_cols.map((c) => `'${c}'`).join(", ")} 열이 없습니다. 나머지 열로 대상자를 골랐습니다.
+          <b>못 읽은 열</b> · 지원정보 엑셀에 {pref.missing_cols.map((c) => `'${c}'`).join(", ")} 열이 없습니다. 나머지 열로 대상자를 선택하였습니다.
         </div>
       )}
 
@@ -213,7 +213,7 @@ export default function PrefTab({ ctx }: { ctx: Ctx }) {
               <tr>
                 <td colSpan={5}>
                   <div className="tf-in">
-                    해당 없음으로 보는 값 · 빈칸, &apos;-&apos;, &apos;해당없음&apos;, &apos;비대상&apos;, &apos;아니오&apos;. 그 밖의 값이 적혀 있으면 대상자입니다.
+                    해당 없음으로 보는 값 · 빈칸, &apos;-&apos;, &apos;해당없음&apos;, &apos;비대상&apos;, &apos;아니오&apos;. 그 밖의 값이 입력되어 있으면 대상자입니다.
                   </div>
                 </td>
               </tr>
