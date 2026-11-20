@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Download, FileText, LayoutDashboard } from "lucide-react";
+import { ArrowUpRight, Download, LayoutDashboard } from "lucide-react";
 import { api, asError, failedLabel, isNotFound, type JobFailuresResponse } from "@/lib/api";
 import ApplicantDeleteButton from "@/components/applicant-delete-button";
 import ApplicantPdfButton from "@/components/applicant-pdf-button";
@@ -187,9 +187,6 @@ export default async function JobDetailPage({
             <div className="flex items-center gap-3">
               <a href={api.resultCsvUrl(id)} className="btn-ghost inline-flex items-center gap-2" target="_blank" rel="noreferrer">
                 <Download size={13} /> CSV
-              </a>
-              <a href={api.reportPdfUrl(id)} className="btn-ghost inline-flex items-center gap-2" target="_blank" rel="noreferrer">
-                <FileText size={13} /> 분석 보고 PDF
               </a>
               <BulkPdfButton jobId={id} />
             </div>
