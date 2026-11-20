@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { ShieldAlert } from "lucide-react";
+import { Loader2, ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { Bar } from "@/components/page-skeleton";
 import {
@@ -22,7 +22,7 @@ import { useAttachUpload } from "../attach-upload";
 import { STAGES } from "./parts";
 import SummaryTab from "./tab-summary";
 import EssayTab from "./tab-essay";
-import AttachTab from "./tab-attach";
+import AttachTab, { AttachResume } from "./tab-attach";
 import InternalTab from "./tab-internal";
 import ExternalTab from "./tab-external";
 import FinalTab from "./tab-final";
@@ -156,14 +156,15 @@ export default function ResultView({ ticket }: { ticket: string }) {
     void load();
   }, [load]);
 
-  // 첨부 검사 중에는 5초마다 다시 읽음
+  // 엑셀 검토 중에는 3초, 첨부 검사 중에는 5초마다 다시 읽음
+  const reviewing = data?.run_status === "running";
   const scanning =
     data && ["uploading", "queued", "scanning"].includes(data.attach_status);
   useEffect(() => {
-    if (!scanning) return;
-    const t = setInterval(() => void load(), 5000);
+    if (!reviewing && !scanning) return;
+    const t = setInterval(() => void load(), reviewing ? 3000 : 5000);
     return () => clearInterval(t);
-  }, [scanning, load]);
+  }, [reviewing, scanning, load]);
 
   const setQuery = useCallback(
     (next: Record<string, string | null>, scrollTop: boolean) => {
@@ -324,6 +325,50 @@ export default function ResultView({ ticket }: { ticket: string }) {
       </div>
     );
   }
+  // 이 창에서 보내고 있지 않은 업로드는 멈춘 것(새로고침·창 닫기)
+  const paused = data?.attach_status === "uploading" && (!up || !!up.error);
+  const upLine = (d: PrelimResult) =>
+    paused ? (
+      <>
+        {up?.error && <div style={{ color: "var(--red-text)" }}>{up.error}</div>}
+        <AttachResume ticket={ticket} data={d} />
+      </>
+    ) : up ? (
+      `첨부 실적 zip 파일을 업로드하고 있습니다(${Math.round(up.ratio * 100)}%). 업로드가 끝날 때까지 이 창을 닫거나 새로고침하지 마십시오.`
+    ) : null;
+  if (data && (data.run_status === "running" || data.run_status === "failed")) {
+    const failedRun = data.run_status === "failed";
+    const line = data.attach_status === "uploading" ? upLine(data) : null;
+    return (
+      <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
+        {head(
+          <>
+            저장명 <b className="font-semibold text-[var(--ink)]">{data.label || "-"}</b>
+          </>,
+          <Link href="/prelim/new" className="btn-primary">
+            + 신규 검토 생성
+          </Link>,
+        )}
+        <div className="prelim result mt-8 grid gap-4">
+          {failedRun ? (
+            <div className="empty" role="alert">
+              사전스크리닝 실행에 실패하였습니다.{data.run_error ? ` ${data.run_error}` : ""}
+            </div>
+          ) : (
+            <div className="empty flex items-center justify-center gap-2" role="status" aria-live="polite">
+              <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+              검토 중입니다. 이 창을 닫거나 새로고침해도 검토는 계속됩니다.
+            </div>
+          )}
+          {!failedRun && line && (
+            <div className="rulebox" role="status" aria-live="polite">
+              {line}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
   if (!data || !derived || !verdicts) {
     return (
       <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
@@ -418,15 +463,14 @@ export default function ResultView({ ticket }: { ticket: string }) {
   );
 
   // 첨부 zip 만 진행 중으로 두고 엑셀 결과 탭은 먼저 보여 줌(기관검토 2)
-  const attachLine =
-    up?.error ??
-    (!scanning
-      ? null
-      : data.attach_status === "uploading"
-        ? up
-          ? `첨부 실적 zip 파일을 업로드하고 있습니다(${Math.round(up.ratio * 100)}%). 업로드가 끝날 때까지 이 창을 닫거나 새로고침하지 마십시오.`
-          : "첨부 실적 zip 파일을 업로드하고 있습니다."
-        : `첨부 실적을 검사하고 있습니다${data.attach_total ? `(${data.attach_done ?? 0} / ${data.attach_total}개)` : ""}. 검사가 끝나면 첨부 실적 내 위배, 요약, 블라인드 최종 결과의 숫자가 바뀝니다.`);
+  // 멈춘 업로드는 첨부 탭이 이어 올리기를 직접 보여 줌
+  const attachLine: ReactNode =
+    data.attach_status === "uploading"
+      ? upLine(data)
+      : (up?.error ??
+        (!scanning
+          ? null
+          : `첨부 실적을 검사하고 있습니다${data.attach_total ? `(${data.attach_done ?? 0} / ${data.attach_total}개)` : ""}. 검사가 끝나면 첨부 실적 내 위배, 요약, 블라인드 최종 결과의 숫자가 바뀝니다.`));
 
   return (
     <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
@@ -449,12 +493,12 @@ export default function ResultView({ ticket }: { ticket: string }) {
           ))}
         </div>
 
-        {attachLine && (tab !== "attach" || up?.error) && (
+        {attachLine && (tab !== "attach" || (up?.error && !paused)) && (
           <div
             className="rulebox"
             role="status"
             aria-live="polite"
-            style={up?.error ? { borderLeftColor: "var(--red)", color: "var(--red-text)" } : undefined}
+            style={up?.error && !paused ? { borderLeftColor: "var(--red)", color: "var(--red-text)" } : undefined}
           >
             {attachLine}
           </div>

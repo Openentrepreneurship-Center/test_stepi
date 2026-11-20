@@ -2,7 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { hasHangul, downloadUrl, type PrelimAttachItem, type PrelimVerdict } from "@/lib/api";
+import { hasHangul, downloadUrl, type PrelimAttachItem, type PrelimResult, type PrelimVerdict } from "@/lib/api";
+import {
+  canRememberZip,
+  pickZip,
+  readZip,
+  recallZip,
+  rememberZip,
+  startAttachUpload,
+  useAttachUpload,
+  type ZipHandle,
+} from "../attach-upload";
 import { Fold, XBtn, shownNo } from "./parts";
 import type { Ctx } from "./result-view";
 
@@ -166,6 +176,95 @@ export function Viewer({
   );
 }
 
+/** zip 고르기 버튼. 파일 핸들을 쓸 수 있으면 핸들까지 넘겨 새로고침 뒤에도 기억하게 함 */
+function ZipPick({ label, onFile }: { label: string; onFile: (f: File, h?: ZipHandle) => void }) {
+  return (
+    <label className="btn tertiary" style={{ cursor: "pointer" }}>
+      {label}
+      <input
+        type="file"
+        accept=".zip"
+        hidden
+        onClick={(e) => {
+          if (!canRememberZip()) return;
+          e.preventDefault();
+          void pickZip().then((g) => g && onFile(g.file, g.handle));
+        }}
+        onChange={(e) => {
+          const f = e.currentTarget.files?.[0];
+          e.currentTarget.value = "";
+          if (f) onFile(f);
+        }}
+      />
+    </label>
+  );
+}
+
+const startFresh = (ticket: string, f: File, h?: ZipHandle) => {
+  if (h) void rememberZip(ticket, h);
+  startAttachUpload(ticket, f, null);
+};
+
+/** 끊긴 첨부 zip 업로드를 받은 곳부터 이어 올림. 기억한 파일이 있으면 버튼 하나로, 없으면 같은 파일을 다시 골라서(PRELIM-002) */
+export function AttachResume({ ticket, data }: { ticket: string; data: PrelimResult }) {
+  const [saved, setSaved] = useState<ZipHandle | null>(null);
+  const [other, setOther] = useState<{ f: File; h?: ZipHandle } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void recallZip(ticket).then((h) => alive && setSaved(h ?? null));
+    return () => {
+      alive = false;
+    };
+  }, [ticket]);
+  const received = data.attach_received ?? 0;
+  const pct = data.attach_size ? Math.floor((received / data.attach_size) * 100) : 0;
+  const use = (f: File, h?: ZipHandle) => {
+    if (f.name !== data.attach_name || f.size !== data.attach_size) return setOther({ f, h });
+    setOther(null);
+    if (h) void rememberZip(ticket, h);
+    startAttachUpload(ticket, f, received);
+  };
+  return (
+    <div className="grid gap-2">
+      <div>
+        첨부 실적 zip 업로드가 멈췄습니다({pct}% 받음). 같은 파일로 이어 올릴 수 있습니다.
+        {!saved && <> 처음 고른 파일({data.attach_name})을 다시 골라 주십시오.</>}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {saved && (
+          <button
+            className="btn primary"
+            type="button"
+            onClick={async () => {
+              const f = await readZip(saved);
+              if (f) use(f, saved);
+              else setSaved(null);
+            }}
+          >
+            이어 올리기
+          </button>
+        )}
+        <ZipPick label="파일 다시 고르기" onFile={use} />
+      </div>
+      {other && (
+        <div role="alert" className="flex flex-wrap items-center gap-2" style={{ color: "var(--red-text)" }}>
+          처음 고른 파일과 다릅니다({data.attach_name}). 같은 파일을 고르거나 고른 파일을 처음부터 다시 올려 주십시오.
+          <button
+            className="btn sm"
+            type="button"
+            onClick={() => {
+              setOther(null);
+              startFresh(ticket, other.f, other.h);
+            }}
+          >
+            처음부터 다시 올리기
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AttachTab({ ctx }: { ctx: Ctx }) {
   const { data, derived, verdicts, judge, focusNo, exportUrl, ticket } = ctx;
   const [viewing, setViewing] = useState<{ id: string; mode: "hit" | "all" } | null>(null);
@@ -173,6 +272,7 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
   const kpi = derived.summary_fixed.kpi;
   const current = viewing ? attach.find((a) => a.id === viewing.id) : null;
   const status = data.attach_status;
+  const up = useAttachUpload(ticket);
 
   // 사유는 입력 즉시 화면에 반영하고, 입력이 멈추거나 칸을 벗어나면 저장함
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -310,6 +410,15 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
     return acc;
   }, []);
 
+  // 이 창에서 보내고 있지 않은 업로드는 멈춘 것. 이어 올리기를 보여 줌
+  if (status === "uploading" && (!up || up.error)) {
+    return (
+      <div className="rulebox" role="status">
+        {up?.error && <div style={{ color: "var(--red-text)" }}>{up.error}</div>}
+        <AttachResume ticket={ticket} data={data} />
+      </div>
+    );
+  }
   // 업로드·검사가 끝나기 전에는 표 대신 진행 중 표시만
   if (["uploading", "queued", "scanning"].includes(status)) {
     return (
@@ -347,8 +456,10 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
         {status === "none" ? (
           <div className="empty">첨부 실적 zip 파일을 업로드하지 않았습니다.</div>
         ) : status === "failed" ? (
-          <div className="empty" role="alert">
-            첨부 실적 검사에 실패하였습니다.{hasHangul(data.attach_error) ? ` ${data.attach_error}` : ""}
+          <div className="empty grid justify-items-center gap-3" role="alert">
+            <div>첨부 실적 검사에 실패하였습니다.{hasHangul(data.attach_error) ? ` ${data.attach_error}` : ""}</div>
+            {up?.error && <div>{up.error}</div>}
+            <ZipPick label="다시 올리기" onFile={(f, h) => startFresh(ticket, f, h)} />
           </div>
         ) : (
           <div className="tblwrap">

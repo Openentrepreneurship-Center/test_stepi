@@ -25,8 +25,13 @@ const TONE = {
 };
 
 function StatusBadge({ r }: { r: PrelimSummary }) {
+  // 엑셀 검토가 끝나기 전·실패는 첨부 상태보다 먼저 보임(PRELIM-002)
   const [tone, label] =
-    r.attach_status === "uploading" || r.attach_status === "queued"
+    r.run_status === "running"
+      ? [TONE.running, "검토 중"]
+      : r.run_status === "failed"
+        ? [TONE.failed, "실패"]
+        : r.attach_status === "uploading" || r.attach_status === "queued"
       ? [TONE.pending, "대기"]
       : r.attach_status === "scanning"
         ? [TONE.running, r.attach_total ? `검토 중 ${r.attach_done ?? 0}/${r.attach_total}` : "검토 중"]
@@ -67,8 +72,9 @@ export default function PrelimList({ trashed, tabs }: { trashed: boolean; tabs?:
     void load();
   }, [load]);
 
-  // 첨부 검사 중인 검토가 있으면 5초마다 다시 읽음
-  const active = !trashed && !!items?.some((r) => ACTIVE.includes(r.attach_status ?? ""));
+  // 엑셀 검토·첨부 검사 중인 검토가 있으면 5초마다 다시 읽음
+  const active =
+    !trashed && !!items?.some((r) => r.run_status === "running" || ACTIVE.includes(r.attach_status ?? ""));
   useEffect(() => {
     if (!active) return;
     const t = setInterval(() => void load(), 5000);
@@ -239,7 +245,7 @@ export default function PrelimList({ trashed, tabs }: { trashed: boolean; tabs?:
                   </div>
                   <div className={`${WIDE_ONLY} ${CELL}`}>{r.eval_date || "-"}</div>
                   <div className={CELL}>{people(r)}</div>
-                  <div className={`${WIDE_ONLY} ${CELL}`}>{vc ? n(vc.essay) : `${r.counts.blind_total}건`}</div>
+                  <div className={`${WIDE_ONLY} ${CELL}`}>{vc ? n(vc.essay) : r.counts.blind_total != null ? `${r.counts.blind_total}건` : "-"}</div>
                   <div className={`${WIDE_ONLY} ${CELL}`}>{n(vc?.attach)}</div>
                   <div className={`${WIDE_ONLY} ${CELL}`}>{n(vc?.inx)}</div>
                   <div className={`${WIDE_ONLY} ${CELL}`}>{n(vc?.exx)}</div>

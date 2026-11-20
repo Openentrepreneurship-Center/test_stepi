@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { CalendarDays, ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { failText, prelim, type PrelimRefSummary } from "@/lib/api";
-import { startAttachUpload } from "../attach-upload";
+import { canRememberZip, pickZip, rememberZip, startAttachUpload } from "../attach-upload";
 import "../prelim.css";
 
 type Slot = "essay" | "attach" | "origin";
@@ -41,12 +41,15 @@ function DropBox({
   label,
   file,
   onPick,
+  onBrowse,
   disabled,
 }: {
   accept: string;
   label: string;
   file: File | null;
   onPick: (f: File | null) => Promise<boolean>;
+  /** 있으면 클릭 때 브라우저 파일 창 대신 이것을 씀(끌어다 놓기는 그대로) */
+  onBrowse?: () => void;
   disabled?: boolean;
 }) {
   const [over, setOver] = useState(false);
@@ -67,6 +70,13 @@ function DropBox({
         accept={accept}
         disabled={disabled}
         aria-label={label}
+        onClick={
+          onBrowse &&
+          ((e) => {
+            e.preventDefault();
+            onBrowse();
+          })
+        }
         onChange={async (e) => {
           const input = e.currentTarget;
           // 거절한 파일은 입력칸에서도 비워 같은 파일을 다시 골라도 반응하게 함
@@ -92,6 +102,8 @@ export default function UploadForm() {
   const [error, setError] = useState<string | null>(null);
   const [ref, setRef] = useState<PrelimRefSummary | null>(null);
   const [attachMaxGb, setAttachMaxGb] = useState<number | null>(null);
+  // 고른 zip 을 기억해 두면 새로고침 뒤 다시 고르지 않고 이어 올림(PRELIM-002)
+  const zipHandle = useRef<Awaited<ReturnType<typeof pickZip>>>(null);
 
   // 내부위원·섭외 심사위원·연구기관은 제척 기준 정보 탭에서 읽는다는 안내용 건수
   useEffect(() => {
@@ -144,7 +156,10 @@ export default function UploadForm() {
       if (saveName.trim()) form.append("label", saveName.trim());
       const res = await prelim.run(form);
       // 엑셀 결과를 먼저 보도록 결과 화면으로 바로 넘어가고, zip 은 뒤에서 계속 올림
-      if (files.attach) startAttachUpload(res.ticket, files.attach);
+      if (files.attach) {
+        if (zipHandle.current?.file === files.attach) await rememberZip(res.ticket, zipHandle.current.handle);
+        startAttachUpload(res.ticket, files.attach, null);
+      }
       router.push(`/prelim/${encodeURIComponent(res.ticket)}`);
     } catch (err) {
       setError(failText(err, "사전스크리닝 실행에 실패하였습니다."));
@@ -234,6 +249,16 @@ export default function UploadForm() {
                   label="첨부 실적 zip 파일 선택"
                   file={files.attach}
                   onPick={pick("attach")}
+                  onBrowse={
+                    canRememberZip()
+                      ? async () => {
+                          const got = await pickZip();
+                          if (!got) return;
+                          zipHandle.current = got;
+                          await pick("attach")(got.file);
+                        }
+                      : undefined
+                  }
                 />
               </div>
 

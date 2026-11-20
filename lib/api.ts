@@ -918,11 +918,18 @@ export interface PrelimResult extends PrelimRunResponse {
   attach_status: "none" | "uploading" | "queued" | "scanning" | "done" | "failed";
   attach_done: number | null; attach_total: number | null;
   attach_error?: string | null;
+  /** 엑셀 검토 진행(PRELIM-002). 예전 서버·검토는 없거나 done. done 이 아니면 view·verdicts·derived 는 null */
+  run_status?: "running" | "done" | "failed";
+  run_error?: string | null;
+  /** 서버가 받은 첨부 바이트 수. 끊긴 업로드를 이어 올릴 때 씀 */
+  attach_received?: number;
+  attach_size?: number | null;
+  attach_name?: string | null;
   view: PrelimView;
-  verdicts: PrelimVerdicts;
+  verdicts: PrelimVerdicts | null;
   /** warnings: 올린 파일에서 빠진 열·빈 칸 알림. 9/30 이전 업로드에는 없음 */
   uploads: Partial<Record<PrelimUploadKind, { file_name: string; uploaded_at: string | null; warnings?: string[] }>>;
-  derived: PrelimDerived;
+  derived: PrelimDerived | null;
 }
 
 /** 사전스크리닝 API 응답. 실패면 ApiError(서버 한글 사유는 그대로 실림) */
@@ -943,6 +950,7 @@ export interface PrelimSummary {
   attach_status?: string;
   attach_done?: number | null;
   attach_total?: number | null;
+  run_status?: "running" | "done" | "failed";
   /** view 를 저장하기 전의 옛 실행은 null */
   view_counts?: { essay: number; attach: number; inx: number; exx: number } | null;
   judged?: number;
@@ -950,15 +958,23 @@ export interface PrelimSummary {
   judged_total?: number | null;
 }
 
+/** 첨부 조각을 서버가 받은 곳과 다른 위치부터 보냈을 때. received 부터 다시 보내면 됨 */
+export class AttachOffsetError extends Error {
+  constructor(public received: number) {
+    super("받은 곳과 다른 위치부터 보냈습니다.");
+  }
+}
+
 export const prelim = {
-  async run(form: FormData): Promise<PrelimRunResponse> {
+  /** ticket 을 바로 돌려주고 검토는 서버에서 이어서 함(PRELIM-002) */
+  async run(form: FormData): Promise<{ ticket: string; run_status?: "running" }> {
     const res = await apiFetch(`/prelim/run`, {
       method: "POST",
       body: form,
     });
     // 서버가 detail 에 담아 보낸 한글 안내(예: 암호 걸린 엑셀)는 그대로 보여 줌
     if (!res.ok) throw await readApiError(res);
-    return res.json() as Promise<PrelimRunResponse>;
+    return res.json() as Promise<{ ticket: string; run_status?: "running" }>;
   },
   list: (opts?: { trashed?: boolean; limit?: number }) =>
     http<{ items: PrelimSummary[] }>(
@@ -1057,29 +1073,43 @@ export const prelim = {
   },
   attach: {
     status: () => http<{ enabled: boolean; max_bytes: number }>(`/prelim/attach/status`),
-    /** 크기·디스크 검사를 먼저 하고, 통과하면 zip 본문을 그대로 보냄. 진행률 때문에 XHR 을 씀 */
-    async send(ticket: string, file: File, onProgress: (ratio: number) => void): Promise<void> {
-      const base = `/prelim/results/${encodeURIComponent(ticket)}/attach`;
-      const pre = await apiFetch(`${base}/prepare`, {
+    /** 크기·디스크 검사. 업로드 중·실패면 받은 조각을 지우고 처음부터 받을 준비를 함 */
+    async prepare(ticket: string, file: File): Promise<void> {
+      const pre = await apiFetch(`/prelim/results/${encodeURIComponent(ticket)}/attach/prepare`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ size_bytes: file.size, file_name: file.name }),
       });
       await prelimJson<unknown>(pre);
+    },
+    /** zip 의 offset 부터 한 조각을 보냄. 진행률 때문에 XHR 을 씀. 받은 위치가 다르면 AttachOffsetError */
+    async sendFrom(
+      ticket: string,
+      piece: Blob,
+      offset: number,
+      onProgress: (sent: number) => void,
+    ): Promise<{ received: number; attach_status: string }> {
+      const path = `/prelim/results/${encodeURIComponent(ticket)}/attach?offset=${offset}`;
       // 본문 전송 시작 때 한 번만 검사하므로, 긴 전송 중에 토큰이 만료돼도 끊기지 않음
       const token = await apiToken(540);
-      await new Promise<void>((resolve, reject) => {
+      return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", `${API_BASE}${base}`);
+        xhr.open("POST", `${API_BASE}${path}`);
         xhr.setRequestHeader("Content-Type", "application/zip");
         if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-        xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
+        xhr.upload.onprogress = (e) => onProgress(e.loaded);
         xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) return resolve();
-          reject(apiError(xhr.status, xhr.responseText, base));
+          if (xhr.status >= 200 && xhr.status < 300) return resolve(JSON.parse(xhr.responseText));
+          if (xhr.status === 409) {
+            try {
+              const b = JSON.parse(xhr.responseText);
+              if (typeof b.received === "number") return reject(new AttachOffsetError(b.received));
+            } catch {}
+          }
+          reject(apiError(xhr.status, xhr.responseText, path));
         };
         xhr.onerror = () => reject(new Error("업로드 중 연결이 끊겼습니다."));
-        xhr.send(file);
+        xhr.send(piece);
       });
     },
   },
