@@ -689,12 +689,13 @@ function RefRow({
 }
 
 /** 방금 저장한 줄이 접힌 자리에 있으면 그 묶음을 펼침 */
-function useExpanded(savedKey: string | null) {
+function useExpanded(savedKey: string | null, savedId: number | null) {
   const [open, setOpen] = useState<string[]>([]);
   const [prevKey, setPrevKey] = useState<string | null>(null);
-  // 저장 키가 바뀔 때만 펼침, 그 뒤 사용자가 접으면 접힌 채로 둠
-  if (savedKey !== prevKey) {
-    setPrevKey(savedKey);
+  // 저장한 줄이나 묶음이 바뀔 때만 펼침(같은 묶음의 다른 줄 저장도 포함), 그 뒤 사용자가 접으면 접힌 채로 둠
+  const key = savedKey === null ? null : `${savedId}:${savedKey}`;
+  if (key !== prevKey) {
+    setPrevKey(key);
     if (savedKey !== null && !open.includes(savedKey)) setOpen([...open, savedKey]);
   }
   return [open, (k: string) => setOpen((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k]))] as const;
@@ -740,7 +741,7 @@ function StaffGroups({
   onOpen: (r: PrelimRefRow) => void;
 }) {
   const saved = rows.find((r) => r.id === savedId);
-  const [open, expand] = useExpanded(saved ? deptOf(saved) : null);
+  const [open, expand] = useExpanded(saved ? deptOf(saved) : null, savedId);
   const shown = rows.filter((r) => (!grades.length || grades.includes(str(r.grade))) && matches(r, query));
   if (!shown.length)
     return (
@@ -798,7 +799,7 @@ function OrgGroups({
   onOpen: (r: PrelimRefRow | null, preset?: Record<string, string>) => void;
 }) {
   const saved = rows.find((r) => r.id === savedId);
-  const [open, expand] = useExpanded(saved ? str(saved.kind) : null);
+  const [open, expand] = useExpanded(saved ? str(saved.kind) : null, savedId);
   // 연구기관은 기관명으로만 찾음
   const shown = rows.filter((r) => !query || str(r.name).toLowerCase().includes(query));
   const cards = ORG_KINDS.filter((k) => !kinds.length || kinds.includes(k)).flatMap((kind) => {
@@ -939,7 +940,7 @@ function ReviewerGroups({
   onOpen: (r: PrelimRefRow | null, preset?: Record<string, string>) => void;
 }) {
   const saved = rows.find((r) => r.id === savedId);
-  const [open, expand] = useExpanded(saved ? recruitmentOf(saved) : null);
+  const [open, expand] = useExpanded(saved ? recruitmentOf(saved) : null, savedId);
   if (!rows.length)
     return (
       <div className="ref-emptycard">

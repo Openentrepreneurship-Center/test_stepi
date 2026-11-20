@@ -31,7 +31,10 @@ async function sendAll(ticket: string, file: File, from: number | null, id?: str
     try {
       const start = offset;
       const r = await prelim.attach.sendFrom(ticket, file.slice(start, start + PIECE), start, attachId, (sent) => {
-        uploads.set(ticket, { ratio: (start + sent) / file.size, error: null });
+        const ratio = (start + sent) / file.size;
+        // 화면에 보이는 % 가 바뀔 때만 알림(진행 이벤트마다 결과 화면 전체가 다시 그려지지 않게 함)
+        if (Math.round(ratio * 100) === Math.round((uploads.get(ticket)?.ratio ?? -1) * 100)) return;
+        uploads.set(ticket, { ratio, error: null });
         emit();
       });
       // 보낼 것이 없는데 서버가 더 기다리면 크기가 어긋난 것. 빈 조각을 거듭 보내지 않음
