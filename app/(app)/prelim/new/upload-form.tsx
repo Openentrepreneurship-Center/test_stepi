@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { CalendarDays, ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { failText, prelim, type PrelimRefSummary } from "@/lib/api";
-import { canRememberZip, pickZip, rememberZip, startAttachUpload } from "../attach-upload";
+import { browseZip, rememberZip, startAttachUpload, type ZipHandle } from "../attach-upload";
 import "../prelim.css";
 
 type Slot = "essay" | "attach" | "origin";
@@ -41,15 +41,14 @@ function DropBox({
   label,
   file,
   onPick,
-  onBrowse,
+  onClick,
   disabled,
 }: {
   accept: string;
   label: string;
   file: File | null;
   onPick: (f: File | null) => Promise<boolean>;
-  /** 있으면 클릭 때 브라우저 파일 창 대신 이것을 씀(끌어다 놓기는 그대로) */
-  onBrowse?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLInputElement>) => void;
   disabled?: boolean;
 }) {
   const [over, setOver] = useState(false);
@@ -70,13 +69,7 @@ function DropBox({
         accept={accept}
         disabled={disabled}
         aria-label={label}
-        onClick={
-          onBrowse &&
-          ((e) => {
-            e.preventDefault();
-            onBrowse();
-          })
-        }
+        onClick={onClick}
         onChange={async (e) => {
           const input = e.currentTarget;
           // 거절한 파일은 입력칸에서도 비워 같은 파일을 다시 골라도 반응하게 함
@@ -103,7 +96,7 @@ export default function UploadForm() {
   const [ref, setRef] = useState<PrelimRefSummary | null>(null);
   const [attachMaxGb, setAttachMaxGb] = useState<number | null>(null);
   // 고른 zip 을 기억해 두면 새로고침 뒤 다시 고르지 않고 이어 올림(PRELIM-002)
-  const zipHandle = useRef<Awaited<ReturnType<typeof pickZip>>>(null);
+  const zipHandle = useRef<{ file: File; handle: ZipHandle } | null>(null);
 
   // 내부위원·섭외 심사위원·연구기관은 제척 기준 정보 탭에서 읽는다는 안내용 건수
   useEffect(() => {
@@ -249,15 +242,11 @@ export default function UploadForm() {
                   label="첨부 실적 zip 파일 선택"
                   file={files.attach}
                   onPick={pick("attach")}
-                  onBrowse={
-                    canRememberZip()
-                      ? async () => {
-                          const got = await pickZip();
-                          if (!got) return;
-                          zipHandle.current = got;
-                          await pick("attach")(got.file);
-                        }
-                      : undefined
+                  onClick={(e) =>
+                    browseZip(e, (file, handle) => {
+                      zipHandle.current = { file, handle };
+                      void pick("attach")(file);
+                    })
                   }
                 />
               </div>

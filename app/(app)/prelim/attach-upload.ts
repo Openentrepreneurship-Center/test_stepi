@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, type MouseEvent } from "react";
 import { ApiError, AttachOffsetError, failText, prelim } from "@/lib/api";
 
 // 첨부 zip 전송을 화면과 떼어 둠. 결과 화면으로 넘어가도 이어지고, 새로고침·창 닫기로 끊기면 서버가 받은 곳부터 다시 보냄(PRELIM-002)
@@ -14,38 +14,46 @@ const subs = new Set<() => void>();
 const emit = () => subs.forEach((f) => f());
 const warn = (e: BeforeUnloadEvent) => e.preventDefault();
 const sending = () => [...uploads.values()].some((u) => !u.error && !u.done);
+// 끊긴 앞 요청을 서버가 아직 쥐고 있을 때의 409. 잠깐 뒤 다시 보내면 됨
+const BUSY = "다른 창에서 이 첨부를 올리고 있습니다.";
 
-async function sendAll(ticket: string, file: File, from: number | null) {
-  if (from === null) await prelim.attach.prepare(ticket, file);
+/** 이 창에서 보내고 있지 않은 업로드는 멈춘 것 */
+export const isPaused = (status: string | undefined, up: AttachUpload | null) =>
+  status === "uploading" && (!up || !!up.error);
+
+async function sendAll(ticket: string, file: File, from: number | null, id?: string | null) {
+  const attachId = from === null ? (await prelim.attach.prepare(ticket, file)).attach_id : id;
   let offset = from ?? 0;
   let tries = 0;
-  while (offset < file.size) {
+  // 다 받았는데 대기로 못 바꾼 채 끊겼으면 빈 조각으로 마무리함
+  let status = "uploading";
+  while (status === "uploading") {
     try {
       const start = offset;
-      const r = await prelim.attach.sendFrom(ticket, file.slice(start, start + PIECE), start, (sent) => {
+      const r = await prelim.attach.sendFrom(ticket, file.slice(start, start + PIECE), start, attachId, (sent) => {
         uploads.set(ticket, { ratio: (start + sent) / file.size, error: null });
         emit();
       });
+      // 보낼 것이 없는데 서버가 더 기다리면 크기가 어긋난 것. 빈 조각을 거듭 보내지 않음
+      if (start >= file.size && r.attach_status === "uploading") throw new ApiError(409, "처음부터 다시 올려 주십시오.");
       offset = r.received;
+      status = r.attach_status;
       tries = 0;
     } catch (err) {
       if (err instanceof AttachOffsetError) offset = err.received;
-      else if (err instanceof ApiError || ++tries > 3) throw err;
-      else {
-        // 연결이 잠깐 끊긴 것. 서버가 받은 만큼을 다시 읽고 이어 보냄
-        await new Promise((r) => setTimeout(r, 3000));
-        offset = (await prelim.result(ticket)).attach_received ?? offset;
-      }
+      // 연결 끊김·서버 오류·쓰는 중이면 기다렸다가 같은 위치부터 다시 보냄(어긋나면 서버가 받은 곳을 알려 줌)
+      else if (++tries > 5 || (err instanceof ApiError && err.status < 500 && err.reason !== BUSY)) throw err;
+      else await new Promise((r) => setTimeout(r, 3000 * tries));
     }
   }
 }
 
-/** from 이 null 이면 처음부터(준비 요청 포함), 숫자면 서버가 받은 그 위치부터 이어 보냄 */
-export function startAttachUpload(ticket: string, file: File, from: number | null) {
+/** from 이 null 이면 처음부터(준비 요청 포함), 숫자면 서버가 받은 그 위치부터 id 로 이어 보냄 */
+export function startAttachUpload(ticket: string, file: File, from: number | null, id?: string | null) {
   uploads.set(ticket, { ratio: from && file.size ? from / file.size : 0, error: null });
   window.addEventListener("beforeunload", warn);
   emit();
-  sendAll(ticket, file, from)
+  sendAll(ticket, file, from, id)
     .then(
       () => {
         uploads.set(ticket, { ratio: 1, error: null, done: true });
@@ -80,19 +88,25 @@ export type ZipHandle = FileSystemFileHandle & {
 };
 type Picker = (o: object) => Promise<ZipHandle[]>;
 
+// 브라우저가 파일 기억 창을 막으면 이 창에서는 일반 파일 창만 씀
+let pickerOff = false;
 export const canRememberZip = () =>
-  typeof window !== "undefined" && window.isSecureContext && "showOpenFilePicker" in window;
+  !pickerOff && typeof window !== "undefined" && window.isSecureContext && "showOpenFilePicker" in window;
 
-/** 고르기를 취소하면 null */
-export async function pickZip(): Promise<{ file: File; handle: ZipHandle } | null> {
-  try {
-    const [handle] = await (window as unknown as { showOpenFilePicker: Picker }).showOpenFilePicker({
-      types: [{ description: "zip", accept: { "application/zip": [".zip"] } }],
+/** zip 파일 칸의 onClick. 기억할 수 있으면 핸들까지 넘기고, 막히면 일반 파일 창을 엶(고르면 칸의 onChange 로 감) */
+export function browseZip(e: MouseEvent<HTMLInputElement>, onFile: (f: File, h: ZipHandle) => void) {
+  if (!canRememberZip()) return;
+  e.preventDefault();
+  const input = e.currentTarget;
+  (window as unknown as { showOpenFilePicker: Picker })
+    .showOpenFilePicker({ types: [{ description: "zip", accept: { "application/zip": [".zip"] } }] })
+    .then(async ([h]) => onFile(await h.getFile(), h))
+    .catch((err) => {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      pickerOff = true;
+      // 바로 거절되면 아직 처음 클릭을 처리하는 중이라 같은 칸의 click() 이 무시됨. 다음 차례로 미룸
+      setTimeout(() => input.click());
     });
-    return { file: await handle.getFile(), handle };
-  } catch {
-    return null;
-  }
 }
 
 function zipStore<T>(mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {

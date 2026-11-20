@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { hasHangul, downloadUrl, type PrelimAttachItem, type PrelimResult, type PrelimVerdict } from "@/lib/api";
 import {
-  canRememberZip,
-  pickZip,
+  browseZip,
+  isPaused,
   readZip,
   recallZip,
   rememberZip,
@@ -185,11 +185,7 @@ function ZipPick({ label, onFile }: { label: string; onFile: (f: File, h?: ZipHa
         type="file"
         accept=".zip"
         hidden
-        onClick={(e) => {
-          if (!canRememberZip()) return;
-          e.preventDefault();
-          void pickZip().then((g) => g && onFile(g.file, g.handle));
-        }}
+        onClick={(e) => browseZip(e, onFile)}
         onChange={(e) => {
           const f = e.currentTarget.files?.[0];
           e.currentTarget.value = "";
@@ -222,7 +218,7 @@ export function AttachResume({ ticket, data }: { ticket: string; data: PrelimRes
     if (f.name !== data.attach_name || f.size !== data.attach_size) return setOther({ f, h });
     setOther(null);
     if (h) void rememberZip(ticket, h);
-    startAttachUpload(ticket, f, received);
+    startAttachUpload(ticket, f, received, data.attach_id);
   };
   return (
     <div className="grid gap-2">
@@ -410,8 +406,7 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
     return acc;
   }, []);
 
-  // 이 창에서 보내고 있지 않은 업로드는 멈춘 것. 이어 올리기를 보여 줌
-  if (status === "uploading" && (!up || up.error)) {
+  if (isPaused(status, up)) {
     return (
       <div className="rulebox" role="status">
         {up?.error && <div style={{ color: "var(--red-text)" }}>{up.error}</div>}

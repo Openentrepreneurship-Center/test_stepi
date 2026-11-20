@@ -18,7 +18,7 @@ import {
   type PrelimVerdicts,
 } from "@/lib/api";
 import "../prelim.css";
-import { useAttachUpload } from "../attach-upload";
+import { isPaused, useAttachUpload } from "../attach-upload";
 import { STAGES } from "./parts";
 import SummaryTab from "./tab-summary";
 import EssayTab from "./tab-essay";
@@ -329,20 +329,19 @@ export default function ResultView({ ticket }: { ticket: string }) {
       </div>
     );
   }
-  // 이 창에서 보내고 있지 않은 업로드는 멈춘 것(새로고침·창 닫기)
-  const paused = data?.attach_status === "uploading" && (!up || !!up.error);
-  const upLine = (d: PrelimResult) =>
-    paused ? (
+  const paused = isPaused(data?.attach_status, up);
+  const upLine =
+    paused && data ? (
       <>
         {up?.error && <div style={{ color: "var(--red-text)" }}>{up.error}</div>}
-        <AttachResume ticket={ticket} data={d} />
+        <AttachResume ticket={ticket} data={data} />
       </>
     ) : up ? (
       `첨부 실적 zip 파일을 업로드하고 있습니다(${Math.round(up.ratio * 100)}%). 업로드가 끝날 때까지 이 창을 닫거나 새로고침하지 마십시오.`
     ) : null;
   if (data && (data.run_status === "running" || data.run_status === "failed")) {
     const failedRun = data.run_status === "failed";
-    const line = data.attach_status === "uploading" ? upLine(data) : null;
+    const line = data.attach_status === "uploading" ? upLine : null;
     return (
       <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
         {head(
@@ -470,7 +469,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
   // 멈춘 업로드는 첨부 탭이 이어 올리기를 직접 보여 줌
   const attachLine: ReactNode =
     data.attach_status === "uploading"
-      ? upLine(data)
+      ? upLine
       : (up?.error ??
         (!scanning
           ? null

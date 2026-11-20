@@ -820,8 +820,6 @@ export interface PrelimView {
   version: number; legacy?: boolean; end: string | null; notice: string | null;
   essay: PrelimEssayItem[]; attach: PrelimAttachItem[];
   external: PrelimExternalRow[];
-  /** 학력 기관이 제척 기관인 경우(기간 없음) */
-  external_edu?: { no: string; name: string; org: string; school: string }[];
   missing: { count: number; rows: number[] };
   warnings: string[];
 }
@@ -910,7 +908,6 @@ export interface PrelimDerived {
   exx_advisor?: PrelimAdvisorRow[];
   /** api 재시작 전 응답에는 없음 */
   pref?: PrelimPref;
-  external_edu_count: number;
   warnings: string[];
 }
 export interface PrelimVerdict { value: string; reason: string | null }
@@ -944,6 +941,8 @@ export interface PrelimResult extends PrelimRunResponse {
   attach_received?: number;
   attach_size?: number | null;
   attach_name?: string | null;
+  /** 이 업로드의 준비 번호. 다른 창이 처음부터 다시 올리면 바뀜 */
+  attach_id?: string | null;
   view: PrelimView;
   verdicts: PrelimVerdicts | null;
   /** warnings: 올린 파일에서 빠진 열·빈 칸 알림. 9/30 이전 업로드에는 없음 */
@@ -993,7 +992,7 @@ export const prelim = {
     });
     // 서버가 detail 에 담아 보낸 한글 안내(예: 암호 걸린 엑셀)는 그대로 보여 줌
     if (!res.ok) throw await readApiError(res);
-    return res.json() as Promise<{ ticket: string; run_status?: "running" }>;
+    return res.json();
   },
   list: (opts?: { trashed?: boolean; limit?: number }) =>
     http<{ items: PrelimSummary[] }>(
@@ -1093,22 +1092,25 @@ export const prelim = {
   attach: {
     status: () => http<{ enabled: boolean; max_bytes: number }>(`/prelim/attach/status`),
     /** 크기·디스크 검사. 업로드 중·실패면 받은 조각을 지우고 처음부터 받을 준비를 함 */
-    async prepare(ticket: string, file: File): Promise<void> {
+    async prepare(ticket: string, file: File): Promise<{ attach_id?: string }> {
       const pre = await apiFetch(`/prelim/results/${encodeURIComponent(ticket)}/attach/prepare`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ size_bytes: file.size, file_name: file.name }),
       });
-      await prelimJson<unknown>(pre);
+      return prelimJson<{ attach_id?: string }>(pre);
     },
     /** zip 의 offset 부터 한 조각을 보냄. 진행률 때문에 XHR 을 씀. 받은 위치가 다르면 AttachOffsetError */
     async sendFrom(
       ticket: string,
       piece: Blob,
       offset: number,
+      attachId: string | null | undefined,
       onProgress: (sent: number) => void,
     ): Promise<{ received: number; attach_status: string }> {
-      const path = `/prelim/results/${encodeURIComponent(ticket)}/attach?offset=${offset}`;
+      const path =
+        `/prelim/results/${encodeURIComponent(ticket)}/attach?offset=${offset}` +
+        (attachId ? `&attach_id=${encodeURIComponent(attachId)}` : "");
       // 본문 전송 시작 때 한 번만 검사하므로, 긴 전송 중에 토큰이 만료돼도 끊기지 않음
       const token = await apiToken(540);
       return new Promise((resolve, reject) => {
