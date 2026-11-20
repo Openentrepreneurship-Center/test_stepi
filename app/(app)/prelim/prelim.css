@@ -515,12 +515,6 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim .essay-types button:focus-visible { outline-offset: 2px; }
 .prelim .essay-on { font-size: 14.5px; font-weight: 600; color: var(--navy); }
 .prelim .essay-on button { border: 0; background: none; padding: 0; font: inherit; color: var(--navy); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; white-space: nowrap; }
-.prelim .wait { display: grid; justify-items: center; gap: 14px; padding: 64px 24px; border: 1px solid var(--line); background: #fff; text-align: center; }
-.prelim .wait h2 { margin: 0; font-size: 20px; font-weight: 700; }
-.prelim .wait-bar { width: min(440px, 100%); height: 8px; border: 1px solid var(--line); background: var(--surface); }
-.prelim .wait-bar i { display: block; height: 100%; background: var(--navy); transition: width .4s; }
-.prelim .wait p { margin: 0; font-size: 15px; color: var(--muted); }
-.prelim .wait .wait-n { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
 
 /* 블라인드 최종 결과 */
 .prelim .dtable .sub { display: block; margin-top: 4px; font-size: 13px; font-weight: 400; color: var(--muted); }
@@ -543,9 +537,9 @@ html:has(.prelim) { scrollbar-gutter: stable; }
 .prelim.result .tblwrap { container-type: inline-size; }
 .prelim.result tfoot .tf-in { position: sticky; left: 16px; display: block; max-width: calc(100cqw - 32px); white-space: normal; }
 /* 글자 크기 6단계(13.5·14.5·15.5·17.5·22·30). :where 로 원래 규칙과 같은 우선순위에서 값만 바꿈 */
-.prelim:where(.result) h2, .prelim:where(.result) .bcard .b-side h3, .prelim:where(.result) .wait h2 { font-size: 22px; }
+.prelim:where(.result) h2, .prelim:where(.result) .bcard .b-side h3 { font-size: 22px; }
 .prelim:where(.result) .matrix .go, .prelim:where(.result) .quote, .prelim:where(.result) .vw-head h2 { font-size: 17.5px; }
-.prelim:where(.result) .hint.upfmt, .prelim:where(.result) .tabs button, .prelim:where(.result) .vhead b, .prelim:where(.result) .pg .line, .prelim:where(.result) .wait p { font-size: 15.5px; }
+.prelim:where(.result) .hint.upfmt, .prelim:where(.result) .tabs button, .prelim:where(.result) .vhead b, .prelim:where(.result) .pg .line { font-size: 15.5px; }
 .prelim:where(.result) .jsave, .prelim:where(.result) .jb, .prelim:where(.result) .dtable .sub { font-size: 13.5px; }
 /* 버튼 높이: 표·패널 안 32, 쪽 머리 44. 엑셀 버튼은 아이콘 옆 글자. 한 줄에 놓인 버튼은 같은 높이 */
 .prelim.result :is(.jbtn, .outbtn, .dec .btn, .seg2 button, .stageseg button, .essay-types button) { min-height: 32px; height: 32px; padding: 0 10px; font-size: 13.5px; border-radius: 0; }

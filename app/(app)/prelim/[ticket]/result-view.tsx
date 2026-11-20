@@ -18,6 +18,7 @@ import {
   type PrelimVerdicts,
 } from "@/lib/api";
 import "../prelim.css";
+import { useAttachUpload } from "../attach-upload";
 import { STAGES } from "./parts";
 import SummaryTab from "./tab-summary";
 import EssayTab from "./tab-essay";
@@ -125,6 +126,7 @@ export default function ResultView({ ticket }: { ticket: string }) {
   const [verdicts, setVerdicts] = useState<PrelimVerdicts | null>(null);
   const [uploads, setUploads] = useState<PrelimResult["uploads"]>({});
   const [error, setError] = useState<unknown>(null);
+  const up = useAttachUpload(ticket);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
@@ -415,28 +417,16 @@ export default function ResultView({ ticket }: { ticket: string }) {
     </div>
   );
 
-  // 첨부 검사가 끝나기 전에는 탭 대신 대기 화면. 결과는 끝난 뒤 한 번에 보여 줌
-  if (scanning) {
-    const done = data.attach_done ?? 0;
-    const total = data.attach_total ?? 0;
-    return (
-      <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
-        {head(meta, actions)}
-        <div className="prelim result mt-8">
-          <div className="wait" role="status" aria-live="polite">
-            <h2>첨부 실적을 검사하고 있습니다</h2>
-            <div className="wait-bar" aria-hidden="true">
-              <i style={{ width: `${total ? Math.round((done / total) * 100) : 0}%` }} />
-            </div>
-            <p className="wait-n">
-              {total ? `${done} / ${total}개` : data.attach_status === "scanning" ? "검사 중" : "대기"}
-            </p>
-            <p>검사가 완료되면 결과를 한 번에 확인할 수 있습니다.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // 첨부 zip 만 진행 중으로 두고 엑셀 결과 탭은 먼저 보여 줌(기관검토 2)
+  const attachLine =
+    up?.error ??
+    (!scanning
+      ? null
+      : data.attach_status === "uploading"
+        ? up
+          ? `첨부 실적 zip 파일을 업로드하고 있습니다(${Math.round(up.ratio * 100)}%). 업로드가 끝날 때까지 이 창을 닫거나 새로고침하지 마십시오.`
+          : "첨부 실적 zip 파일을 업로드하고 있습니다."
+        : `첨부 실적을 검사하고 있습니다${data.attach_total ? `(${data.attach_done ?? 0} / ${data.attach_total}개)` : ""}. 검사가 끝나면 첨부 실적 내 위배, 요약, 블라인드 최종 결과의 숫자가 바뀝니다.`);
 
   return (
     <div className="px-8 lg:px-12 py-9 max-w-[1400px] mx-auto fade-up">
@@ -458,6 +448,17 @@ export default function ResultView({ ticket }: { ticket: string }) {
             </button>
           ))}
         </div>
+
+        {attachLine && (
+          <div
+            className="rulebox"
+            role="status"
+            aria-live="polite"
+            style={up?.error ? { borderLeftColor: "var(--red)", color: "var(--red-text)" } : undefined}
+          >
+            {attachLine}
+          </div>
+        )}
 
         {notice && (
           <div

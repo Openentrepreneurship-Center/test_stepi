@@ -341,7 +341,9 @@ export default function AttachTab({ ctx }: { ctx: Ctx }) {
           </div>
         ) : status !== "done" && attach.length === 0 ? (
           <div className="empty">
-            첨부 실적을 검사하고 있습니다. {data.attach_total ? `${data.attach_done ?? 0} / ${data.attach_total}개` : ""}
+            {status === "uploading"
+              ? "첨부 실적 zip 파일을 업로드하고 있습니다."
+              : `첨부 실적을 검사하고 있습니다. ${data.attach_total ? `${data.attach_done ?? 0} / ${data.attach_total}개` : ""}`}
           </div>
         ) : (
           <div className="tblwrap">

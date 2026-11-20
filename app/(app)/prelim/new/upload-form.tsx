@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { CalendarDays, ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import { failText, prelim, type PrelimRefSummary } from "@/lib/api";
+import { startAttachUpload } from "../attach-upload";
 import "../prelim.css";
 
 type Slot = "essay" | "attach" | "origin";
@@ -89,7 +90,6 @@ export default function UploadForm() {
   const [saveName, setSaveName] = useState("");
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState<number | null>(null);
   const [ref, setRef] = useState<PrelimRefSummary | null>(null);
   const [attachMaxGb, setAttachMaxGb] = useState<number | null>(null);
 
@@ -143,15 +143,8 @@ export default function UploadForm() {
       if (evalIso) form.append("eval_date", evalIso);
       if (saveName.trim()) form.append("label", saveName.trim());
       const res = await prelim.run(form);
-      if (files.attach) {
-        setProgress(0);
-        try {
-          await prelim.attach.send(res.ticket, files.attach, setProgress);
-        } catch (err) {
-          // 검토는 이미 만들어졌음. 결과 화면은 열어 주고 첨부 실패만 알림(첨부 탭에도 실패 안내가 남음)
-          window.alert(failText(err, "첨부 실적 업로드에 실패하였습니다."));
-        }
-      }
+      // 엑셀 결과를 먼저 보도록 결과 화면으로 바로 넘어가고, zip 은 뒤에서 계속 올림
+      if (files.attach) startAttachUpload(res.ticket, files.attach);
       router.push(`/prelim/${encodeURIComponent(res.ticket)}`);
     } catch (err) {
       setError(failText(err, "사전스크리닝 실행에 실패하였습니다."));
@@ -344,11 +337,7 @@ export default function UploadForm() {
                 disabled={!ready || running}
                 style={{ minWidth: 200, justifyContent: "space-between" }}
               >
-                {running
-                  ? progress !== null
-                    ? `첨부 실적 업로드 중 ${Math.round(progress * 100)}%`
-                    : "검토 중"
-                  : "검토 실행"}{" "}
+                {running ? "검토 중" : "검토 실행"}{" "}
                 <span aria-hidden="true">→</span>
               </button>
               <span
