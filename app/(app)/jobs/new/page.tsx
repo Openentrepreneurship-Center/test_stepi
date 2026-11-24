@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { UploadCloud, FileSpreadsheet, FilePlus2, FileArchive } from "lucide-react";
 import { failText, api } from "@/lib/api";
 import PageHeader from "@/components/page-header";
@@ -14,6 +14,27 @@ const TRACKS = [
 ];
 
 export default function NewJobPage() {
+  return (
+    <Suspense fallback={null}>
+      <FreshForm />
+    </Suspense>
+  );
+}
+
+// 만든 분석 번호는 주소에 둠. 새로고침해도 논문 ZIP 올리기 화면이 남고 분석을 다시 만들지 않음.
+// 메뉴로 번호 없는 주소에 오면 지난 입력을 버린 새 화면
+function FreshForm() {
+  const job = useSearchParams().get("job");
+  const [prev, setPrev] = useState(job);
+  const [gen, setGen] = useState(0);
+  if (prev !== job) {
+    setPrev(job);
+    if (!job) setGen(gen + 1);
+  }
+  return <NewJobForm key={gen} createdJobId={job} />;
+}
+
+function NewJobForm({ createdJobId }: { createdJobId: string | null }) {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [infoFile, setInfoFile] = useState<File | null>(null);
@@ -27,7 +48,6 @@ export default function NewJobPage() {
   const [zipSummary, setZipSummary] = useState<string | null>(null);
   const [zipErrors, setZipErrors] = useState<string[]>([]);
   const [unmatchedApplicants, setUnmatchedApplicants] = useState<string[]>([]);
-  const [createdJobId, setCreatedJobId] = useState<string | null>(null);
   const [createWarnings, setCreateWarnings] = useState<string[]>([]);
   const submitting = useRef(false);
   const [sheets, setSheets] = useState<string[]>([]);
@@ -64,6 +84,17 @@ export default function NewJobPage() {
     onDragLeave: () => setDragOver(null),
     onDrop: acceptDrop(zone),
   });
+
+  // 올리는 중 새로고침·창 닫기는 묻고 떠남(분석은 서버에 생겨도 화면이 번호를 잃음)
+  useEffect(() => {
+    if (!busy) return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [busy]);
 
   const loadSheets = async (f: File, target: "essay" | "info") => {
     try {
@@ -102,7 +133,9 @@ export default function NewJobPage() {
           info_sheet_name: infoSheetName || undefined,
         });
         jobId = r.job_id;
-        setCreatedJobId(jobId);
+        // ZIP 을 같이 올릴 때만(바로 결과로 가면 뒤로 가기가 빈 화면이어야 함), 이미 다른 화면으로 갔으면 두지 않음
+        if (pdfZip && window.location.pathname === "/jobs/new")
+          window.history.replaceState(null, "", `/jobs/new?job=${encodeURIComponent(jobId)}`);
         setCreateWarnings(r.warnings ?? []);
       }
       if (!jobId) return;
