@@ -36,6 +36,36 @@ async function isLockedExcel(f: File): Promise<boolean> {
   return b[0] === 0xd0 && b[1] === 0xcf && b[2] === 0x11 && b[3] === 0xe0;
 }
 
+// zip 끝 목록과 중앙 목록 첫 항목만 봄(잘린 파일·zip 아닌 파일). 그 밖의 손상은 첨부 검사가 알림
+async function isBrokenZip(f: File): Promise<boolean> {
+  const read = async (at: number, n: number) =>
+    at < 0 || n < 0 || at + n > f.size ? null : new DataView(await f.slice(at, at + n).arrayBuffer());
+  const tailAt = Math.max(0, f.size - 65557);
+  const tail = await read(tailAt, f.size - tailAt);
+  let e = -1;
+  for (let i = (tail?.byteLength ?? 0) - 22; i >= 0 && e < 0; i--) if (tail!.getUint32(i, true) === 0x06054b50) e = i;
+  if (!tail || e < 0) return true;
+  // 중앙 목록은 끝 목록 바로 앞에서 그 크기만큼 거슬러 찾음(앞에 다른 내용이 붙은 zip 도 열림)
+  let end = tailAt + e;
+  let entries = tail.getUint16(e + 10, true);
+  let size = tail.getUint32(e + 12, true);
+  const loc = await read(end - 20, 20);
+  if (loc && loc.getUint32(0, true) === 0x07064b50) {
+    // 4GB 가 넘는 zip(ZIP64)은 위치 표시가 가리키는 곳, 없으면 바로 앞의 ZIP64 끝 목록을 씀
+    let z: DataView | null = null;
+    for (const at of [Number(loc.getBigUint64(8, true)), end - 76]) {
+      const v: DataView | null = z ? null : await read(at, 56);
+      if (v?.getUint32(0, true) === 0x06064b50) [z, end] = [v, at];
+    }
+    if (!z) return true;
+    entries = Number(z.getBigUint64(32, true));
+    size = Number(z.getBigUint64(40, true));
+  }
+  if (entries === 0) return false;
+  const cd = await read(end - size, 4);
+  return !cd || cd.getUint32(0, true) !== 0x02014b50;
+}
+
 function DropBox({
   accept,
   label,
@@ -122,6 +152,11 @@ export default function UploadForm() {
         `${label} 파일에 암호가 설정되어 있어 업로드할 수 없습니다.\n` +
           "엑셀에서 암호를 해제한 뒤(파일 > 정보 > 통합 문서 보호 > 암호 설정) 다시 업로드해 주십시오.",
       );
+      return false;
+    }
+    if (f && slot === "attach" && (await isBrokenZip(f).catch(() => true))) {
+      setFiles((prev) => ({ ...prev, [slot]: null }));
+      window.alert("zip 파일을 열지 못했습니다. zip 으로 압축한 파일인지 확인해 주세요.");
       return false;
     }
     setFiles((prev) => ({ ...prev, [slot]: f }));
