@@ -17,8 +17,12 @@ function LoginInner() {
   // 설정을 받기 전에는 로그인 단추를 막음(아이디 칸 없이 보내지 않게)
   const [accountLogin, setAccountLogin] = useState<boolean | null>(null);
   const [username, setUsername] = useState("");
-  const [changing, setChanging] = useState(false);
   const [pw2, setPw2] = useState("");
+  // 비밀번호가 맞은 뒤 남은 단계: 비밀번호 바꾸기, 2차 인증 코드(MFA-001), 첫 등록
+  const [step, setStep] = useState<"change_password" | "otp" | "enroll" | null>(null);
+  const [enroll, setEnroll] = useState<{ secret: string; qr: string } | null>(null);
+  const changing = step === "change_password";
+  const coding = step === "otp" || step === "enroll";
 
   useEffect(() => {
     fetch("/api/login", { cache: "no-store" })
@@ -39,18 +43,29 @@ function LoginInner() {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(changing ? { new_password: pw } : accountLogin ? { username, password: pw } : { password: pw }),
+        body: JSON.stringify(
+          changing ? { new_password: pw } : coding ? { code: pw.replace(/\s/g, "") } : accountLogin ? { username, password: pw } : { password: pw },
+        ),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        // 바꾸기 단계가 끝났으면 처음부터 다시 로그인
-        if (changing && res.status === 401) setChanging(false);
-        setErr(j.error ?? "로그인에 실패하였습니다.");
+        // 단계 표가 끝났으면 처음부터 다시 로그인
+        if (j.restart) {
+          setStep(null);
+          setEnroll(null);
+          setPw("");
+        }
+        setErr(
+          j.restart && step === "enroll"
+            ? "등록 시간이 지났습니다. 다시 로그인하면 새 QR 이 나오니, 앱에 넣은 예전 항목은 지우고 새로 등록해 주십시오."
+            : (j.error ?? "로그인에 실패하였습니다."),
+        );
         setLoading(false);
         return;
       }
-      if (j.step === "change_password") {
-        setChanging(true);
+      if (j.step) {
+        setStep(j.step);
+        setEnroll(j.enroll ?? null);
         setPw("");
         setPw2("");
         setLoading(false);
@@ -100,13 +115,30 @@ function LoginInner() {
           <p className="text-[14px] text-[var(--ink-muted)] leading-[1.7] mb-10">
             {changing
               ? "비밀번호를 바꿔야 로그인이 끝납니다. 9자 이상이고 영문자·숫자·특수문자를 모두 넣어 주십시오."
+              : step === "enroll"
+                ? "처음 로그인입니다. 휴대폰 OTP 앱(예: Google Authenticator)에 아래 QR 을 찍거나 키를 넣은 뒤, 앱에 나온 6자리 숫자를 입력해 주십시오."
+              : step === "otp"
+                ? "휴대폰 OTP 앱에 나온 6자리 숫자를 입력해 주십시오."
               : accountLogin
                 ? "개인 아이디와 비밀번호를 입력해 주십시오."
                 : "인사팀에 공유된 비밀번호를 입력해 주십시오."}
           </p>
 
           <form onSubmit={submit} className="space-y-6">
-            {accountLogin && !changing && (
+            {enroll && (
+              <div className="space-y-3">
+                {/* eslint-disable-next-line @next/next/no-img-element -- 서버가 만든 SVG 데이터 주소 */}
+                <img src={enroll.qr} alt="OTP 등록 QR" width={180} height={180} className="border border-[var(--line)]" />
+                <div className="text-[13px] text-[var(--ink-muted)]">
+                  QR 을 찍을 수 없으면 이 키를 앱에 직접 넣어 주십시오.
+                  <div className="mt-1 font-mono text-[14px] text-[var(--ink)] break-all select-all">
+                    {enroll.secret.match(/.{1,4}/g)?.join(" ")}
+                  </div>
+                </div>
+                <p className="text-[13px] text-[var(--ink-muted)]">OTP 앱의 클라우드 백업은 끄고 쓰십시오.</p>
+              </div>
+            )}
+            {accountLogin && !step && (
               <label className="block">
                 <span className="block text-[13px] text-[var(--ink-muted)] mb-2">아이디</span>
                 <input
@@ -123,19 +155,21 @@ function LoginInner() {
             )}
             <label className="block">
               <span className="block text-[13px] text-[var(--ink-muted)] mb-2">
-                {changing ? "새 비밀번호" : "비밀번호"}
+                {changing ? "새 비밀번호" : coding ? "인증 코드" : "비밀번호"}
               </span>
               <input
-                key={changing ? "new" : "current"}
-                type="password"
+                key={step ?? "current"}
+                type={coding ? "text" : "password"}
                 className="input"
-                placeholder="비밀번호 입력"
+                placeholder={coding ? "6자리 숫자 입력" : "비밀번호 입력"}
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
                 onInput={(e) => setPw((e.target as HTMLInputElement).value)}
-                autoFocus={!accountLogin || changing}
+                autoFocus={!accountLogin || !!step}
                 required
-                autoComplete={changing ? "new-password" : "current-password"}
+                {...(coding
+                  ? { inputMode: "numeric" as const, autoComplete: "one-time-code" }
+                  : { autoComplete: changing ? "new-password" : "current-password" })}
               />
             </label>
             {changing && (
@@ -164,7 +198,7 @@ function LoginInner() {
               className="btn-primary w-full"
               disabled={loading || accountLogin === null}
             >
-              {loading ? "확인 중" : changing ? "비밀번호 바꾸기" : "로그인"}
+              {loading ? "확인 중" : changing ? "비밀번호 바꾸기" : coding ? "확인" : "로그인"}
             </button>
           </form>
 

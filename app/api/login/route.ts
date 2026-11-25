@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
   const now = Date.now() / 1000;
   const locked = rule ? (failures.get(addr)?.lockedUntil ?? 0) : 0;
   if (locked > now) return tooMany(Math.ceil(locked - now), addr);
-  let body: { username?: string; password?: string; new_password?: string };
+  let body: { username?: string; password?: string; new_password?: string; code?: string };
   try {
     body = await req.json();
   } catch {
@@ -143,9 +143,27 @@ export async function POST(req: NextRequest) {
   return startSession(secret);
 }
 
+type Step = { account: string; step: string | null; ticket: string | null; enroll?: unknown };
+
+/** 백엔드가 다음 단계를 주면 임시 쿠키를 새 표로 바꾸고, 없으면 로그인을 끝냄 */
+async function proceed(r: Response, secret: string) {
+  const got = (await r.json()) as Step;
+  if (!got.step || !got.ticket) return startSession(secret, got.account);
+  // 등록 단계의 비밀 키는 화면에 한 번만 넘김(MFA-001). 저장하지 않음
+  const res = NextResponse.json({ step: got.step, enroll: got.enroll }, { headers: { "Cache-Control": "no-store" } });
+  res.cookies.set(PENDING_COOKIE, got.ticket, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: secureCookie(),
+    path: "/api/login",
+    maxAge: 300,
+  });
+  return res;
+}
+
 async function accountPost(
   req: NextRequest,
-  body: { username?: string; password?: string; new_password?: string },
+  body: { username?: string; password?: string; new_password?: string; code?: string },
   secret: string,
   rule: ReturnType<typeof loginRule>,
   addr: string,
@@ -157,15 +175,30 @@ async function accountPost(
   const unreachable = () =>
     NextResponse.json({ error: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주십시오." }, { status: 502 });
 
+  // 비밀번호 바꾸기·2차 인증 코드 단계. 표는 임시 쿠키에만 있음
   const ticket = req.cookies.get(PENDING_COOKIE)?.value;
-  if (body.new_password !== undefined) {
-    const r = ticket ? await backend("/auth/password", { ticket, new_password: body.new_password }, apiSecret) : undefined;
+  const pending =
+    body.new_password !== undefined ? { path: "/auth/password", new_password: body.new_password }
+    : body.code !== undefined ? { path: "/auth/otp", code: body.code }
+    : null;
+  if (pending) {
+    const { path, ...rest } = pending;
+    const r = ticket ? await backend(path, { ticket, ...rest }, apiSecret) : undefined;
     if (r === null) return unreachable();
-    if (r?.ok) return startSession(secret, ((await r.json()) as { account: string }).account);
+    if (r?.ok) return proceed(r, secret);
     if (r?.status === 400) return NextResponse.json({ error: await detail(r, "요청 형식이 올바르지 않습니다.") }, { status: 400 });
+    if (r?.status === 422) return NextResponse.json({ error: "요청 형식이 올바르지 않습니다." }, { status: 400 });
+    if (r?.status === 429) {
+      return NextResponse.json(
+        { error: await detail(r, "인증 코드 입력이 너무 많습니다. 잠시 후 다시 시도해 주십시오.") },
+        { status: 429, headers: { "Retry-After": r.headers.get("Retry-After") ?? "60" } },
+      );
+    }
     if (r && r.status !== 401) return unreachable();
-    // 표가 없거나 5분이 지남. 처음부터 다시 로그인
-    const res = NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+    const why = r ? await detail(r, "") : "";
+    // 틀린 코드는 같은 단계에서 다시 넣음. 표가 없거나 5분이 지났으면 처음부터
+    if (why && !why.startsWith("로그인이 필요합니다")) return NextResponse.json({ error: why }, { status: 401 });
+    const res = NextResponse.json({ error: "로그인이 필요합니다.", restart: true }, { status: 401 });
     res.cookies.delete({ name: PENDING_COOKIE, path: "/api/login" });
     return res;
   }
@@ -179,17 +212,5 @@ async function accountPost(
   }
   if (r.status === 401) return NextResponse.json({ error: SERVER_ERROR }, { status: 500 });
   if (!r.ok) return unreachable();
-  const got = (await r.json()) as { account: string; step: string | null; ticket: string | null };
-  if (got.step && got.ticket) {
-    const res = NextResponse.json({ step: got.step });
-    res.cookies.set(PENDING_COOKIE, got.ticket, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: secureCookie(),
-      path: "/api/login",
-      maxAge: 300,
-    });
-    return res;
-  }
-  return startSession(secret, got.account);
+  return proceed(r, secret);
 }

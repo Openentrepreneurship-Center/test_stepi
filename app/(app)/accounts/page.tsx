@@ -5,7 +5,7 @@ import { Users } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import PageHeader from "@/components/page-header";
 
-type Account = { username: string; status: string; must_change: boolean; password_changed_at: string; created_by: string };
+type Account = { username: string; status: string; must_change: boolean; password_changed_at: string; created_by: string; otp?: boolean };
 
 const day = (iso: string) =>
   new Date(iso).toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" });
@@ -19,6 +19,8 @@ export default function AccountsPage() {
   const [password, setPassword] = useState("");
   const [resetFor, setResetFor] = useState<string | null>(null);
   const [resetPw, setResetPw] = useState("");
+  // 자기 OTP 는 초기화하지 못함(백엔드도 거절)
+  const [me, setMe] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const r = await apiFetch("/accounts").catch(() => null);
@@ -30,6 +32,10 @@ export default function AccountsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 첫 조회
     load();
+    fetch("/api/login", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { account?: string | null }) => setMe(j.account ?? null))
+      .catch(() => {});
   }, [load]);
 
   /** 성공하면 true. 실패하면 응답 detail 을 그대로 보임 */
@@ -79,7 +85,7 @@ export default function AccountsPage() {
         eyebrow="환경 설정"
         icon={Users}
         title="계정 관리"
-        description="관리자 개인 계정을 만들고, 비밀번호를 초기화하고, 사용 중지합니다. 계정은 지우지 않습니다. 바꾼 내용은 권한 설정 기록에 남습니다."
+        description="관리자 개인 계정을 만들고, 비밀번호와 OTP 를 초기화하고, 사용 중지합니다. 계정은 지우지 않습니다. 바꾼 내용은 권한 설정 기록에 남습니다."
       />
 
       <section className="mt-8 panel">
@@ -129,6 +135,18 @@ export default function AccountsPage() {
                     <button className="btn-ghost" disabled={busy} onClick={() => { setResetFor(resetFor === a.username ? null : a.username); setResetPw(""); }}>
                       비밀번호 초기화
                     </button>
+                    {a.otp && a.username !== me && (
+                      <button
+                        className="btn-ghost"
+                        disabled={busy}
+                        onClick={() =>
+                          window.confirm(`${a.username} 의 OTP 를 초기화합니다. 다음 로그인 때 다시 등록합니다.`) &&
+                          send(`/accounts/${encodeURIComponent(a.username)}/reset-otp`)
+                        }
+                      >
+                        OTP 초기화
+                      </button>
+                    )}
                     <button className="btn-ghost" disabled={busy} onClick={() => send(`/accounts/${encodeURIComponent(a.username)}/${a.status === "active" ? "disable" : "enable"}`)}>
                       {a.status === "active" ? "사용 중지" : "다시 쓰기"}
                     </button>
