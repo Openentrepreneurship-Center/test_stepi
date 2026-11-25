@@ -14,7 +14,8 @@ function compare(got: string, expected: string): boolean {
 }
 
 // 로그인 실패 잠금(RATE-001). 화면 서버 메모리라 재시작하면 처음부터 셈
-const failures = new Map<string, { at: number[]; lockedUntil: number }>();
+// logged: 이번 잠금 중 시도를 접근 로그에 남겼는지(AUDIT-001)
+const failures = new Map<string, { at: number[]; lockedUntil: number; logged?: boolean }>();
 let warnedBadRule = false;
 
 const WHOLE = /^\s*\d+\s*$/;
@@ -73,6 +74,7 @@ function countFailure(rule: ReturnType<typeof loginRule>, addr: string, now: num
   if (rec.at.length >= rule.limit) {
     rec.lockedUntil = now + rule.lock;
     rec.at = [];
+    rec.logged = false;
   }
   failures.set(addr, rec);
 }
@@ -115,11 +117,23 @@ export async function POST(req: NextRequest) {
   const addr = clientAddr(req);
   const now = Date.now() / 1000;
   const locked = rule ? (failures.get(addr)?.lockedUntil ?? 0) : 0;
-  if (locked > now) return tooMany(Math.ceil(locked - now), addr);
-  let body: { username?: string; password?: string; new_password?: string; code?: string };
+  let body: Body;
   try {
     body = await req.json();
   } catch {
+    if (locked > now) return tooMany(Math.ceil(locked - now), addr);
+    return NextResponse.json({ error: "요청 형식이 올바르지 않습니다." }, { status: 400 });
+  }
+  if (locked > now) {
+    const rec = failures.get(addr);
+    // 잠금 한 번에 첫 시도만 남김. 거절마다 백엔드를 부르면 잠금이 백엔드를 지켜 주지 못함
+    if (accountLogin() && rec && !rec.logged) {
+      rec.logged = true;
+      await logLocked(req, body, addr).catch(() => {});
+    }
+    return tooMany(Math.ceil(locked - now), addr);
+  }
+  if (!body || typeof body !== "object") {
     return NextResponse.json({ error: "요청 형식이 올바르지 않습니다." }, { status: 400 });
   }
   const secret = process.env.SESSION_SECRET ?? "";
@@ -143,6 +157,17 @@ export async function POST(req: NextRequest) {
   return startSession(secret);
 }
 
+type Body = { username?: string; password?: string; new_password?: string; code?: string };
+
+/** 잠금으로 거절한 시도도 접근 로그에 남김(AUDIT-001). 남기지 못해도 거절은 그대로 */
+async function logLocked(req: NextRequest, body: Body | null, addr: string) {
+  const apiSecret = process.env.API_AUTH_SECRET ?? "";
+  if (!apiSecret) return;
+  const stage = body?.new_password !== undefined ? "change_password" : body?.code !== undefined ? "otp" : "password";
+  const ticket = req.cookies.get(PENDING_COOKIE)?.value ?? "";
+  await backend("/auth/log", { username: String(body?.username ?? ""), ticket, addr, stage }, apiSecret);
+}
+
 type Step = { account: string; step: string | null; ticket: string | null; enroll?: unknown };
 
 /** 백엔드가 다음 단계를 주면 임시 쿠키를 새 표로 바꾸고, 없으면 로그인을 끝냄 */
@@ -163,7 +188,7 @@ async function proceed(r: Response, secret: string) {
 
 async function accountPost(
   req: NextRequest,
-  body: { username?: string; password?: string; new_password?: string; code?: string },
+  body: Body,
   secret: string,
   rule: ReturnType<typeof loginRule>,
   addr: string,
@@ -183,7 +208,8 @@ async function accountPost(
     : null;
   if (pending) {
     const { path, ...rest } = pending;
-    const r = ticket ? await backend(path, { ticket, ...rest }, apiSecret) : undefined;
+    // addr: 실제 접속 주소를 접근 로그에 남김(AUDIT-001)
+    const r = ticket ? await backend(path, { ticket, ...rest, addr }, apiSecret) : undefined;
     if (r === null) return unreachable();
     if (r?.ok) return proceed(r, secret);
     if (r?.status === 400) return NextResponse.json({ error: await detail(r, "요청 형식이 올바르지 않습니다.") }, { status: 400 });
@@ -203,7 +229,7 @@ async function accountPost(
     return res;
   }
 
-  const r = await backend("/auth/login", { username: body.username ?? "", password: body.password ?? "" }, apiSecret);
+  const r = await backend("/auth/login", { username: body.username ?? "", password: body.password ?? "", addr }, apiSecret);
   if (!r) return unreachable();
   // 백엔드 키가 없거나 다르면 401 이 와도 비밀번호 탓이 아님. 실패로 세지 않음
   if (r.status === 422 || (r.status === 401 && (await detail(r, "")) === BAD_LOGIN)) {
