@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { API_BASE } from "@/lib/api";
-import { SESSION_COOKIE, sessionExp, signApiToken, verifySession } from "@/lib/auth";
+import { SESSION_COOKIE, sessionAccount, sessionExp, signApiToken, verifySession } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -37,7 +37,8 @@ export async function GET(req: NextRequest) {
   let target = `${API_BASE}${u}`;
   if (apiSecret) {
     const exp = Math.min(Math.floor(Date.now() / 1000) + TTL_SECONDS, sessionExp(session));
-    const token = await signApiToken({ p: "url", m: "GET", u, exp }, apiSecret);
+    const a = sessionAccount(session);
+    const token = await signApiToken({ p: "url", m: "GET", u, exp, ...(a && { a }) }, apiSecret);
     target += `${query ? "&" : "?"}_t=${token}`;
   }
   return NextResponse.redirect(target, { status: 302, headers: noStore });

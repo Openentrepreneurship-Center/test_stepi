@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
-import { SESSION_COOKIE, SESSION_DURATION_SECONDS, signSession } from "@/lib/auth";
+import { NextResponse, type NextRequest } from "next/server";
+import { API_BASE } from "@/lib/api";
+import { SESSION_COOKIE, SESSION_DURATION_SECONDS, sessionAccount, signApiToken, signSession, verifySession } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -47,24 +48,87 @@ function tooMany(seconds: number, addr: string) {
   );
 }
 
-export async function POST(req: Request) {
+const SERVER_ERROR = "서버 설정 오류입니다. 시스템 관리자에게 문의해 주십시오.";
+const BAD_LOGIN = "아이디 또는 비밀번호가 올바르지 않습니다.";
+// 개인 계정 로그인(ACCT-001). 비밀번호 바꾸기 단계의 표는 이 경로에서만 보임
+const PENDING_COOKIE = "polaris_pending";
+const accountLogin = () => process.env.ACCOUNT_LOGIN === "1";
+// https 가 없는 기관 내부망 대비. 기본은 켜짐
+const secureCookie = () => process.env.NODE_ENV === "production" && process.env.SESSION_COOKIE_SECURE !== "false";
+
+/** 로그인 화면은 아이디 칸을, 사이드바는 로그인한 아이디를 보일지 여기서 봄 */
+export async function GET(req: NextRequest) {
+  const session = req.cookies.get(SESSION_COOKIE)?.value ?? "";
+  const ok = await verifySession(session, process.env.SESSION_SECRET ?? "");
+  return NextResponse.json(
+    { account_login: accountLogin(), account: ok ? sessionAccount(session) : null },
+    { headers: { "Cache-Control": "no-store" } },
+  );
+}
+
+function countFailure(rule: ReturnType<typeof loginRule>, addr: string, now: number) {
+  if (!rule) return;
+  const rec = failures.get(addr) ?? { at: [], lockedUntil: 0 };
+  rec.at = rec.at.filter((t) => t > now - rule.window).concat(now);
+  if (rec.at.length >= rule.limit) {
+    rec.lockedUntil = now + rule.lock;
+    rec.at = [];
+  }
+  failures.set(addr, rec);
+}
+
+async function startSession(secret: string, account?: string) {
+  const exp = Math.floor(Date.now() / 1000) + SESSION_DURATION_SECONDS;
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(SESSION_COOKIE, await signSession(exp, secret, account), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: secureCookie(),
+    path: "/",
+    maxAge: SESSION_DURATION_SECONDS,
+  });
+  res.cookies.delete({ name: PENDING_COOKIE, path: "/api/login" });
+  return res;
+}
+
+/** 백엔드 로그인 단계를 서버끼리 부름. 연결이 안 되면 null */
+async function backend(path: string, body: unknown, apiSecret: string): Promise<Response | null> {
+  const token = await signApiToken({ p: "api", exp: Math.floor(Date.now() / 1000) + 60 }, apiSecret);
+  try {
+    // 기관은 화면 서버가 백엔드를 내부 주소로 부름(hr-ai lib/api.ts 와 같음)
+    return await fetch(`${process.env.API_INTERNAL_BASE_URL || API_BASE}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+  } catch {
+    return null;
+  }
+}
+
+const detail = async (r: Response, fallback: string) =>
+  ((await r.json().catch(() => ({}))) as { detail?: unknown }).detail?.toString() ?? fallback;
+
+export async function POST(req: NextRequest) {
   const rule = loginRule();
   const addr = clientAddr(req);
   const now = Date.now() / 1000;
   const locked = rule ? (failures.get(addr)?.lockedUntil ?? 0) : 0;
   if (locked > now) return tooMany(Math.ceil(locked - now), addr);
-  let body: { password?: string };
+  let body: { username?: string; password?: string; new_password?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "요청 형식이 올바르지 않습니다." }, { status: 400 });
   }
+  const secret = process.env.SESSION_SECRET ?? "";
+  if (accountLogin()) return accountPost(req, body, secret, rule, addr, now);
   const accepted = [process.env.AUTH_PASSWORD, process.env.AUTH_PASSWORD_2].filter(
     (p): p is string => !!p,
   );
-  const secret = process.env.SESSION_SECRET ?? "";
   if (accepted.length === 0 || !secret) {
-    return NextResponse.json({ error: "서버 설정 오류입니다. 시스템 관리자에게 문의해 주십시오." }, { status: 500 });
+    return NextResponse.json({ error: SERVER_ERROR }, { status: 500 });
   }
   const got = body.password ?? "";
   // every candidate is checked even after a match, so timing does not leak which one it was
@@ -73,27 +137,59 @@ export async function POST(req: Request) {
     if (compare(got, expected)) same = true;
   }
   if (!same) {
-    if (rule) {
-      const rec = failures.get(addr) ?? { at: [], lockedUntil: 0 };
-      rec.at = rec.at.filter((t) => t > now - rule.window).concat(now);
-      if (rec.at.length >= rule.limit) {
-        rec.lockedUntil = now + rule.lock;
-        rec.at = [];
-      }
-      failures.set(addr, rec);
-    }
+    countFailure(rule, addr, now);
     return NextResponse.json({ error: "비밀번호가 올바르지 않습니다." }, { status: 401 });
   }
-  const exp = Math.floor(Date.now() / 1000) + SESSION_DURATION_SECONDS;
-  const token = await signSession(exp, secret);
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    // https 가 없는 기관 내부망 대비. 기본은 켜짐
-    secure: process.env.NODE_ENV === "production" && process.env.SESSION_COOKIE_SECURE !== "false",
-    path: "/",
-    maxAge: SESSION_DURATION_SECONDS,
-  });
-  return res;
+  return startSession(secret);
+}
+
+async function accountPost(
+  req: NextRequest,
+  body: { username?: string; password?: string; new_password?: string },
+  secret: string,
+  rule: ReturnType<typeof loginRule>,
+  addr: string,
+  now: number,
+) {
+  const apiSecret = process.env.API_AUTH_SECRET ?? "";
+  // 키가 없으면 백엔드가 요청한 계정을 알 수 없음
+  if (!secret || !apiSecret) return NextResponse.json({ error: SERVER_ERROR }, { status: 500 });
+  const unreachable = () =>
+    NextResponse.json({ error: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주십시오." }, { status: 502 });
+
+  const ticket = req.cookies.get(PENDING_COOKIE)?.value;
+  if (body.new_password !== undefined) {
+    const r = ticket ? await backend("/auth/password", { ticket, new_password: body.new_password }, apiSecret) : undefined;
+    if (r === null) return unreachable();
+    if (r?.ok) return startSession(secret, ((await r.json()) as { account: string }).account);
+    if (r?.status === 400) return NextResponse.json({ error: await detail(r, "요청 형식이 올바르지 않습니다.") }, { status: 400 });
+    if (r && r.status !== 401) return unreachable();
+    // 표가 없거나 5분이 지남. 처음부터 다시 로그인
+    const res = NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+    res.cookies.delete({ name: PENDING_COOKIE, path: "/api/login" });
+    return res;
+  }
+
+  const r = await backend("/auth/login", { username: body.username ?? "", password: body.password ?? "" }, apiSecret);
+  if (!r) return unreachable();
+  // 백엔드 키가 없거나 다르면 401 이 와도 비밀번호 탓이 아님. 실패로 세지 않음
+  if (r.status === 422 || (r.status === 401 && (await detail(r, "")) === BAD_LOGIN)) {
+    countFailure(rule, addr, now);
+    return NextResponse.json({ error: BAD_LOGIN }, { status: 401 });
+  }
+  if (r.status === 401) return NextResponse.json({ error: SERVER_ERROR }, { status: 500 });
+  if (!r.ok) return unreachable();
+  const got = (await r.json()) as { account: string; step: string | null; ticket: string | null };
+  if (got.step && got.ticket) {
+    const res = NextResponse.json({ step: got.step });
+    res.cookies.set(PENDING_COOKIE, got.ticket, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: secureCookie(),
+      path: "/api/login",
+      maxAge: 300,
+    });
+    return res;
+  }
+  return startSession(secret, got.account);
 }

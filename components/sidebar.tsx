@@ -17,6 +17,7 @@ import {
   ListChecks,
   LogOut,
   Menu,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import StepiLogo from "./stepi-logo";
@@ -149,8 +150,18 @@ export default function Sidebar() {
     },
   ];
 
+  // 개인 계정으로 로그인했을 때만 계정 관리와 아이디를 보임(ACCT-001)
+  const [account, setAccount] = useState<string | null>(null);
+  useEffect(() => {
+    fetch("/api/login", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { account?: string | null }) => setAccount(j.account ?? null))
+      .catch(() => {});
+  }, []);
+
   const utility: NavLeaf[] = [
     { href: "/settings", label: "표시 설정", icon: Settings, match: (p) => p.startsWith("/settings") },
+    ...(account ? [{ href: "/accounts", label: "계정 관리", icon: Users, match: (p: string) => p.startsWith("/accounts") }] : []),
   ];
 
   const logout = async () => {
@@ -397,6 +408,11 @@ export default function Sidebar() {
                 );
               })}
             </div>
+            {account && (
+              <div className="mt-1 px-2.5 py-1 text-[13px] text-[var(--ink-soft)] truncate" title={account}>
+                {account}
+              </div>
+            )}
             <button
               onClick={logout}
               className="mt-1 flex items-center gap-2.5 px-2.5 py-2 w-full rounded-md text-[14px] text-[var(--ink-muted)] hover:text-[var(--bad)] hover:bg-[var(--bg-2)] transition"

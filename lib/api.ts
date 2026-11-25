@@ -1,5 +1,5 @@
 import type { AiDetectionExplanation } from "./ai-detection";
-import { SESSION_COOKIE, sessionExp, signApiToken, verifySession } from "./auth";
+import { SESSION_COOKIE, sessionAccount, sessionExp, signApiToken, verifySession } from "./auth";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
@@ -17,7 +17,8 @@ async function apiToken(minLeft = 60): Promise<string | null> {
     const { cookies } = await import("next/headers");
     const session = (await cookies()).get(SESSION_COOKIE)?.value ?? "";
     if (!(await verifySession(session, process.env.SESSION_SECRET ?? ""))) return null;
-    return signApiToken({ p: "api", exp: Math.min(now + 60, sessionExp(session)) }, secret);
+    const a = sessionAccount(session);
+    return signApiToken({ p: "api", exp: Math.min(now + 60, sessionExp(session)), ...(a && { a }) }, secret);
   }
   if (browserToken && browserToken.exp - minLeft > now) return browserToken.token;
   browserTokenReq ??= fetch("/api/api-token", { method: "POST", cache: "no-store" })
@@ -49,7 +50,14 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   const headers = new Headers(init.headers);
   if (token) headers.set("Authorization", `Bearer ${token}`);
   const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
-  if (res.status === 401 && typeof window !== "undefined") browserToken = null;
+  if (res.status === 401 && typeof window !== "undefined") {
+    browserToken = null;
+    // 사용 중지된 계정은 세션을 지우고 로그인 화면으로(ACCT-001 FR-004)
+    if ((await res.clone().json().catch(() => null))?.code === "account_disabled") {
+      await fetch("/api/logout", { method: "POST" }).catch(() => {});
+      window.location.assign("/login");
+    }
+  }
   return res;
 }
 

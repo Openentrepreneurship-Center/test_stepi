@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE, sessionExp, signApiToken, verifySession } from "@/lib/auth";
+import { SESSION_COOKIE, sessionAccount, sessionExp, signApiToken, verifySession } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -22,7 +22,8 @@ export async function POST(req: NextRequest) {
   // 키를 아직 넣지 않은 배포에서는 토큰 없이 부름. 5분 동안 다시 묻지 않음
   if (!apiSecret) return NextResponse.json({ token: null, ttl: 300 }, { headers: noStore });
   const exp = Math.min(now + TTL_SECONDS, sessionExp(session));
-  const token = await signApiToken({ p: "api", exp }, apiSecret);
+  const a = sessionAccount(session);
+  const token = await signApiToken({ p: "api", exp, ...(a && { a }) }, apiSecret);
   // 브라우저는 자기 시계로 남은 시간을 셈(ttl)
   return NextResponse.json({ token, ttl: exp - now }, { headers: noStore });
 }
